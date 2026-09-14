@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use this software or the accompanying manuscript, please cite it as below."
+title: "epymorph-manuscript-pkg: reproducibility package for the epymorph manuscript"
+type: software
+authors:
+  - family-names: "Mihaljevic"
+    given-names: "Joseph R."
+    affiliation: "Northern Arizona University"
+    email: "joseph.mihaljevic@nau.edu"
+license: GPL-3.0-only
+license-url: "https://www.gnu.org/licenses/gpl-3.0.txt"
