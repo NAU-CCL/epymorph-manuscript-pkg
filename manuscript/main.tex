@@ -1,0 +1,69 @@
+\documentclass[pdflatex,sn-nature]{sn-jnl}% Style for submissions to Nature Portfolio journals (covers both Nature Methods and Nature Communications -- final choice still open, see manuscript/README.md)
+
+%%%% Standard packages, carried over from the Springer Nature template (sn-article.tex)
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{amsthm}
+\usepackage{mathrsfs}
+\usepackage[title]{appendix}
+\usepackage{xcolor}
+\usepackage{textcomp}
+\usepackage{manyfoot}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\usepackage{listings}
+
+\raggedbottom
+
+\begin{document}
+
+\title[Short title -- PLACEHOLDER]{Full article title -- PLACEHOLDER}
+
+\author*[1]{\fnm{Joseph R.} \sur{Mihaljevic}}\email{joseph.mihaljevic@nau.edu}
+\affil*[1]{\orgdiv{PLACEHOLDER Department}, \orgname{Northern Arizona University}, \orgaddress{\city{Flagstaff}, \state{AZ}, \country{USA}}}
+
+\abstract{PLACEHOLDER -- abstract not yet written.}
+
+\keywords{epidemic modeling, metapopulation, epymorph, PLACEHOLDER}
+
+\maketitle
+
+%% ===================================================================
+%% DRAFTING NOTE (remove before submission):
+%% Springer Nature's own template says not to \input other .tex files
+%% and to submit as ONE file. We're drafting modularly anyway -- one
+%% file per section, easier to review/diff in git -- and will FLATTEN
+%% this into a single file at submission time (scripts/build.sh, once
+%% written). \input compiles fine here on Overleaf; the "one file"
+%% instruction is a Springer Nature submission-format requirement, not
+%% a LaTeX limitation.
+%% ===================================================================
+
+\input{sections/01-introduction}
+\input{sections/02-methods}
+\input{sections/03-results}
+\input{sections/04-discussion}
+
+\backmatter
+
+\bmhead{Supplementary information}
+See the accompanying Supplementary Information document.
+
+\bmhead{Acknowledgements}
+PLACEHOLDER
+
+\section*{Declarations}
+\begin{itemize}
+\item Funding: PLACEHOLDER
+\item Conflict of interest / Competing interests: PLACEHOLDER
+\item Data availability: PLACEHOLDER
+\item Code availability: PLACEHOLDER
+\item Author contribution: PLACEHOLDER
+\end{itemize}
+
+\bibliography{references}
+
+\end{document}
