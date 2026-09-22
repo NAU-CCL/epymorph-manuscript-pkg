@@ -32,6 +32,23 @@ the three places it belongs in. Read it before changing `export.py`.
 load and score them, draw every panel, and render the composed manuscript figures. These
 are hand-maintained and have no generator; edit them directly.
 
+## Conventions
+
+- **Readable over clever.** This code is read by people learning epymorph. Explicit loops
+  and named intermediates beat dense one-liners.
+- **The notebooks demonstrate epymorph; `demos/lib/` hides everything else.** Anything
+  that touches the epymorph API belongs where a reader will see it; the plotting and
+  data-wrangling beneath it belongs in the library.
+- **Panels draw, `export.py` lays out.** See
+  `src/manuscript_analysis/demos/ADDING-FIGURES.md`, which also has the naming rule.
+- **Never hand-edit a generated file.** Every generated `.tex` carries a `% GENERATED`
+  header; `../scripts/check.sh` enforces it.
+- **Run `../scripts/check.sh` before and after a change.** It is the regression suite.
+- **Do not casually delete `results/demos/runs/`.** It is ~1 GB and 8-10 hours to rebuild.
+- **No em-dashes in manuscript prose.** Code comments are fine.
+- **Name things for what they are.** Not "arm" (clinical trials) or "ablation" (machine
+  learning) for the model comparison; the models have names.
+
 ## Running things
 
     python -m manuscript_analysis.lit_search --check     # the search pipeline
