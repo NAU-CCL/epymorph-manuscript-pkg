@@ -1,6 +1,6 @@
 # License (manuscript text and figures)
 
-The manuscript text and figures in this repository (`manuscript/`, `results/figures/`,
+The manuscript text and figures in this repository (`manuscript/`, `results/demos/figures/`,
 and any other prose/figure content outside `analysis/`) are licensed under the
 **Creative Commons Attribution 4.0 International License (CC BY 4.0)**.
 

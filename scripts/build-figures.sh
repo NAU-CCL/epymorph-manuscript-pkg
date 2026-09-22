@@ -2,7 +2,7 @@
 # Build every figure and table the manuscript uses, from the run outputs.
 #
 # Seconds, not hours: everything expensive already happened in scripts/run-demos.sh.
-# Writes results/figures/ and results/demos/tables/, both of which are safe to delete.
+# Writes results/demos/{figures,tables}/, both of which are safe to delete.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."

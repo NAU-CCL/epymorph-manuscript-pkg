@@ -5,13 +5,14 @@ Everything the two demonstration vignettes produce. Generated: safe to delete, r
 
 | | what | in git? |
 |---|---|---|
+| `figures/` | the manuscript's figures, composed by the exporter | yes |
 | `runs/` | the ensembles: one folder per model, under `<demo>/seed<N>/` | **no** |
 | `tables/` | the score tables, as `.csv` to read and `.tex` to `\input` | yes |
 | `notebook/` | whatever the notebooks save while you run them | **no** — exploratory |
 | `MANIFEST.sha256` | checksums of `runs/` | yes |
 
 The notebooks' per-panel figures are deliberately not carried: they are the exploratory
-view of panels the exporter composes properly into `results/figures/`, and a second copy
+view of panels the exporter composes properly into `figures/`, and a second copy
 of a figure is a second thing to drift.
 
 ## Why `runs/` is not in git
@@ -26,7 +27,7 @@ over GitHub's 100 MB hard limit. Two ways to get it:
    referenced from the top-level `README.md` once it exists.
 
 Everything needed to *check the paper* is in git without either: the figures in
-`results/figures/`, the numbers in `tables/`, and the frozen observations in
+`figures/`, the numbers in `tables/`, and the frozen observations in
 `data/demos/`. The ensembles are what those were computed from.
 
 ## What the manifest means

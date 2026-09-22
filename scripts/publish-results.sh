@@ -18,7 +18,7 @@
 # No file is ever written by both sides, so neither script can lose an edit the other
 # made. That is the whole reason the split is safe.
 #
-# PDFs rather than PNGs: the PNGs in results/figures/ are for looking at, the PDFs are
+# PDFs rather than PNGs: the PNGs in results/demos/figures/ are for looking at, the
 # vector and are what LaTeX should include.
 set -euo pipefail
 
@@ -41,8 +41,8 @@ add_pair() {
 }
 
 while IFS= read -r f; do
-  add_pair "results/figures/$f" "figures/$f"
-done < <(cd "$HERE/results/figures" 2>/dev/null && ls ./*.pdf 2>/dev/null | sed 's|^\./||')
+  add_pair "results/demos/figures/$f" "figures/$f"
+done < <(cd "$HERE/results/demos/figures" 2>/dev/null && ls ./*.pdf 2>/dev/null | sed 's|^\./||')
 
 while IFS= read -r f; do
   add_pair "results/demos/tables/$f" "tables/$f"

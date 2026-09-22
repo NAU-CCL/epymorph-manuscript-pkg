@@ -71,8 +71,8 @@ starting over.
 scripts/build-figures.sh      # seconds
 ```
 
-Writes `results/figures/` (five composed figures) and `results/demos/tables/` (six
-tables, each as a `.csv` to read and a `.tex` to `\input`).
+Writes `results/demos/figures/` (five composed figures) and `results/demos/tables/`
+(six tables, each as a `.csv` to read and a `.tex` to `\input`).
 
 ### 4. Check it
 
@@ -122,8 +122,8 @@ analysis/
     lit_search/     the software-landscape search pipeline
   notebooks/        the driver notebooks
 manuscript/         LaTeX, one file per section; round-trips with Overleaf
-results/
-  figures/          the manuscript's figures
+results/            organised by producer, mirroring data/
+  demos/figures/    the manuscript's figures
   demos/tables/     the manuscript's tables, .csv and .tex
   demos/runs/       the ensembles. NOT in git.
   lit-search/       shortlists, register, PRISMA flow, Table 1
@@ -207,7 +207,7 @@ Two licenses, matching two kinds of content:
 
 - **Code** (`analysis/`): GPL-3.0-only, see `LICENSE`. Matches epymorph itself
   (NAU-CCL/Epymorph, GPL-3.0), which the analysis depends on.
-- **Manuscript text and figures** (`manuscript/`, `results/figures/`): CC BY 4.0, see
+- **Manuscript text and figures** (`manuscript/`, `results/demos/figures/`): CC BY 4.0, see
   `LICENSE-MANUSCRIPT.md`.
 
 ## Citation
