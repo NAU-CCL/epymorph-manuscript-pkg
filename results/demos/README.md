@@ -7,8 +7,12 @@ Everything the two demonstration vignettes produce. Generated: safe to delete, r
 |---|---|---|
 | `runs/` | the ensembles: one folder per model, under `<demo>/seed<N>/` | **no** |
 | `tables/` | the score tables, as `.csv` to read and `.tex` to `\input` | yes |
-| `notebook/` | whatever the notebooks save while you run them | yes, and disposable |
+| `notebook/` | whatever the notebooks save while you run them | **no** — exploratory |
 | `MANIFEST.sha256` | checksums of `runs/` | yes |
+
+The notebooks' per-panel figures are deliberately not carried: they are the exploratory
+view of panels the exporter composes properly into `results/figures/`, and a second copy
+of a figure is a second thing to drift.
 
 ## Why `runs/` is not in git
 
