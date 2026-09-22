@@ -1,5 +1,26 @@
 \documentclass[12pt]{article}
+\usepackage[margin=2.5cm]{geometry}
 \usepackage{graphicx,amsmath,amssymb,booktabs}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{wasysym}
+\usepackage{array,longtable,pdflscape}
+\usepackage[hidelinks,breaklinks]{hyperref}
+
+% macros that sn-nature.bst writes into the bibliography (defined by sn-jnl in main.tex)
+\providecommand{\bibcommenthead}{}
+\providecommand{\burl}[1]{\url{#1}}
+
+% Feature-support marks (same macros as main.tex)
+\newcommand{\mkfull}{\CIRCLE}
+% \mkpart deliberately not defined: the comparison is binary by design (see S1.3).
+\newcommand{\mknone}{\Circle}
+
+\emergencystretch=3em
+
+% Supplementary numbering: Section S1, S1.1; Table S1; Figure S1
+\renewcommand{\thesection}{S\arabic{section}}
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thefigure}{S\arabic{figure}}
 
 \title{Supplementary Information}
 \author{}
@@ -10,5 +31,9 @@
 
 \input{S1-software-landscape}
 \input{S2-parameter-estimation}
+
+%% Compile from inside supplementary/ (paths below are relative to this folder).
+\bibliographystyle{../sn-nature}
+\bibliography{../references}
 
 \end{document}

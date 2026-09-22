@@ -1,0 +1,21 @@
+{
+  "advanced_dispositioned": 645,
+  "audited": 2388,
+  "lens_advanced": 208,
+  "lens_dropped": 461,
+  "lens_duplicates": 340,
+  "lens_novel": 669,
+  "lens_retrieved": 1009,
+  "nearmiss": 0,
+  "nocue_stratum": 1585,
+  "pubmed_advanced": 437,
+  "pubmed_dropped": 1927,
+  "pubmed_retrieved": 2403,
+  "pubmed_screened": 2364,
+  "random_sample": 100,
+  "random_sample_seed": 20260724,
+  "titlesweep": 101,
+  "total_advanced": 645,
+  "total_dropped": 2388,
+  "total_screened": 3033
+}

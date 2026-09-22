@@ -1,0 +1,35 @@
+﻿CRAN package,Task-view subsection,In scope for this review?,Note / disposition
+surveillance,Surveillance,Yes,Tabulated (hhh4)
+EpiEstim,Transmissibility/forecasting,No,Rt-only (criterion b)
+EpiNow2,Transmissibility/forecasting,Borderline,"Bayesian Rt+forecast; excluded (b), flagged"
+epinet,Transmissibility/forecasting,Yes,Candidate - Bayesian network inference
+R0,Transmissibility/forecasting,No,Rt/R0 estimation only
+earlyR,Transmissibility/forecasting,No,R0 estimation only
+tsiR,Transmissibility/forecasting,No,TSIR regression/profile likelihood
+Bernadette,Transmissibility/forecasting,Yes,Candidate - Bayesian evidence synthesis (Stan)
+BayesianFitForecast,Transmissibility/forecasting,Yes,Candidate - Bayesian estimation+forecasting (Stan)
+linelistBayes,Transmissibility/forecasting,No,Bayesian Rt on linelist; Rt-focused
+epigrowthfit,Transmissibility/forecasting,No,MLE growth-rate models
+EpiInvert,Transmissibility/forecasting,No,Incidence decomposition / Rt
+epicasting,Transmissibility/forecasting,No,Wavelet neural-net forecaster (non-mechanistic)
+Bernadette,Transmissibility/forecasting,Yes,(dup) Bayesian age-specific transmission
+pomp,Epidemic simulation models,Yes,Tabulated - core inference toolkit
+SimInf,Epidemic simulation models,Yes,Tabulated - PF/ABC/pMCMC
+odin,Epidemic simulation models,Yes,Tabulated (odin/dust/mcstate; now odin2/dust2/monty)
+EpiModel,Epidemic simulation models,Yes,Capsule - network-based
+EpiDynamics,Epidemic simulation models,No,"Deterministic SEIR/SIR, no inference"
+epichains,Epidemic simulation models,Borderline,Branching-process sim; plug-in MLE/Bayes
+finalsize,Epidemic simulation models,No,"Analytic final-size, no inference"
+genSEIR,Epidemic simulation models,No,"SEIR fitting, deterministic"
+simulist,Epidemic simulation models,No,Linelist simulation
+nosoi,Individual-level data,No,Agent-based simulator (criterion a)
+epiworldR,Individual-level data,No,Agent-based (criterion a)
+modelSSE,Individual-level data,No,Superspreading analytics
+outbreaker2,Transmission tree reconstruction,No,Bayesian tree reconstruction (out of scope)
+o2geosocial,Transmission tree reconstruction,No,Bayesian tree reconstruction
+TransPhylo,Transmission tree reconstruction,No,Phylogenetic transmission tree
+adegenet,Transmission tree reconstruction,No,Population-genetics / seqtrack
+Epi,Surveillance,No,Lexis/demographic analysis
+mem,Surveillance,No,Moving Epidemic Method (thresholds)
+argo,Digital epidemiology,No,Regression on online data (non-mechanistic)
+bets.covid19,COVID-19 data,No,"Likelihood inference, early-outbreak niche"

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Figure S1 — Software identification &amp; selection flow</title>
+<style>
+  body { font-family: Arial, Helvetica, sans-serif; margin: 24px; color: #1a1a1a; }
+  h1 { font-size: 16px; font-weight: 600; }
+  p  { font-size: 13px; color: #555; max-width: 760px; }
+  #diagram { margin-top: 16px; }
+  .hint { font-size: 12px; color: #777; margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px; }
+</style>
+</head>
+<body>
+  <h1>Figure S1. Software identification and selection flow (PRISMA-style)</h1>
+  <p>Generated from the search pipeline; do not hand-edit. Every number is derived from
+     <code>results/counts.json</code> and <code>decisions/packages.csv</code>. To export:
+     right-click the diagram &rarr; “Save image”, or paste
+     <code>prisma-flow.mermaid</code> into mermaid.live for SVG/PNG.</p>
+  <div id="diagram">
+    <pre class="mermaid">
+flowchart TB
+    subgraph ID["Identification"]
+        A1["Bibliographic databases<br/>PubMed n = 2,403<br/>Lens.org (journal + conference<br/>+ preprint) n = 1,009"]
+        A2["Other sources<br/>CRAN Task View (curated)<br/>PyPI / JOSS · GitHub topics<br/>Citation-chaining"]
+    end
+
+    A1 --> D["Duplicates removed<br/>PubMed ∩ Lens, n = 340"]
+    D --> U["Unique records identified<br/>n = 3,072<br/>(2,403 PubMed + 669 novel Lens)"]
+    U --> S["Screened<br/>n = 3,033<br/>(39 PubMed records lacked abstracts)"]
+
+    S --> PF["Keyword pre-filter — one lexicon, both sources<br/>(software × inference × epidemiology)<br/>advanced n = 645<br/>(437 PubMed + 208 Lens)"]
+    S --> EX["Set aside by pre-filter<br/>n = 2,388"]
+
+    EX --> RA["Recall audit of set-aside records<br/>near-miss stratum empty by construction ·<br/>exhaustive package-title sweep n = 101 ·<br/>seeded random sample n = 100 of 1,585<br/>→ 0 missed in-scope packages"]
+
+    PF --> AS["Assessed for eligibility<br/>+ marks verified vs primary docs"]
+    RA --> AS
+    A2 --> AS
+
+    AS --> INC["<b>Included</b><br/>14 packages retained for comparison<br/>(12 tabulated in Table 1)<br/>22 capsule / context packages<br/>3 method / review references"]
+
+    AS --> OOS["Excluded at eligibility<br/>agent-based only · Rt-only ·<br/>phylodynamics / genomics ·<br/>general-purpose toolkits · clinical models"]
+    </pre>
+  </div>
+  <p class="hint">Rendered client-side by Mermaid.</p>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+  </script>
+</body>
+</html>

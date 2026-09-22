@@ -1,0 +1,8 @@
+software:
+  package, software, toolkit, toolbox, library, framework, open-source, freely available, available at, available from, GitHub, CRAN, PyPI, implemented in, R package, Python package, Julia, we present/introduce/develop
+
+inference:
+  particle filter, sequential Monte Carlo, SMC, ensemble Kalman, Kalman filter, data assimilation, Bayesian, Markov chain Monte Carlo, MCMC, approximate Bayesian, ABC-SMC, pMCMC, state-space, nested sampling, Hamiltonian Monte Carlo, uncertainty quantification, quantified uncertainty, emulation, history matching, iterated filtering, parameter estimation, calibration, likelihood
+
+epidemiology:
+  epidemic, compartmental, SEIR, SIR model, metapopulation, meta-population, transmission, infectious disease, outbreak, forecast, influenza, COVID, dengue, malaria, measles, mpox, Ebola, pandemic

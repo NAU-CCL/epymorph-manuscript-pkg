@@ -1,0 +1,22 @@
+flowchart TB
+    subgraph ID["Identification"]
+        A1["Bibliographic databases<br/>PubMed n = 2,403<br/>Lens.org (journal + conference<br/>+ preprint) n = 1,009"]
+        A2["Other sources<br/>CRAN Task View (curated)<br/>PyPI / JOSS · GitHub topics<br/>Citation-chaining"]
+    end
+
+    A1 --> D["Duplicates removed<br/>PubMed ∩ Lens, n = 340"]
+    D --> U["Unique records identified<br/>n = 3,072<br/>(2,403 PubMed + 669 novel Lens)"]
+    U --> S["Screened<br/>n = 3,033<br/>(39 PubMed records lacked abstracts)"]
+
+    S --> PF["Keyword pre-filter — one lexicon, both sources<br/>(software × inference × epidemiology)<br/>advanced n = 645<br/>(437 PubMed + 208 Lens)"]
+    S --> EX["Set aside by pre-filter<br/>n = 2,388"]
+
+    EX --> RA["Recall audit of set-aside records<br/>near-miss stratum empty by construction ·<br/>exhaustive package-title sweep n = 101 ·<br/>seeded random sample n = 100 of 1,585<br/>→ 0 missed in-scope packages"]
+
+    PF --> AS["Assessed for eligibility<br/>+ marks verified vs primary docs"]
+    RA --> AS
+    A2 --> AS
+
+    AS --> INC["<b>Included</b><br/>14 packages retained for comparison<br/>(12 tabulated in Table 1)<br/>22 capsule / context packages<br/>3 method / review references"]
+
+    AS --> OOS["Excluded at eligibility<br/>agent-based only · Rt-only ·<br/>phylodynamics / genomics ·<br/>general-purpose toolkits · clinical models"]

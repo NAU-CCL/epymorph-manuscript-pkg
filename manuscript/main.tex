@@ -15,6 +15,16 @@
 \usepackage{algorithmicx}
 \usepackage{algpseudocode}
 \usepackage{listings}
+\usepackage{wasysym}
+
+% Feature-support marks used in the software-comparison tables (Table 1 here, Table S1 in the SI)
+\newcommand{\mkfull}{\CIRCLE}
+% \mkpart deliberately not defined: the comparison is binary by design (see S1.3).
+\newcommand{\mknone}{\Circle}
+
+% Code listings (Python); literate maps the Greek symbols used in the SIRS example
+\lstset{basicstyle=\ttfamily\small,breaklines=true,columns=fullflexible,keepspaces=true,
+  literate={β}{{$\beta$}}1 {γ}{{$\gamma$}}1 {ξ}{{$\xi$}}1}
 
 \raggedbottom
 

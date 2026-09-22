@@ -10,13 +10,19 @@ still open (nothing so far depends on it).
 - `main.tex` — the manuscript itself. `\input`s each file in `sections/`
   in order.
 - `sections/` — one file per section (introduction, methods, results,
-  discussion). All PLACEHOLDER content right now — nothing has been
-  migrated from the old working drafts yet.
+  discussion). Introduction and Methods were ported from `drafts/intro-v05.md`
+  and `drafts/methods_v05.md` on 2026-09-21; Results and Discussion are still
+  PLACEHOLDER. The `.tex` files are now the working copy, and the markdown
+  drafts are frozen.
 - `supplementary/` — a separate document (`supplement-main.tex`, its own
   `\documentclass`) for Supplementary Information, `\input`ing one file
-  per appendix (S1, S2, ...).
-- `references.bib` — empty for now; will be populated via Zotero's
-  Better BibTeX auto-export.
+  per appendix (S1, S2, ...). Compile it from inside `supplementary/` (its
+  `\bibliography` and `\input` paths assume that working directory).
+- `references.bib` — copy of `lit/epymorph-2026.bib` (Zotero export) with
+  three small patches: `file = {...}` lines removed, `mckinney_data_2010` recast
+  as `@article` (sn-nature.bst crashes on `@inproceedings` without an editor),
+  and `v_individual-level_2020` author fixed. It also has one commented stub,
+  `ning_iterated_2023`, that is not in Zotero yet.
 - `sn-jnl.cls`, `sn-*.bst` — Springer Nature template support files,
   copied from the Overleaf project so this directory compiles standalone
   (not only inside Overleaf).
