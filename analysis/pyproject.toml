@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "manuscript-analysis"
+version = "0.1.0"
+description = "Executable analysis for the epymorph 2.0 manuscript: the two demonstration vignettes and the software-landscape search."
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "epymorph==2.0.0b1",
+    "ipykernel>=7.1.0",
+    "nbclient>=0.10.0",
+    "nbformat>=5.10.4",
+    "openpyxl>=3.1.0",
+    "python-dotenv>=1.0.0",
+    "ruff>=0.15.17",
+    "scipy>=1.14",
+]
+
+# Not a distribution to publish: this file is the dependency manifest `uv sync` reads,
+# and the package declaration is what lets a notebook `import manuscript_analysis`
+# without a `sys.path` insert. matplotlib, numpy and pandas arrive with epymorph.
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
