@@ -25,6 +25,9 @@ them would move the target the models are scored against.
   manuscript's figures and tables; `paths.py` says where everything lives.
 - `lit_search/` -- the software-landscape search pipeline. See its own README.
 
+`src/manuscript_analysis/demos/ADDING-FIGURES.md` -- how to add a figure, and which of
+the three places it belongs in. Read it before changing `export.py`.
+
 `notebooks/demo-flu/`, `notebooks/demo-covid/` -- the exploratory surface: run the models,
 load and score them, draw every panel, and render the composed manuscript figures. These
 are hand-maintained and have no generator; edit them directly.

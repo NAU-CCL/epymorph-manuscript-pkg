@@ -571,7 +571,13 @@ def plot_line_panels(
         handles, labels = axs[0].get_legend_handles_labels()
         unique = dict(zip(labels, handles))
         if legend == "axes":
-            axs[0].legend(list(unique.values()), list(unique), fontsize=6)
+            # An explicit corner, not matplotlib's default `loc="best"`: "best" asks the
+            # renderer which position overlaps the data least, and the answer is not
+            # stable across runs. It made this figure's PNG flip between two byte values
+            # on alternate builds, which is poison for a repository whose premise is
+            # regenerate-and-compare.
+            axs[0].legend(list(unique.values()), list(unique), fontsize=6,
+                          loc="lower left")
         else:
             fig.legend(list(unique.values()), list(unique), loc="outside lower center",
                        ncol=len(unique), fontsize=6, frameon=False)

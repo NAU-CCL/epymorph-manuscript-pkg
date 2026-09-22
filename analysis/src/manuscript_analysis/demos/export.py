@@ -142,7 +142,7 @@ def figure_3_covid(ev, replicate):
 # --- Supplementary: calibration across both demos ---------------------------------
 
 
-def figure_calibration(flu_ev, covid_ev, nominal: float = 0.95):
+def figure_s_calibration(flu_ev, covid_ev, nominal: float = 0.95):
     """Interval coverage against nominal, both demos side by side.
 
     Supplementary by JM's call, 2026-09-21. It still carries a real methodological
@@ -164,7 +164,7 @@ def figure_calibration(flu_ev, covid_ev, nominal: float = 0.95):
     return fig
 
 
-def figure_flu_forecasts(ev):
+def figure_s_flu_forecasts(ev):
     """Supplementary: Demo 1's rolling forecasts at both resolutions.
 
     (a) the six age bands the model actually forecasts, for one state; (b) the state
@@ -197,7 +197,7 @@ def figure_flu_forecasts(ev):
     return fig
 
 
-def figure_covid_forecasts(ev):
+def figure_s_covid_forecasts(ev):
     """Supplementary: Demo 2's rolling forecasts at both resolutions.
 
     (a) the counties the model forecasts, (b) the states those counties are summed into
@@ -255,7 +255,7 @@ def main(argv=None) -> None:
         written += save_figure(fig, "fig2-flu-demographic-structure", args.figures_dir)
         plt.close(fig)
     if "figure-s-flu-forecasts" in wanted:
-        fig = figure_flu_forecasts(flu_ev)
+        fig = figure_s_flu_forecasts(flu_ev)
         written += save_figure(fig, "figS-flu-rolling-forecasts", args.figures_dir)
         plt.close(fig)
 
@@ -266,12 +266,12 @@ def main(argv=None) -> None:
         written += save_figure(fig, "fig3-covid-spatial-structure", args.figures_dir)
         plt.close(fig)
     if "figure-s-covid-forecasts" in wanted:
-        fig = figure_covid_forecasts(covid_ev)
+        fig = figure_s_covid_forecasts(covid_ev)
         written += save_figure(fig, "figS-covid-rolling-forecasts", args.figures_dir)
         plt.close(fig)
 
     if "figure-s-calibration" in wanted:
-        fig = figure_calibration(flu_ev, covid_ev)
+        fig = figure_s_calibration(flu_ev, covid_ev)
         written += save_figure(fig, "figS-calibration-both-demos", args.figures_dir)
         plt.close(fig)
 

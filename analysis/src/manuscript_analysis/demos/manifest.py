@@ -96,7 +96,7 @@ def main(argv=None) -> None:
             continue
         value, _, name = line.partition("  ")
         recorded[name] = value
-    current = dict((name, value) for name, value in found)
+    current = {name: value for name, value in found}
 
     missing = sorted(set(recorded) - set(current))
     added = sorted(set(current) - set(recorded))
