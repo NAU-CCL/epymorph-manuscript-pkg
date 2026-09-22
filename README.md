@@ -85,7 +85,17 @@ committed: the literature-search pipeline's own eight assertions, the demo table
 a fresh generation, and the ensembles against `MANIFEST.sha256`. The demo checks are
 skipped, with a message, when the ensembles are absent.
 
-### 5. Explore, if you want to
+### 5. Publish the generated files to Overleaf
+
+```bash
+scripts/publish-results.sh            # report
+scripts/publish-results.sh --apply    # copy, then verify
+```
+
+Then, in the Overleaf clone: `git add -A && git commit && git push`, and click **Pull**
+in Overleaf's GitHub panel.
+
+### 6. Explore, if you want to
 
 ```bash
 cd analysis && uv run jupyter lab notebooks/
@@ -117,7 +127,8 @@ results/
   demos/tables/     the manuscript's tables, .csv and .tex
   demos/runs/       the ensembles. NOT in git.
   lit-search/       shortlists, register, PRISMA flow, Table 1
-scripts/            run-demos.sh, build-figures.sh, check.sh, sync-manuscript.sh
+scripts/            run-demos.sh, build-figures.sh, check.sh,
+                    sync-manuscript.sh, publish-results.sh
 ```
 
 Each subdirectory has its own README with the detail.
@@ -147,14 +158,38 @@ The manuscript is edited in Overleaf, which round-trips with the separate
 `manuscript/` here: it reports by default, copies with `--apply`, verifies byte-equality
 afterwards, and refuses when a file is newer here than in Overleaf.
 
-Generated tables and figures travel the other way: `results/` is built here, and the
-manuscript `\input`s or includes them. **Never hand-edit a generated table**, in either
-repository; `scripts/check.sh` is what catches it if someone does.
+Generated figures, tables and numbers travel the other way, via
+`scripts/publish-results.sh`.
+
+**The two scripts are not a bidirectional sync.** They are two one-way mirrors over
+**disjoint sets of files**, which is what makes the arrangement safe:
+
+| | written by | direction |
+|---|---|---|
+| `main.tex`, `sections/`, `supplementary/`, `references.bib` | a human, in Overleaf | Overleaf -> here |
+| `figures/`, `tables/`, `manuscript-numbers.tex` | this repository's scripts | here -> Overleaf |
+
+No file is ever written by both sides, so neither script can lose an edit the other made.
+`publish-results.sh` additionally warns when a generated `.tex` in Overleaf has lost its
+`% GENERATED` header, which is what a hand-edit looks like from the outside.
+
+**Never hand-edit a generated table**, in either repository; `scripts/check.sh` catches it
+here, and the publish script's warning catches it there.
+
+The manuscript includes them the usual way:
+
+```latex
+\graphicspath{{figures/}}
+\includegraphics[width=\textwidth]{fig2-flu-demographic-structure}
+\input{tables/flu-skill}
+```
 
 ---
 
 ## Still to come
 
+- Referencing the generated figures and tables from the LaTeX: they are published into
+  Overleaf but nothing `\input`s them yet.
 - `scripts/build.sh`: the whole chain, analysis through to a compiled PDF, plus the
   "flatten to one file" step Springer Nature's submission format wants.
 - `results/manuscript-numbers.tex`: generated `\newcommand` macros so prose quotes
