@@ -162,18 +162,15 @@ OMITTED = {
 LANGUAGE_IN_TABLE_1 = False
 
 CAPTION_T1 = (
-    "\\textbf{Capabilities of epymorph and eleven comparator packages for mechanistic "
-    "epidemic modelling and forecasting.} \\mkfull{}, the package provides a dedicated "
-    "construct, API or data service for the capability; \\mknone{}, it does not. Each cell "
-    "is a binary judgement against a single stated criterion; the criteria, the evidence "
-    "for every mark, and the two further packages surveyed are given in Supplementary "
+    "\\textbf{Capabilities of epymorph and eleven other packages for mechanistic "
+    "epidemic modeling and forecasting.} \\mkfull{}, the package provides a dedicated "
+    "construct, API or data service for the capability; \\mknone{}, it does not. "
+    "Additional packages are discussed in Supplementary "
     "\\S\\ref{sec:S1-3} and Table~\\ref{tab:S1}. Packages are grouped by the role they are "
     "designed for: \\emph{Pipelines}, end-to-end; \\emph{Toolkits}, inference toolkits; "
-    "\\emph{Simulation tools}, simulation and calibration. Shown here are the capabilities "
-    "that separate these packages; probabilistic calibration and uncertainty quantification "
-    "is omitted because all fourteen provide it, which is itself worth recording. "
+    "\\emph{Simulation tools}, simulation and calibration."
     "\\textsuperscript{a}One package that retrieves both the model inputs and the "
-    "calibration target, fits the model to them, and generates forecasts."
+    "observation (i.e., surveillance) target, fits the model to them, and generates forecasts."
 )
 
 CAPTION_S1 = (
