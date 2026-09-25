@@ -1,7 +1,7 @@
 jurisdiction,quantity,counties + commuting,"counties, no movement",no spatial structure,movement / state,county / state,movement / county
-CT,hospital census,104.914,113.867,95.954,1.093,1.187,0.921
-CT,weekly deaths,21.565,22.204,18.901,1.141,1.175,0.971
-MA,hospital census,150.46,168.623,108.628,1.385,1.552,0.892
-MA,weekly deaths,27.461,30.383,22.158,1.239,1.371,0.904
-NH,hospital census,38.354,39.555,24.654,1.556,1.604,0.97
-NH,weekly deaths,7.768,7.924,6.425,1.209,1.233,0.98
+CT,hospital census,0.137,0.144,0.118,1.103,1.161,0.949
+CT,weekly deaths,0.141,0.14,0.119,1.086,1.057,1.027
+MA,hospital census,0.124,0.131,0.103,1.05,1.09,0.964
+MA,weekly deaths,0.106,0.114,0.11,0.865,0.912,0.949
+NH,hospital census,0.215,0.227,0.187,1.085,1.118,0.97
+NH,weekly deaths,0.233,0.241,0.228,1.055,1.097,0.962

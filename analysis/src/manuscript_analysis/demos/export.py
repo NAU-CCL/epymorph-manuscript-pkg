@@ -42,6 +42,10 @@ absolute performance and invites the models to be judged as forecasters rather t
 controlled comparison. The text states the over-prediction rather than leaving a reviewer
 to find it.
 
+**Every score in these figures is log WIS**, and every ratio is relative log WIS, the
+ratio of geometric means, as in CDC's FluSight evaluations. That is set in one place,
+`lib.scoring.HEADLINE_SCALE`, which `load()` defaults to; nothing here names a scale.
+
 Usage:
 
     python export_manuscript.py                  # everything, into figures/
@@ -83,9 +87,10 @@ moves the paper and the notebook together. Demo 2's equivalent is `focus_countie
 def figure_2_flu(ev, replicate):
     """Figure 2: four panels in three rows, the same four Figure 3 has.
 
-    Panel (d) is the headline. Pooled WIS, which is what panel (b) shows, is dominated by
-    the four largest states, so the distribution over jurisdictions is both the stronger
-    statistic and the more honest one, and it is the only panel that draws both seeds.
+    Panel (d) is the headline. Panel (b) is pooled log WIS, which weights jurisdictions far
+    more evenly than natural-scale WIS (where the four largest states dominate), but it is
+    still one pooled number; the distribution over jurisdictions is the stronger statistic
+    and the more honest one, and it is the only panel that draws both seeds.
     """
     fig = plt.figure(figsize=(DOUBLE_COLUMN, 8.3), layout="constrained")
     top, channels, benefit = fig.subfigures(3, 1, height_ratios=[2.5, 3.4, 2.4])

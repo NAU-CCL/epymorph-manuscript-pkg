@@ -1,7 +1,7 @@
-model,quantity,WIS,rel WIS,cov95,cov50
-counties + commuting,hospital census,97.91,1.281,0.753,0.295
-counties + commuting,weekly deaths,18.931,1.196,0.872,0.385
-"counties, no movement",hospital census,107.348,1.405,0.774,0.288
-"counties, no movement",weekly deaths,20.171,1.274,0.844,0.382
-no spatial structure,hospital census,76.412,1.0,1.0,0.51
-no spatial structure,weekly deaths,15.828,1.0,0.958,0.552
+model,quantity,WIS,rel WIS,log WIS,rel log WIS,cov95,cov50
+counties + commuting,hospital census,97.91,1.106,0.159,1.079,0.753,0.295
+counties + commuting,weekly deaths,18.931,1.028,0.16,0.997,0.872,0.385
+"counties, no movement",hospital census,107.348,1.163,0.167,1.123,0.774,0.288
+"counties, no movement",weekly deaths,20.171,1.058,0.165,1.018,0.844,0.382
+no spatial structure,hospital census,76.412,1.0,0.136,1.0,1.0,0.51
+no spatial structure,weekly deaths,15.828,1.0,0.152,1.0,0.958,0.552

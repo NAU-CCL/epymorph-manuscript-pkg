@@ -503,6 +503,7 @@ def plot_line_panels(
     xticks: Sequence | None = None,
     ylim: tuple[float, float] | None = None,
     legend: bool | str = True,
+    legend_loc: str = "lower left",
     figure_width: float = 7.20,
     panel_height: float = 2.1,
     share_y: bool = True,
@@ -529,6 +530,9 @@ def plot_line_panels(
         put it inside the first panel. Use ``"axes"`` when this figure is a subfigure
         sitting *beside* another one: two "outside" legends are both placed against the
         parent figure and land on top of each other.
+    legend_loc :
+        The corner an ``"axes"`` legend sits in. Pick the one the data leaves empty:
+        coverage curves fall away from the top, skill curves rise away from the bottom.
     """
     shapes = {np.asarray(v).shape for v in series.values()}
     if len(shapes) != 1:
@@ -577,7 +581,7 @@ def plot_line_panels(
             # on alternate builds, which is poison for a repository whose premise is
             # regenerate-and-compare.
             axs[0].legend(list(unique.values()), list(unique), fontsize=6,
-                          loc="lower left")
+                          loc=legend_loc)
         else:
             fig.legend(list(unique.values()), list(unique), loc="outside lower center",
                        ncol=len(unique), fontsize=6, frameon=False)

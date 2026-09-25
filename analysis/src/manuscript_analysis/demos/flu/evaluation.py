@@ -41,7 +41,11 @@ from manuscript_analysis.demos.lib.results import (
 )
 from manuscript_analysis.demos.lib.scoring import (
     DEMO_QUANTILE_LEVELS,
+    HEADLINE_SCALE,
+    SCORE_LABELS,
+    check_scale,
     interval_coverage,
+    relative_wis,
     weighted_interval_score,
 )
 
@@ -120,6 +124,8 @@ class Evaluation(NamedTuple):
     observed: np.ndarray
     """`(origins, horizons, locations)`; identical for every model, and checked."""
     scores: dict
+    scale: str
+    """What `scores` are computed on: `"log"` (the manuscript's) or `"natural"`."""
     coverage: dict
     origins: np.ndarray
     horizons: np.ndarray
@@ -145,8 +151,13 @@ def load(
     levels: Sequence[float] = DEMO_QUANTILE_LEVELS,
     folders: Mapping[str, str] | None = None,
     observations_csv: str | Path | None = None,
+    scale: str = HEADLINE_SCALE,
 ) -> Evaluation:
     """Load every model's output, align it to the observations, and score it.
+
+    `scale` names the scale the scores are computed on: `"log"`, the default and what
+    the manuscript reports, transforms observations and forecasts by `log(x + 1)` before
+    scoring; `"natural"` scores the counts as they are. Coverage is the same either way.
 
     `folders` maps a model name to the folder holding its run, for output trees whose
     folders are named for the run rather than for the model (`sensitivity/`). The name
@@ -157,6 +168,7 @@ def load(
     tree has none of its own: every run is scored against the one frozen file, which is
     the whole point of freezing it.
     """
+    transform = check_scale(scale)
     output_root = Path(output_root or paths.runs("flu", seed=0))
     folders = dict(folders or {name: name for name in models})
     runs = load_runs(output_root, [folders[name] for name in models])
@@ -190,7 +202,7 @@ def load(
             raise ValueError(f"{name} was scored against different observations")
 
     scores = {
-        name: weighted_interval_score(reference, forecasts[name], levels)
+        name: weighted_interval_score(reference, forecasts[name], levels, transform)
         for name in models
     }
     coverage = {
@@ -208,6 +220,7 @@ def load(
         forecasts=forecasts,
         observed=reference,
         scores=scores,
+        scale=scale,
         coverage=coverage,
         origins=first["reference_date"],
         horizons=first["horizon"],
@@ -219,6 +232,7 @@ def load(
 def load_replicate(
     models: Sequence[str] = MODELS,
     levels: Sequence[float] = DEMO_QUANTILE_LEVELS,
+    scale: str = HEADLINE_SCALE,
 ) -> Evaluation:
     """The seed-1 replicate of the manuscript run, scored identically.
 
@@ -230,20 +244,28 @@ def load_replicate(
         output_root=paths.runs("flu", seed=REPLICATE_SEED),
         models=models,
         levels=levels,
+        scale=scale,
     )
 
 
 def wis_table(ev: Evaluation) -> pd.DataFrame:
-    """Pooled and per-horizon WIS with coverage, one row per model."""
+    """Pooled and per-horizon WIS with coverage, one row per model.
+
+    Columns are named for the scale, `WIS` or `log WIS`. The scores are arithmetic means;
+    the relative column is the ratio of geometric means (`relative_wis`), so it is not
+    simply one mean divided by another.
+    """
+    label = SCORE_LABELS[ev.scale]
+    baseline = ev.scores[BASELINE].total
     return pd.DataFrame(
         {
-            "WIS": [ev.scores[m].total.mean() for m in ev.scores],
+            label: [ev.scores[m].total.mean() for m in ev.scores],
             **{
                 f"h{h}": [ev.scores[m].total[:, i].mean() for m in ev.scores]
                 for i, h in enumerate(ev.horizons)
             },
-            "rel WIS": [
-                ev.scores[m].total.mean() / ev.scores[BASELINE].total.mean()
+            f"rel {label}": [
+                float(relative_wis(ev.scores[m].total, baseline))
                 for m in ev.scores
             ],
             "cov95": [ev.coverage[0.95][m].mean() for m in ev.scores],
@@ -259,6 +281,9 @@ def wis_by_jurisdiction(
     sort_by: str | None = None,
 ) -> pd.DataFrame:
     """Mean WIS per jurisdiction, one row per jurisdiction and one column per model.
+
+    The model columns are arithmetic means on `ev.scale`; the ratio columns are relative
+    WIS, the ratio of geometric means, exactly as Figure 2(d) draws them.
 
     The per-jurisdiction detail behind the pooled table and behind Figure 2(d), for the
     supplement. Ratios against the baseline are included because a column of raw WIS is
@@ -277,7 +302,7 @@ def wis_by_jurisdiction(
         frame[model] = ev.scores[model].total.mean(axis=(0, 1))
     for model in models:
         if model != BASELINE:
-            frame[f"{model} / {BASELINE}"] = frame[model] / frame[BASELINE]
+            frame[f"{model} / {BASELINE}"] = relative_by_unit(ev, model)
 
     if sort_by is not None:
         if sort_by not in frame.columns:
@@ -291,14 +316,14 @@ def wis_by_jurisdiction(
 
 
 def relative_by_unit(ev: Evaluation, model: str) -> np.ndarray:
-    """Per-jurisdiction WIS ratio against the baseline; below 1 means `model` is better.
+    """Per-jurisdiction relative WIS against the baseline; below 1 means `model` is better.
 
-    Named for the *unit* rather than the jurisdiction so Demo 1 and Demo 2 can use one
+    The ratio of geometric means over origins and horizons, on `ev.scale`. Named for the
+    *unit* rather than the jurisdiction so Demo 1 and Demo 2 can use one
     name for one idea; Demo 2's units are counties.
     """
-    return (
-        ev.scores[model].total.mean(axis=(0, 1))
-        / ev.scores[BASELINE].total.mean(axis=(0, 1))
+    return relative_wis(
+        ev.scores[model].total, ev.scores[BASELINE].total, axis=(0, 1)
     )
 
 
@@ -653,11 +678,12 @@ def figure_wis_by_horizon(
         ev.horizons,
         series,
         colors={LABELS[model]: COLORS[model] for model in ev.scores},
-        ylabel="WIS",
+        ylabel=SCORE_LABELS[ev.scale],
         xlabel="horizon (weeks ahead)",
         xticks=ev.horizons,
         suptitle=title,
         legend=legend,
+        legend_loc="upper left",
         figure_width=SINGLE_COLUMN,
         panel_height=2.3,
         subfig=subfig,
@@ -737,8 +763,9 @@ def figure_relative_wis_swarm(
 
     fig, ax = panel_grid(1, 1, subfig=subfig, figsize=(ONE_AND_HALF_COLUMN, 2.5))
     ax = ax[0, 0]
-    plot_ratio_swarm(ax, rows)
-    ax.set_xlabel(f"WIS relative to {LABELS[BASELINE]}")
+    # Relative log WIS sits much closer to 1 than natural-scale ratios did.
+    plot_ratio_swarm(ax, rows, ticks=(0.8, 0.9, 1.0, 1.1, 1.25, 1.5))
+    ax.set_xlabel(f"{SCORE_LABELS[ev.scale]} relative to {LABELS[BASELINE]}")
     heading = resolve_title(
         title,
         "one jurisdiction is a pair of dots, one per seed"

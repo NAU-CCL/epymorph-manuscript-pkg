@@ -9,9 +9,20 @@ Scoring convention follows the US forecasting hubs (Bracher et al. 2021):
 the weighted interval score (WIS) approximates CRPS as the number of central
 intervals grows, and decomposes into dispersion, underprediction and
 overprediction components.
+
+**Transformed scales.** Every score can be computed on a transformed scale by passing a
+``transform``, which is applied to the observations and to every forecast quantile
+*before* scoring (Bosse et al. 2023), as the companion FluSight pipeline's ``wis_score``
+does. The transform must be increasing, which is what makes it legitimate to apply it to
+quantiles directly: the quantile of ``f(Y)`` is ``f`` of the quantile of ``Y``. It is also
+why ``interval_coverage`` takes no transform: an increasing transform cannot move an
+observation into or out of an interval.
+
+**Relative skill.** ``relative_wis`` compares two models by the ratio of their geometric
+mean scores, which is how CDC's FluSight evaluations define relative WIS.
 """
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import NamedTuple
 
 import numpy as np
@@ -45,6 +56,52 @@ HUB_QUANTILE_LEVELS = (
 
 # The five levels the existing demo notebooks already compute.
 DEMO_QUANTILE_LEVELS = (0.025, 0.25, 0.5, 0.75, 0.975)
+
+Transform = Callable[[np.ndarray], np.ndarray]
+
+
+def log_plus_one(values: np.ndarray) -> np.ndarray:
+    """``log(x + 1)``, the transform behind "log WIS".
+
+    The offset is needed, not merely conventional: the frozen observations contain zeros
+    (a third of county-week death counts), where a plain log is minus infinity. A WIS on
+    this scale measures relative rather than absolute error, so a pooled mean is no longer
+    dominated by the largest jurisdictions.
+    """
+    return np.log1p(values)
+
+
+SCALES: dict[str, Transform | None] = {
+    "natural": None,
+    "log": log_plus_one,
+}
+"""The scales a demo can be scored on, by name. A name rather than a bare function
+because the scale has to appear in axis labels and table captions."""
+
+SCORE_LABELS = {
+    "natural": "WIS",
+    "log": "log WIS",
+}
+"""What a score on each scale is called in a figure or a table."""
+
+HEADLINE_SCALE = "log"
+"""The scale the manuscript's figures and headline tables are scored on, following CDC's
+FluSight evaluations. The skill tables report the natural scale beside it."""
+
+
+def check_scale(scale: str) -> Transform | None:
+    """The transform for a named scale, or a clear error naming the valid ones."""
+    if scale not in SCALES:
+        raise ValueError(f"unknown scale {scale!r}; expected one of {sorted(SCALES)}")
+    return SCALES[scale]
+
+
+def _apply(transform: Transform | None, values: np.ndarray) -> np.ndarray:
+    """Convert to float and apply ``transform``, if there is one."""
+    values = np.asarray(values, dtype=np.float64)
+    if transform is None:
+        return values
+    return transform(values)
 
 
 class WIS(NamedTuple):
@@ -99,6 +156,7 @@ def weighted_interval_score(
     observations: np.ndarray,
     forecasts: np.ndarray,
     quantile_levels: Sequence[float] = DEMO_QUANTILE_LEVELS,
+    transform: Transform | None = None,
 ) -> WIS:
     """Compute the weighted interval score for a quantile forecast.
 
@@ -111,6 +169,9 @@ def weighted_interval_score(
         last axis in increasing level order.
     quantile_levels :
         The quantile levels, sorted, symmetric about 0.5, and including 0.5.
+    transform :
+        An increasing function applied to observations and forecasts before scoring,
+        e.g. ``log_plus_one``. ``None`` scores on the natural scale.
 
     Returns
     -------
@@ -118,8 +179,8 @@ def weighted_interval_score(
         The score and its components, each of shape ``(...)``.
     """
     levels = _check_levels(quantile_levels)
-    observations = np.asarray(observations, dtype=np.float64)
-    forecasts = np.asarray(forecasts, dtype=np.float64)
+    observations = _apply(transform, observations)
+    forecasts = _apply(transform, forecasts)
 
     if forecasts.shape[-1] != levels.size:
         raise ValueError(
@@ -214,11 +275,50 @@ def median_absolute_error(
     observations: np.ndarray,
     forecasts: np.ndarray,
     quantile_levels: Sequence[float] = DEMO_QUANTILE_LEVELS,
+    transform: Transform | None = None,
 ) -> np.ndarray:
-    """Absolute error of the predictive median, in the units of the data."""
+    """Absolute error of the predictive median, on the scale ``transform`` gives."""
     levels = _check_levels(quantile_levels)
     median_index = int(np.flatnonzero(np.isclose(levels, 0.5))[0])
-    return np.abs(
-        np.asarray(observations, dtype=np.float64)
-        - np.asarray(forecasts, dtype=np.float64)[..., median_index]
+    observations = _apply(transform, observations)
+    forecasts = _apply(transform, forecasts)
+    return np.abs(observations - forecasts[..., median_index])
+
+
+def relative_wis(
+    scores: np.ndarray,
+    baseline: np.ndarray,
+    axis: int | tuple[int, ...] | None = None,
+) -> np.ndarray:
+    """Relative WIS: the ratio of geometric mean scores, model over baseline.
+
+    Below 1 means the model is better. This is the definition CDC's FluSight evaluations
+    use. A geometric mean suits a ratio in a way an arithmetic one does not: halving and
+    doubling are equally far from 1, and no single large forecast dominates.
+
+    Parameters
+    ----------
+    scores, baseline :
+        WIS totals of the same shape, paired forecast by forecast.
+    axis :
+        The axes to average over; ``None`` pools everything. Averaging over
+        ``(origins, horizons)`` gives one ratio per location.
+
+    A WIS of exactly zero, a perfect forecast of a zero count, has no logarithm. Such a
+    forecast is dropped **together with its partner**, so both models are always averaged
+    over the same forecasts. This happens only in the county-scale death counts, where a
+    few dozen of some three thousand county-weeks are affected.
+    """
+    scores = np.asarray(scores, dtype=np.float64)
+    baseline = np.asarray(baseline, dtype=np.float64)
+    if scores.shape != baseline.shape:
+        raise ValueError(
+            f"scores shape {scores.shape} does not match baseline {baseline.shape}"
+        )
+    usable = (scores > 0) & (baseline > 0)
+    # Substitute 1 (log 0) where a pair is dropped, then exclude it from the count.
+    log_ratio = np.log(np.where(usable, scores, 1.0)) - np.log(
+        np.where(usable, baseline, 1.0)
     )
+    mean_log_ratio = log_ratio.sum(axis=axis) / usable.sum(axis=axis)
+    return np.exp(mean_log_ratio)

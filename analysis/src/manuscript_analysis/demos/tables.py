@@ -13,12 +13,17 @@ Six tables, in the order the supplement wants them:
 
 | file | what it is |
 |---|---|
-| `flu-skill` | pooled and per-horizon WIS, relative WIS, coverage, one row per model |
+| `flu-skill` | WIS and log WIS with their relative forms, per-horizon log WIS, coverage |
 | `flu-reproducibility` | median ratio, wins and sign test at both seeds |
 | `flu-by-jurisdiction` | all 51 scored jurisdictions; a reference table, see its caption |
-| `covid-skill` | one row per model per quantity |
-| `covid-reproducibility` | relative WIS at both seeds and their geometric mean |
+| `covid-skill` | WIS and log WIS with their relative forms, one row per model per quantity |
+| `covid-reproducibility` | relative log WIS at both seeds and their geometric mean |
 | `covid-by-state` | the three scored states, both quantities, with the movement contrast |
+
+**Scales.** The manuscript's headline scale is log WIS, as in CDC's FluSight evaluations
+(`scoring.HEADLINE_SCALE`). The two skill tables report the natural scale beside it; every
+other table, like every figure, is on the log scale only. Relative WIS is always the ratio
+of geometric means (`scoring.relative_wis`).
 
 Usage:
 
@@ -38,6 +43,7 @@ from manuscript_analysis.demos import paths
 from manuscript_analysis.demos.covid import evaluation as covid
 from manuscript_analysis.demos.flu import evaluation as flu
 from manuscript_analysis.demos.lib.figures import use_manuscript_style
+from manuscript_analysis.demos.lib.scoring import SCORE_LABELS
 
 HERE = Path(__file__).resolve().parent
 
@@ -142,9 +148,24 @@ def _to_latex(
 # --- Demo 1 -----------------------------------------------------------------------
 
 
-def flu_skill(ev) -> pd.DataFrame:
-    """Pooled and per-horizon WIS with coverage, one row per model."""
-    frame = flu.wis_table(ev)
+def _both_scales(natural: pd.DataFrame, log: pd.DataFrame) -> pd.DataFrame:
+    """The natural-scale score and its relative form, then everything on the log scale.
+
+    Coverage is taken from the log table. It does not depend on the scale, and this
+    checks that rather than assuming it.
+    """
+    for column in ("cov95", "cov50"):
+        if not np.allclose(natural[column], log[column]):
+            raise ValueError(f"{column} differs between scales; it should not")
+    return pd.concat([natural[["WIS", "rel WIS"]], log], axis=1)
+
+
+def flu_skill(ev, natural_ev) -> pd.DataFrame:
+    """WIS and log WIS with relative forms, per-horizon log WIS and coverage, by model."""
+    log = flu.wis_table(ev)
+    first = ["log WIS", "rel log WIS"]
+    log = log[first + [column for column in log.columns if column not in first]]
+    frame = _both_scales(flu.wis_table(natural_ev), log)
     frame.index = [flu.LABELS[model] for model in frame.index]
     frame.index.name = "model"
     return frame.round(3)
@@ -199,9 +220,9 @@ def flu_by_jurisdiction(ev) -> pd.DataFrame:
 # --- Demo 2 -----------------------------------------------------------------------
 
 
-def covid_skill(ev) -> pd.DataFrame:
-    """Mean WIS per model per quantity, with the ratio against the baseline."""
-    frame = covid.wis_table(ev)
+def covid_skill(ev, natural_ev) -> pd.DataFrame:
+    """WIS and log WIS per model per quantity, with relative forms and coverage."""
+    frame = _both_scales(covid.wis_table(natural_ev), covid.wis_table(ev))
     frame.index = pd.MultiIndex.from_tuples(
         [(covid.LABELS[model], covid.AXIS_LABELS[quantity])
          for model, quantity in frame.index],
@@ -216,22 +237,21 @@ def covid_reproducibility(ev, replicate) -> pd.DataFrame:
     The geometric mean rather than the arithmetic one because these are ratios: the
     average of 0.5 and 2.0 should be 1.0, not 1.25.
     """
+    label = f"rel {SCORE_LABELS[ev.scale]}"
     rows = []
     for quantity in covid.QUANTITIES:
         for model in covid.MODELS:
             if model == covid.BASELINE:
                 continue
-            first = (ev.scores[model][quantity].total.mean()
-                     / ev.scores[covid.BASELINE][quantity].total.mean())
+            first = covid.relative_pooled(ev, model, quantity)
             row = {
                 "model": covid.LABELS[model],
                 "quantity": covid.AXIS_LABELS[quantity],
-                "rel WIS, seed 0": round(float(first), 3),
+                f"{label}, seed 0": round(first, 3),
             }
             if replicate is not None:
-                second = (replicate.scores[model][quantity].total.mean()
-                          / replicate.scores[covid.BASELINE][quantity].total.mean())
-                row["rel WIS, seed 1"] = round(float(second), 3)
+                second = covid.relative_pooled(replicate, model, quantity)
+                row[f"{label}, seed 1"] = round(second, 3)
                 row["geometric mean"] = round(float(np.sqrt(first * second)), 3)
             rows.append(row)
     return pd.DataFrame(rows).set_index(["model", "quantity"])
@@ -257,69 +277,90 @@ REPRODUCIBILITY_NOTE = (
     "per-unit assignment is not; see the caption of the per-unit table."
 )
 
+SCALE_NOTE = (
+    r"\emph{log WIS} is scored after transforming observations and forecast quantiles "
+    r"by $\log(x+1)$, following CDC's FluSight evaluations in scoring on the log scale; "
+    r"the offset is needed because some counts are zero. \emph{rel} columns are "
+    r"relative WIS, as FluSight defines it: the geometric mean "
+    r"score of each model divided by that of the baseline over the same forecasts, so "
+    r"they are not the ratio of the arithmetic means beside them."
+)
+
 JURISDICTION_NOTE = (
     "\\textbf{A reference table, not a ranking.} The distribution of the ratio is "
     "reproducible across ensemble seeds but the per-jurisdiction assignment is not, so "
     "the ordering of these rows carries no claim about any individual jurisdiction. "
-    "Ratios below~1 favour the stratified model."
+    "Ratios below~1 favour the stratified model. Scores are log WIS; ratios are relative "
+    "log WIS, the ratio of geometric means."
 )
 
 
 CAPTIONS = {
     "flu-skill": (
         r"\textbf{Demo 1: forecast skill by model.} Weighted interval score pooled over "
-        r"25 forecast origins and 51 jurisdictions, and separately at each horizon "
-        r"(h0--h3, weeks ahead). Lower is better. \emph{rel WIS} is the ratio against "
-        r"the unstratified model; \emph{cov95} and \emph{cov50} are empirical coverage "
-        r"of the nominal 95\% and 50\% prediction intervals."
+        r"25 forecast origins and 51 jurisdictions, on the natural and the log scale, "
+        r"with log WIS also shown separately at each horizon (h0--h3, weeks ahead). "
+        r"Lower is better. Relative scores are against the unstratified model; "
+        r"\emph{cov95} and \emph{cov50} are empirical coverage of the nominal 95\% and "
+        r"50\% prediction intervals, which does not depend on the scale."
     ),
     "flu-reproducibility": (
         r"\textbf{Demo 1: the comparison at two ensemble seeds.} Median of the "
-        r"per-jurisdiction WIS ratio against the unstratified model, the number of "
+        r"per-jurisdiction relative log WIS against the unstratified model, the number of "
         r"jurisdictions the structured model wins, and a two-sided sign test on that "
         r"count. Both seeds use $R=300$ realizations and are scored against the same "
         r"frozen observations, with every model re-run at each seed."
     ),
     "flu-by-jurisdiction": (
-        r"\textbf{Demo 1: mean WIS by jurisdiction.} One row per scored jurisdiction, "
+        r"\textbf{Demo 1: mean log WIS by jurisdiction.} One row per scored jurisdiction, "
         r"sorted by the empirical-mixing ratio."
     ),
     "covid-skill": (
         r"\textbf{Demo 2: forecast skill by model and quantity.} Weighted interval score "
-        r"pooled over forecast origins and the three scored states. There is no pooled "
+        r"pooled over forecast origins and the three scored states, on the natural and "
+        r"the log scale, with coverage as in Demo 1. There is no pooled "
         r"score across quantities: a hospital census is a stock and deaths are a flow, so "
         r"adding their scores would mean nothing."
     ),
     "covid-reproducibility": (
-        r"\textbf{Demo 2: the comparison at two ensemble seeds.} Relative WIS against the "
+        r"\textbf{Demo 2: the comparison at two ensemble seeds.} Relative log WIS against the "
         r"model with no spatial structure, at each seed and as their geometric mean."
     ),
     "covid-by-state": (
-        r"\textbf{Demo 2: mean WIS by state and quantity.} The final column is the "
+        r"\textbf{Demo 2: mean log WIS by state and quantity.} Ratio columns are relative "
+        r"log WIS. The final column is the "
         r"informative contrast for the movement question: the same 32 counties with "
         r"commuting on against commuting off, at identical spatial resolution."
     ),
 }
 
 NOTES = {
+    "flu-skill": SCALE_NOTE,
+    "covid-skill": SCALE_NOTE,
     "flu-reproducibility": REPRODUCIBILITY_NOTE,
     "covid-reproducibility": REPRODUCIBILITY_NOTE,
     "flu-by-jurisdiction": JURISDICTION_NOTE,
 }
 
 
-def build(flu_ev, flu_replicate, covid_ev, covid_replicate) -> dict:
+def build(
+    flu_ev, flu_replicate, covid_ev, covid_replicate, flu_natural, covid_natural
+) -> dict:
     """Every table, as `name -> (frame, caption, label, note)`.
+
+    The first four evaluations are on the headline (log) scale; `flu_natural` and
+    `covid_natural` are the same seed-0 runs scored on the natural scale, for the two
+    skill tables.
 
     Captions live in `CAPTIONS` rather than inline so that this function reads as the
     list of tables it is, and so a caption can be reworded without touching the code
     that computes the numbers it describes.
     """
     frames = {
-        "flu-skill": flu_skill(flu_ev),
+        "flu-skill": flu_skill(flu_ev, flu_natural),
         "flu-reproducibility": flu_reproducibility(flu_ev, flu_replicate),
         "flu-by-jurisdiction": flu_by_jurisdiction(flu_ev),
-        "covid-skill": covid_skill(covid_ev),
+        "covid-skill": covid_skill(covid_ev, covid_natural),
         "covid-reproducibility": covid_reproducibility(covid_ev, covid_replicate),
         "covid-by-state": covid_by_state(covid_ev),
     }
@@ -352,7 +393,12 @@ def main(argv=None) -> None:
     covid_ev = covid.load()
     covid_replicate = covid.load_replicate()
 
-    tables = build(flu_ev, flu_replicate, covid_ev, covid_replicate)
+    flu_natural = flu.load(scale="natural")
+    covid_natural = covid.load(scale="natural")
+
+    tables = build(
+        flu_ev, flu_replicate, covid_ev, covid_replicate, flu_natural, covid_natural
+    )
 
     if args.check:
         drifted = []

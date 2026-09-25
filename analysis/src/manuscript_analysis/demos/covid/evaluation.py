@@ -48,7 +48,12 @@ from manuscript_analysis.demos.lib.results import (
 )
 from manuscript_analysis.demos.lib.scoring import (
     DEMO_QUANTILE_LEVELS,
+    HEADLINE_SCALE,
+    SCORE_LABELS,
+    SCALES,
+    check_scale,
     interval_coverage,
+    relative_wis,
     weighted_interval_score,
 )
 
@@ -72,6 +77,7 @@ __all__ = [
     "load_replicate",
     "node_forecasts",
     "relative_by_unit",
+    "relative_pooled",
     "wis_by_location",
     "wis_table",
 ]
@@ -136,6 +142,8 @@ class Evaluation(NamedTuple):
     scores: dict[str, dict[str, object]]
     """`scores[model][quantity]`. There is no pooled score across quantities: a census
     and a death count are not commensurate, so adding their WIS would be meaningless."""
+    scale: str
+    """What `scores` are computed on: `"log"` (the manuscript's) or `"natural"`."""
     coverage: dict
     """`coverage[nominal][model][quantity]`."""
     origins: np.ndarray
@@ -215,14 +223,20 @@ def load(
     models: Sequence[str] = MODELS,
     levels: Sequence[float] = DEMO_QUANTILE_LEVELS,
     observations_csv: str | Path | None = None,
+    scale: str = HEADLINE_SCALE,
 ) -> Evaluation:
     """Load every model's output, align it to the observations, and score it.
+
+    `scale` names the scale the scores are computed on: `"log"`, the default and what
+    the manuscript reports, transforms observations and forecasts by `log(x + 1)` before
+    scoring; `"natural"` scores the counts as they are. Coverage is the same either way.
 
     `observations_csv` defaults to `observations.csv` beside the runs. The replicate tree
     has none of its own: both seeds are scored against the one frozen file, which is the
     whole point of freezing it, and here it matters more than in Demo 1 because the
     suppressed-death imputation is a random draw.
     """
+    transform = check_scale(scale)
     output_root = Path(output_root or paths.runs("covid", seed=0))
     runs = load_runs(output_root, list(models))
 
@@ -260,7 +274,7 @@ def load(
     for name in models:
         scores[name] = {
             quantity: weighted_interval_score(
-                reference[..., i], forecasts[name][..., i, :], levels
+                reference[..., i], forecasts[name][..., i, :], levels, transform
             )
             for i, quantity in enumerate(QUANTITIES)
         }
@@ -281,6 +295,7 @@ def load(
         forecasts=forecasts,
         observed=reference,
         scores=scores,
+        scale=scale,
         coverage=coverage,
         origins=first["reference_date"],
         horizons=first["horizon"],
@@ -292,6 +307,7 @@ def load(
 def load_replicate(
     models: Sequence[str] = MODELS,
     levels: Sequence[float] = DEMO_QUANTILE_LEVELS,
+    scale: str = HEADLINE_SCALE,
 ) -> Evaluation:
     """The seed-1 replicate, scored identically against the same frozen observations.
 
@@ -303,42 +319,67 @@ def load_replicate(
         output_root=paths.runs("covid", seed=REPLICATE_SEED),
         models=models,
         levels=levels,
+        scale=scale,
     )
 
 
 def wis_table(ev: Evaluation) -> pd.DataFrame:
-    """Mean WIS per model per quantity, with the ratio against the baseline."""
+    """Mean WIS per model per quantity, with relative WIS against the baseline.
+
+    Columns are named for the scale, `WIS` or `log WIS`. The scores are arithmetic means;
+    the relative column is the ratio of geometric means (`relative_wis`), so it is not
+    simply one mean divided by another.
+    """
+    label = SCORE_LABELS[ev.scale]
     rows = []
     for model in MODELS:
         for quantity in QUANTITIES:
-            mean = ev.scores[model][quantity].total.mean()
-            base = ev.scores[BASELINE][quantity].total.mean()
             rows.append({
                 "model": model,
                 "quantity": quantity,
-                "WIS": mean,
-                "rel WIS": mean / base,
+                label: ev.scores[model][quantity].total.mean(),
+                f"rel {label}": relative_pooled(ev, model, quantity),
                 "cov95": ev.coverage[0.95][model][quantity].mean(),
                 "cov50": ev.coverage[0.50][model][quantity].mean(),
             })
     return pd.DataFrame(rows).set_index(["model", "quantity"])
 
 
-def relative_by_unit(ev: Evaluation, model: str, quantity: str) -> np.ndarray:
-    """Per-state WIS ratio against the baseline; below 1 means `model` is better.
+def relative_pooled(
+    ev: Evaluation, model: str, quantity: str, against: str = BASELINE
+) -> float:
+    """Relative WIS of `model` against `against`, pooled over origins, horizons and states.
 
-    Same name and meaning as Demo 1's, with a `quantity` argument because Demo 2 scores
-    two channels that are not commensurate. Demo 2's finer units are counties; see
-    `county_relative`.
+    The ratio of geometric means (`relative_wis`), on `ev.scale`. Below 1 means `model`
+    is better.
     """
-    return (
-        ev.scores[model][quantity].total.mean(axis=(0, 1))
-        / ev.scores[BASELINE][quantity].total.mean(axis=(0, 1))
+    return float(relative_wis(
+        ev.scores[model][quantity].total, ev.scores[against][quantity].total
+    ))
+
+
+def relative_by_unit(
+    ev: Evaluation, model: str, quantity: str, against: str = BASELINE
+) -> np.ndarray:
+    """Per-state relative WIS against the baseline; below 1 means `model` is better.
+
+    The ratio of geometric means over origins and horizons, on `ev.scale`. Same name and
+    meaning as Demo 1's, with a `quantity` argument because Demo 2 scores two channels
+    that are not commensurate. `against="county"` gives the movement contrast. Demo 2's
+    finer units are counties; see `county_relative`.
+    """
+    return relative_wis(
+        ev.scores[model][quantity].total,
+        ev.scores[against][quantity].total,
+        axis=(0, 1),
     )
 
 
 def wis_by_location(ev: Evaluation) -> pd.DataFrame:
     """Mean WIS per state, per model, per quantity, with ratios. For the supplement.
+
+    The model columns are arithmetic means on `ev.scale`; the ratio columns are relative
+    WIS, the ratio of geometric means.
 
     The index column is `jurisdiction`, not `state`: one of the models is *named* `state`,
     and a column named for both a label and a model silently overwrites one with the other.
@@ -351,10 +392,14 @@ def wis_by_location(ev: Evaluation) -> pd.DataFrame:
                 row[model] = ev.scores[model][quantity].total.mean(axis=(0, 1))[i]
             for model in MODELS:
                 if model != BASELINE:
-                    row[f"{model} / {BASELINE}"] = row[model] / row[BASELINE]
+                    row[f"{model} / {BASELINE}"] = relative_by_unit(
+                        ev, model, quantity
+                    )[i]
             # The informative contrast for the movement question: same resolution,
             # movement on against movement off.
-            row["movement / county"] = row["movement"] / row["county"]
+            row["movement / county"] = relative_by_unit(
+                ev, "movement", quantity, against="county"
+            )[i]
             rows.append(row)
     return pd.DataFrame(rows).set_index(["jurisdiction", "quantity"])
 
@@ -601,11 +646,12 @@ def figure_wis_by_horizon(
         series,
         colors={LABELS[model]: COLORS[model] for model in MODELS},
         titles=[AXIS_LABELS[q] for q in QUANTITIES],
-        ylabel="WIS",
+        ylabel=SCORE_LABELS[ev.scale],
         xlabel="horizon (weeks ahead)",
         xticks=ev.horizons,
         suptitle=title,
         legend=legend,
+        legend_loc="upper left",
         figure_width=DOUBLE_COLUMN,
         panel_height=2.3,
         share_y=False,
@@ -650,7 +696,7 @@ def figure_relative_wis(
         ax.set_xticks(positions)
         ax.set_xticklabels([ev.labels[c] for c in ev.locations])
         ax.set_title(AXIS_LABELS[quantity], fontsize=7)
-    axs[0].set_ylabel(f"WIS relative to\n{LABELS[BASELINE]}")
+    axs[0].set_ylabel(f"{SCORE_LABELS[ev.scale]} relative to\n{LABELS[BASELINE]}")
     axs[0].legend(fontsize=6)
     if replicate is not None:
         axs[-1].set_xlabel("open marker: seed 1", fontsize=6)
@@ -797,28 +843,32 @@ def county_scores(ev: Evaluation, model: str, quantity: str, levels=DEMO_QUANTIL
 
     Available only for runs written with the `scale` column; see `node_forecasts`. Scored
     against the frozen **county** observations, not the state sums, so this is a genuine
-    per-county comparison rather than a decomposition of the state-scale result.
+    per-county comparison rather than a decomposition of the state-scale result. Scored
+    on `ev.scale`, so a county score is always on the same scale as the state scores.
     """
     frame = node_forecasts(ev, model)
     frame = frame[frame["quantity"] == quantity]
     values, coords = quantile_array(frame, DIMS, levels=levels)
     observed = align_observations(frame, DIMS, ev.observations, quantity=quantity)
-    return weighted_interval_score(observed, values, levels).total, coords["location"]
+    transform = SCALES[ev.scale]
+    return (
+        weighted_interval_score(observed, values, levels, transform).total,
+        coords["location"],
+    )
 
 
 def county_relative(ev: Evaluation, quantity: str) -> tuple[np.ndarray, np.ndarray]:
-    """Per-county WIS ratio, movement against no movement, and the county codes.
+    """Per-county relative WIS, movement against no movement, and the county codes.
 
     The `state` model has no county-scale forecast to compare against, so this contrast
     is necessarily `movement / county`: same 32 nodes, same everything, movement on
-    against movement off.
+    against movement off. The ratio of geometric means over origins and horizons; the
+    few county-weeks where either model scores exactly zero are dropped from both, as
+    `relative_wis` explains.
     """
     numerator, locations = county_scores(ev, "movement", quantity)
     denominator, _ = county_scores(ev, "county", quantity)
-    return (
-        numerator.mean(axis=(0, 1)) / denominator.mean(axis=(0, 1)),
-        locations,
-    )
+    return relative_wis(numerator, denominator, axis=(0, 1)), locations
 
 
 def figure_county_relative_wis(
@@ -854,8 +904,8 @@ def figure_county_relative_wis(
         1, 1, subfig=subfig, figsize=(ONE_AND_HALF_COLUMN, 2.5)
     )
     ax = ax[0, 0]
-    plot_ratio_swarm(ax, rows, ticks=(0.5, 0.7, 1.0, 1.5, 2.0))
-    ax.set_xlabel(f"WIS relative to {LABELS['county']}")
+    plot_ratio_swarm(ax, rows, ticks=(0.7, 0.8, 0.9, 1.0, 1.1, 1.25))
+    ax.set_xlabel(f"{SCORE_LABELS[ev.scale]} relative to {LABELS['county']}")
     heading = resolve_title(
         title,
         "one county is a pair of dots, one per seed" if replicate is not None else None,

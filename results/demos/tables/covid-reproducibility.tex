@@ -2,18 +2,18 @@
 % Regenerate:  python -m manuscript_analysis.demos.tables
 \begin{table}[tb]
 \centering
-\caption{\textbf{Demo 2: the comparison at two ensemble seeds.} Relative WIS against the model with no spatial structure, at each seed and as their geometric mean.}
+\caption{\textbf{Demo 2: the comparison at two ensemble seeds.} Relative log WIS against the model with no spatial structure, at each seed and as their geometric mean.}
 \label{tab:covid-reproducibility}
 \footnotesize
 \setlength{\tabcolsep}{5pt}
 \begin{tabular}{@{}llrrr@{}}
 \toprule
-model & quantity & \textbf{rel WIS, seed 0} & \textbf{rel WIS, seed 1} & \textbf{geometric mean} \\
+model & quantity & \textbf{rel log WIS, seed 0} & \textbf{rel log WIS, seed 1} & \textbf{geometric mean} \\
 \midrule
-counties + commuting & hospital census & 1.281 & 1.350 & 1.315 \\
-counties, no movement & hospital census & 1.405 & 1.431 & 1.418 \\
-counties + commuting & weekly deaths & 1.196 & 1.251 & 1.223 \\
-counties, no movement & weekly deaths & 1.274 & 1.307 & 1.291 \\
+counties + commuting & hospital census & 1.079 & 1.115 & 1.097 \\
+counties, no movement & hospital census & 1.123 & 1.146 & 1.134 \\
+counties + commuting & weekly deaths & 0.997 & 1.019 & 1.008 \\
+counties, no movement & weekly deaths & 1.018 & 1.064 & 1.041 \\
 \bottomrule
 \end{tabular}
 \par\medskip\raggedright\scriptsize Both seeds are reported because the aggregate is reproducible and the per-unit assignment is not; see the caption of the per-unit table.

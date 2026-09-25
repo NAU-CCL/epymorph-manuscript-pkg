@@ -2,20 +2,21 @@
 % Regenerate:  python -m manuscript_analysis.demos.tables
 \begin{table}[tb]
 \centering
-\caption{\textbf{Demo 2: forecast skill by model and quantity.} Weighted interval score pooled over forecast origins and the three scored states. There is no pooled score across quantities: a hospital census is a stock and deaths are a flow, so adding their scores would mean nothing.}
+\caption{\textbf{Demo 2: forecast skill by model and quantity.} Weighted interval score pooled over forecast origins and the three scored states, on the natural and the log scale, with coverage as in Demo 1. There is no pooled score across quantities: a hospital census is a stock and deaths are a flow, so adding their scores would mean nothing.}
 \label{tab:covid-skill}
 \footnotesize
 \setlength{\tabcolsep}{5pt}
-\begin{tabular}{@{}llrrrr@{}}
+\begin{tabular}{@{}llrrrrrr@{}}
 \toprule
-model & quantity & \textbf{WIS} & \textbf{rel WIS} & \textbf{cov95} & \textbf{cov50} \\
+model & quantity & \textbf{WIS} & \textbf{rel WIS} & \textbf{log WIS} & \textbf{rel log WIS} & \textbf{cov95} & \textbf{cov50} \\
 \midrule
-counties + commuting & hospital census & 97.910 & 1.281 & 0.753 & 0.295 \\
-counties + commuting & weekly deaths & 18.931 & 1.196 & 0.872 & 0.385 \\
-counties, no movement & hospital census & 107.348 & 1.405 & 0.774 & 0.288 \\
-counties, no movement & weekly deaths & 20.171 & 1.274 & 0.844 & 0.382 \\
-no spatial structure & hospital census & 76.412 & 1.000 & 1.000 & 0.510 \\
-no spatial structure & weekly deaths & 15.828 & 1.000 & 0.958 & 0.552 \\
+counties + commuting & hospital census & 97.910 & 1.106 & 0.159 & 1.079 & 0.753 & 0.295 \\
+counties + commuting & weekly deaths & 18.931 & 1.028 & 0.160 & 0.997 & 0.872 & 0.385 \\
+counties, no movement & hospital census & 107.348 & 1.163 & 0.167 & 1.123 & 0.774 & 0.288 \\
+counties, no movement & weekly deaths & 20.171 & 1.058 & 0.165 & 1.018 & 0.844 & 0.382 \\
+no spatial structure & hospital census & 76.412 & 1.000 & 0.136 & 1.000 & 1.000 & 0.510 \\
+no spatial structure & weekly deaths & 15.828 & 1.000 & 0.152 & 1.000 & 0.958 & 0.552 \\
 \bottomrule
 \end{tabular}
+\par\medskip\raggedright\scriptsize \emph{log WIS} is scored after transforming observations and forecast quantiles by $\log(x+1)$, following CDC's FluSight evaluations in scoring on the log scale; the offset is needed because some counts are zero. \emph{rel} columns are relative WIS, as FluSight defines it: the geometric mean score of each model divided by that of the baseline over the same forecasts, so they are not the ratio of the arithmetic means beside them.
 \end{table}

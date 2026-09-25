@@ -1,5 +1,5 @@
-model,quantity,"rel WIS, seed 0","rel WIS, seed 1",geometric mean
-counties + commuting,hospital census,1.281,1.35,1.315
-"counties, no movement",hospital census,1.405,1.431,1.418
-counties + commuting,weekly deaths,1.196,1.251,1.223
-"counties, no movement",weekly deaths,1.274,1.307,1.291
+model,quantity,"rel log WIS, seed 0","rel log WIS, seed 1",geometric mean
+counties + commuting,hospital census,1.079,1.115,1.097
+"counties, no movement",hospital census,1.123,1.146,1.134
+counties + commuting,weekly deaths,0.997,1.019,1.008
+"counties, no movement",weekly deaths,1.018,1.064,1.041

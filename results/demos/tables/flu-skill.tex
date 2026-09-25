@@ -2,17 +2,18 @@
 % Regenerate:  python -m manuscript_analysis.demos.tables
 \begin{table}[tb]
 \centering
-\caption{\textbf{Demo 1: forecast skill by model.} Weighted interval score pooled over 25 forecast origins and 51 jurisdictions, and separately at each horizon (h0--h3, weeks ahead). Lower is better. \emph{rel WIS} is the ratio against the unstratified model; \emph{cov95} and \emph{cov50} are empirical coverage of the nominal 95\% and 50\% prediction intervals.}
+\caption{\textbf{Demo 1: forecast skill by model.} Weighted interval score pooled over 25 forecast origins and 51 jurisdictions, on the natural and the log scale, with log WIS also shown separately at each horizon (h0--h3, weeks ahead). Lower is better. Relative scores are against the unstratified model; \emph{cov95} and \emph{cov50} are empirical coverage of the nominal 95\% and 50\% prediction intervals, which does not depend on the scale.}
 \label{tab:flu-skill}
 \footnotesize
 \setlength{\tabcolsep}{5pt}
-\begin{tabular}{@{}lrrrrrrrr@{}}
+\begin{tabular}{@{}lrrrrrrrrrr@{}}
 \toprule
-model & \textbf{WIS} & \textbf{h0} & \textbf{h1} & \textbf{h2} & \textbf{h3} & \textbf{rel WIS} & \textbf{cov95} & \textbf{cov50} \\
+model & \textbf{WIS} & \textbf{rel WIS} & \textbf{log WIS} & \textbf{rel log WIS} & \textbf{h0} & \textbf{h1} & \textbf{h2} & \textbf{h3} & \textbf{cov95} & \textbf{cov50} \\
 \midrule
-empirical mixing & 117.540 & 45.253 & 100.302 & 149.711 & 174.895 & 0.833 & 0.767 & 0.335 \\
-homogeneous mixing & 156.992 & 54.913 & 125.201 & 198.469 & 249.384 & 1.112 & 0.737 & 0.330 \\
-no age structure & 141.144 & 47.141 & 111.335 & 178.822 & 227.277 & 1.000 & 0.754 & 0.340 \\
+empirical mixing & 117.540 & 0.915 & 0.403 & 0.961 & 0.218 & 0.353 & 0.472 & 0.569 & 0.767 & 0.335 \\
+homogeneous mixing & 156.992 & 1.042 & 0.450 & 1.046 & 0.240 & 0.388 & 0.527 & 0.646 & 0.737 & 0.330 \\
+no age structure & 141.144 & 1.000 & 0.423 & 1.000 & 0.216 & 0.361 & 0.499 & 0.616 & 0.754 & 0.340 \\
 \bottomrule
 \end{tabular}
+\par\medskip\raggedright\scriptsize \emph{log WIS} is scored after transforming observations and forecast quantiles by $\log(x+1)$, following CDC's FluSight evaluations in scoring on the log scale; the offset is needed because some counts are zero. \emph{rel} columns are relative WIS, as FluSight defines it: the geometric mean score of each model divided by that of the baseline over the same forecasts, so they are not the ratio of the arithmetic means beside them.
 \end{table}
