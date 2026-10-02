@@ -47,3 +47,14 @@ def runs(demo: str, seed: int = 0) -> Path:
     that argument unnecessary.
     """
     return RUNS / demo / f"seed{seed}"
+
+
+def correlated_runs(demo: str, seed: int = 0) -> Path:
+    """The correlated-OU sensitivity runs for one demo at one seed, one folder per model.
+
+    Kept apart from `runs()` deliberately: these are exploratory, so they sit under the
+    gitignored `notebook/` tree and outside `MANIFEST.sha256`, and the manuscript's
+    ensembles are untouched by their existence. If the analysis graduates to the
+    supplement, the folders move under `runs()` and the manifest is refreshed.
+    """
+    return RESULTS / "demos" / "notebook" / "correlated-ou" / demo / f"seed{seed}"

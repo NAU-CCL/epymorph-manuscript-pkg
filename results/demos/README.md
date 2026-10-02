@@ -8,12 +8,17 @@ Everything the two demonstration vignettes produce. Generated: safe to delete, r
 | `figures/` | the manuscript's figures, composed by the exporter | yes |
 | `runs/` | the ensembles: one folder per model, under `<demo>/seed<N>/` | **no** |
 | `tables/` | the score tables, as `.csv` to read and `.tex` to `\input` | yes |
-| `notebook/` | whatever the notebooks save while you run them | **no** — exploratory |
+| `notebook/` | whatever the notebooks save while you run them, and the correlated-OU sensitivity runs under `notebook/correlated-ou/` | **no** — exploratory |
 | `MANIFEST.sha256` | checksums of `runs/` | yes |
 
 The notebooks' per-panel figures are deliberately not carried: they are the exploratory
 view of panels the exporter composes properly into `figures/`, and a second copy
 of a figure is a second thing to drift.
+
+The correlated-OU runs are the exception inside `notebook/`: exploratory, so outside
+`MANIFEST.sha256` and never read by the manuscript, but about five hours to rebuild. Treat
+them like `runs/`. `analysis/notebooks/demo-covid/03-correlated-ou.ipynb` has their
+commands.
 
 ## Why `runs/` is not in git
 

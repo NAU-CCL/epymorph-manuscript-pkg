@@ -8,7 +8,17 @@ single argument selects the movement model:
 
 They are one module rather than two because that difference is one argument. Compare with
 `state_aggregate.py`, which removes the spatial resolution instead.
+
+A sensitivity analysis adds a second argument, `correlation`, which correlates the
+counties' daily parameter shocks (`correlated_ou.py`) while filtering and forecasting.
+Its four models are not part of the main comparison:
+
+- `county_correlated`, `movement_correlated`: correlation fitted to the data.
+- `county_correlated_strong`, `movement_correlated_strong`: a pure exponential kernel,
+  an upper bracket.
 """
+
+from functools import partial
 
 import numpy as np
 from epymorph.data import mm
@@ -29,8 +39,16 @@ from manuscript_analysis.demos.lib.ipms.covid_seirhd import SEIRHD
 from . import covid_season as season
 
 
-def build(movement: bool) -> ForecastModel:
-    """One county-resolution model. Movement is the only thing that varies."""
+def build(
+    movement: bool,
+    correlation: season.SpatialCorrelation | None = None,
+    name: str | None = None,
+) -> ForecastModel:
+    """One county-resolution model. Movement is the only thing that varies.
+
+    `correlation`, if given, replaces the independent county parameter processes with
+    spatially correlated ones; `None` is the main comparison's model.
+    """
     scope = season.scope()
     params = {
         "ipm::beta": ExponentialTransform("log_beta"),
@@ -69,11 +87,19 @@ def build(movement: bool) -> ForecastModel:
         likelihood=PoissonLikelihood(),
     )
 
+    if correlation is None:
+        unknown_params = season.unknown_params()
+        forecast_dynamics = season.forecast_dynamics
+    else:
+        cholesky = season.parameter_cholesky(correlation)
+        unknown_params = season.unknown_params(cholesky)
+        forecast_dynamics = partial(season.forecast_dynamics, cholesky=cholesky)
+
     return ForecastModel(
-        name="movement" if movement else "county",
+        name=name or ("movement" if movement else "county"),
         disease=season.season().disease,
         rume=rume,
-        unknown_params=season.unknown_params(),
+        unknown_params=unknown_params,
         observations=observations,
         quantities=season.QUANTITIES,
         observations_source=lambda: season.observation_source(aggregated=False),
@@ -83,7 +109,7 @@ def build(movement: bool) -> ForecastModel:
         aggregate_quantities=False,
         # 32 counties are scored as the 3 states the state model runs at.
         scoring_groups=season.scoring_groups(),
-        forecast_dynamics=season.forecast_dynamics,
+        forecast_dynamics=forecast_dynamics,
         forecast_seed=season.forecast_seed,
         movement_data_mode="home",
     )
@@ -91,3 +117,17 @@ def build(movement: bool) -> ForecastModel:
 
 movement = build(True)
 county = build(False)
+
+# The sensitivity analysis: the same two models with correlated parameter shocks.
+county_correlated = build(
+    False, season.CORRELATION_FITTED, name="county-correlated"
+)
+movement_correlated = build(
+    True, season.CORRELATION_FITTED, name="movement-correlated"
+)
+county_correlated_strong = build(
+    False, season.CORRELATION_STRONG, name="county-correlated-strong"
+)
+movement_correlated_strong = build(
+    True, season.CORRELATION_STRONG, name="movement-correlated-strong"
+)

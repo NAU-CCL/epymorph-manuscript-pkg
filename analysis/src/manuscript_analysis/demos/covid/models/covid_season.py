@@ -19,11 +19,12 @@ import pandas as pd
 from epymorph.adrio import cdc
 from epymorph.adrio.acs5 import Population
 from epymorph.adrio.commuting_flows import Commuters
+from epymorph.adrio.us_tiger import InternalPoint
 from epymorph.forecasting.dynamic_params import GaussianPrior, OrnsteinUhlenbeck
 from epymorph.forecasting.pipeline import UnknownParam
 from epymorph.geography.us_census import CountyScope, StateScope
 from epymorph.time import TimeFrame
-from epymorph.util import to_date_value_array
+from epymorph.util import pairwise_haversine, to_date_value_array
 from scipy.stats import poisson
 
 from manuscript_analysis.demos.lib.forecasting import Quantity
@@ -35,6 +36,7 @@ from manuscript_analysis.demos.lib.ipms.covid_seirhd import (
 
 from ... import paths
 from ..seasons import COVID_2020, Season
+from .correlated_ou import CorrelatedOU, spatial_correlation
 
 SEASON = COVID_2020
 
@@ -96,6 +98,39 @@ BETA_DAMPING = 1 / 150
 DEATH_PROB_PRIOR_SD = 0.15
 DEATH_PROB_OU_SD = 0.15
 DEATH_PROB_DAMPING = 1 / 150
+
+# --- spatially correlated parameter shocks (a sensitivity analysis) -------------
+
+
+class SpatialCorrelation(NamedTuple):
+    """How strongly the counties' parameter shocks move together.
+
+    Each parameter's correlation matrix is `shared * exp(-d / length_scale) +
+    (1 - shared) * I`, with `d` the distance between county internal points in miles.
+    """
+
+    length_scale: float
+    """Miles."""
+    beta_shared: float
+    death_prob_shared: float
+
+
+CORRELATION_FITTED = SpatialCorrelation(
+    length_scale=200.0, beta_shared=0.3, death_prob_shared=0.1
+)
+"""Fitted, without forecast scores, to the week-to-week changes in the filtered log beta
+of the independent county models, and separately to the weekly growth of the observed
+census; the two agree on about 200 miles and a shared fraction of about 0.3. Death_prob
+changes correlate at only about 0.1 with no clear decay in distance, so it keeps the
+length scale and takes a small shared fraction.
+"""
+
+CORRELATION_STRONG = SpatialCorrelation(
+    length_scale=200.0, beta_shared=1.0, death_prob_shared=1.0
+)
+"""A pure exponential kernel, the form in `FluSight-pipeline/flu/correlated.py`. Mean
+county-pair correlation 0.64, about three times what the data show: an upper bracket.
+"""
 
 
 def season() -> Season:
@@ -180,6 +215,29 @@ def commuters() -> np.ndarray:
     if flows.shape != (scope().nodes, scope().nodes):
         raise ValueError(f"commuters is {flows.shape}, expected a square county matrix")
     return flows
+
+
+@cache
+def county_distances() -> np.ndarray:
+    """`(counties, counties)` great-circle miles between county internal points."""
+    points = (
+        InternalPoint().with_context(scope=scope(), time_frame=time_frame()).inspect().result
+    )
+    return pairwise_haversine(points, units="miles")
+
+
+def parameter_cholesky(correlation: SpatialCorrelation) -> dict[str, np.ndarray]:
+    """The Cholesky factor of each estimated parameter's county correlation matrix."""
+    distances = county_distances()
+    shared = {
+        "log_beta": correlation.beta_shared,
+        "log_death_prob": correlation.death_prob_shared,
+    }
+    factors = {}
+    for name, fraction in shared.items():
+        matrix = spatial_correlation(distances, correlation.length_scale, fraction)
+        factors[name] = np.linalg.cholesky(matrix)
+    return factors
 
 
 class Observed(NamedTuple):
@@ -523,7 +581,9 @@ def scoring_groups() -> dict[str, list[int]]:
     return groups
 
 
-def forecast_dynamics(filter_output) -> dict[str, OrnsteinUhlenbeck]:
+def forecast_dynamics(
+    filter_output, cholesky: dict[str, np.ndarray] | None = None
+) -> dict[str, OrnsteinUhlenbeck | CorrelatedOU]:
     """OU dynamics for the horizon, re-derived from the filter at this origin.
 
     Both the centre and the spread come from the parameter's current ensemble rather than
@@ -531,6 +591,9 @@ def forecast_dynamics(filter_output) -> dict[str, OrnsteinUhlenbeck]:
     actually has instead of the inflation it needed to stay healthy. Carrying that
     inflation in is a category error: the spread exists to fight assimilation-driven
     collapse, and nothing is assimilated in a forecast.
+
+    `cholesky`, from `parameter_cholesky`, correlates the counties' shocks; without it
+    each county's process is independent.
     """
     dynamics = {}
     for name in ("log_beta", "log_death_prob"):
@@ -544,9 +607,15 @@ def forecast_dynamics(filter_output) -> dict[str, OrnsteinUhlenbeck]:
         # ensemble has collapsed should not set the spread for every other node.
         carried = float(np.median(np.std(current, axis=0)))
         spread = max(FORECAST_SD_SCALE * carried, MINIMUM_FORECAST_SD)
-        dynamics[f"ipm::{name}"] = OrnsteinUhlenbeck(
-            damping=FORECAST_DAMPING, mean=centre, standard_deviation=spread,
-        )
+        if cholesky is None:
+            dynamics[f"ipm::{name}"] = OrnsteinUhlenbeck(
+                damping=FORECAST_DAMPING, mean=centre, standard_deviation=spread,
+            )
+        else:
+            dynamics[f"ipm::{name}"] = CorrelatedOU(
+                damping=FORECAST_DAMPING, mean=centre, standard_deviation=spread,
+                chol=cholesky[name],
+            )
     return dynamics
 
 
@@ -559,26 +628,48 @@ def forecast_seed(seed: int, position: int) -> int:
     return seed + 1 + position
 
 
-def unknown_params() -> dict[str, UnknownParam]:
+def unknown_params(
+    cholesky: dict[str, np.ndarray] | None = None,
+) -> dict[str, UnknownParam]:
     """`beta` and `death_prob`, both per node, both Ornstein-Uhlenbeck.
 
     `Static()` dynamics collapse the severity ensemble to a log-sd of 0.020, which reads
     as certainty but is a filter that has stopped learning. Note `standard_deviation` is
     the stationary spread, not the per-step innovation.
+
+    `cholesky`, from `parameter_cholesky`, correlates the counties' shocks while
+    filtering; without it each county's process is independent.
     """
     log_beta = float(np.log(BETA))
     log_death_prob = float(np.log(DEATH_PROB))
+
+    if cholesky is None:
+        beta_dynamics = OrnsteinUhlenbeck(
+            damping=BETA_DAMPING, mean=log_beta, standard_deviation=BETA_OU_SD
+        )
+        death_prob_dynamics = OrnsteinUhlenbeck(
+            damping=DEATH_PROB_DAMPING, mean=log_death_prob,
+            standard_deviation=DEATH_PROB_OU_SD,
+        )
+    else:
+        beta_dynamics = CorrelatedOU(
+            damping=BETA_DAMPING, mean=log_beta, standard_deviation=BETA_OU_SD,
+            chol=cholesky["log_beta"],
+        )
+        death_prob_dynamics = CorrelatedOU(
+            damping=DEATH_PROB_DAMPING, mean=log_death_prob,
+            standard_deviation=DEATH_PROB_OU_SD, chol=cholesky["log_death_prob"],
+        )
+
     return {
         "ipm::log_beta": UnknownParam(
             prior=GaussianPrior(mean=log_beta, standard_deviation=BETA_PRIOR_SD),
-            dynamics=OrnsteinUhlenbeck(damping=BETA_DAMPING, mean=log_beta,
-                                       standard_deviation=BETA_OU_SD),
+            dynamics=beta_dynamics,
         ),
         "ipm::log_death_prob": UnknownParam(
             prior=GaussianPrior(mean=log_death_prob,
                                 standard_deviation=DEATH_PROB_PRIOR_SD),
-            dynamics=OrnsteinUhlenbeck(damping=DEATH_PROB_DAMPING, mean=log_death_prob,
-                                       standard_deviation=DEATH_PROB_OU_SD),
+            dynamics=death_prob_dynamics,
         ),
     }
 

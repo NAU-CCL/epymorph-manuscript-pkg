@@ -12,3 +12,7 @@ the candidate-register workbook, Table 1 as LaTeX, the PRISMA flow, and
 
 which also checks its numbers back against the manuscript. The directory is always safe to
 delete.
+
+`demos/` holds the two demonstration vignettes' outputs: the manuscript's figures and
+tables, which are in git, and the forecast ensembles they are computed from, which are not
+(~1 GB, 8-10 hours to rebuild). See `demos/README.md` before deleting anything there.

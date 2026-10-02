@@ -1,6 +1,6 @@
 """Loading, scoring and the manuscript figures for Demo 1.
 
-Imported by both `evaluation.ipynb` and (later) `export_manuscript.py`, so a figure in
+Imported by both `evaluation.ipynb` and `export.py`, so a figure in
 the paper and the same figure in the notebook come from one function. The notebook
 explores; the exporter emits only the canonical subset.
 
