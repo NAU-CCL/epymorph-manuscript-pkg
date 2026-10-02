@@ -101,10 +101,19 @@ in Overleaf's GitHub panel.
 cd analysis && uv run jupyter lab notebooks/
 ```
 
-`notebooks/demo-flu/evaluation.ipynb` and `notebooks/demo-covid/evaluation.ipynb` run the
-models, score them, draw every panel individually, and render the composed manuscript
-figures. They are the readable surface; `scripts/build-figures.sh` is the same work
-without the commentary.
+Each demo has two notebooks, in `notebooks/demo-flu/` and `notebooks/demo-covid/`:
+
+- `01-model-and-forecast.ipynb` builds the demo's models in epymorph, piece by piece, fits
+  each with the ensemble Kalman filter up to one date before the season's peak, and issues
+  one four-week forecast. It is the readable account of the models and of the workflow,
+  and it checks that its models are identical to the ones that produced the paper's
+  numbers. It fits live, so it takes minutes (Demo 2) to about an hour (Demo 1).
+- `02-evaluation.ipynb` renders every table and figure the manuscript reports for the
+  demo, from the ensembles. `scripts/build-figures.sh` is the same work without the
+  commentary.
+
+Demo 2 has a third, `03-correlated-ou.ipynb`, a sensitivity analysis outside the
+manuscript's comparison.
 
 ---
 

@@ -588,3 +588,77 @@ def plot_line_panels(
     if suptitle is not None:
         fig.suptitle(suptitle)
     return fig, axs
+
+
+def plot_single_forecast_grid(
+    rows: Sequence[Sequence[Mapping | None]],
+    *,
+    colors: Mapping[str, object],
+    ylabels: str | Sequence[str] | None = None,
+    interval: float = 0.95,
+    alpha: float = 0.25,
+    title: str | None = None,
+    subfig=None,
+    figsize=None,
+) -> tuple[Figure, np.ndarray]:
+    """One forecast, issued from one origin, by one or more models, panel by panel.
+
+    The teaching counterpart of `plot_rolling_forecast_grid`: a single origin rather
+    than every origin, so a reader sees exactly what one call to the forecast simulator
+    produced and what then happened.
+
+    Parameters
+    ----------
+    rows :
+        Panel specs, row by row. Each is a mapping with keys `dates` and `observed` (the
+        whole observed series), `origin` (the first forecast date: observations before
+        it are filled, the ones the filter saw; from it on they are hollow, held out),
+        `forecast_dates`, `forecasts` (model label -> {quantile level: values over
+        `forecast_dates`}) and optionally `title`.
+    colors :
+        Model label -> colour. The colour follows the model in every panel.
+    interval :
+        Nominal coverage of the band drawn for each model, around its median line.
+    """
+    rows = as_panel_rows(rows)
+    nrows, ncols = len(rows), len(rows[0])
+    if figsize is None:
+        figsize = (2.4 * ncols, 1.9 * nrows + 0.5)
+    fig, axs = panel_grid(nrows, ncols, subfig=subfig, figsize=figsize, sharex=True)
+
+    lower_level = (1.0 - interval) / 2.0
+    for row in range(nrows):
+        for column in range(ncols):
+            panel = rows[row][column]
+            if panel is None:
+                continue
+            ax = axs[row, column]
+            dates = pd.to_datetime(np.asarray(panel["dates"]))
+            observed = np.asarray(panel["observed"], dtype=np.float64)
+            seen = dates < pd.Timestamp(panel["origin"])
+
+            ax.plot(dates[seen], observed[seen], color="black", linestyle="none",
+                    marker="o", markersize=2.5, label="observed, assimilated")
+            ax.plot(dates[~seen], observed[~seen], color="black", linestyle="none",
+                    marker="o", markersize=2.5, markerfacecolor="none",
+                    markeredgewidth=0.7, label="observed, held out")
+            ax.axvline(pd.Timestamp(panel["origin"]), color="0.6", linewidth=0.6,
+                       linestyle=":", zorder=0)
+
+            forecast_dates = pd.to_datetime(np.asarray(panel["forecast_dates"]))
+            for label, quantiles in panel["forecasts"].items():
+                ax.fill_between(
+                    forecast_dates,
+                    _level(quantiles, lower_level),
+                    _level(quantiles, 1.0 - lower_level),
+                    color=colors[label], alpha=alpha, linewidth=0,
+                )
+                ax.plot(forecast_dates, _level(quantiles, 0.5), color=colors[label],
+                        linewidth=1.2, label=f"{label}: median, {interval:.0%} PI")
+            ax.set_ylim(bottom=0)
+
+    finish_panel_grid(
+        fig, axs, rows, ylabels=ylabels, title=title, legend_from=axs[0, 0],
+        label_rotation=45,
+    )
+    return fig, axs

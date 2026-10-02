@@ -12,9 +12,20 @@ Three influenza models, identical in every respect but one, fitted and forecast 
 The two multi-strata models live in one module because they differ by one argument. If
 they ever differ by more than that, the shared module is the bug.
 
+## The notebooks
+
+| notebook | what it does | needs |
+|---|---|---|
+| `01-model-and-forecast.ipynb` | builds the three models in epymorph, fits each up to two weeks before the season's peak, and issues one four-week forecast; then checks that its models are identical to the ones below | a Census API key; about an hour |
+| `02-evaluation.ipynb` | every table and figure the manuscript reports for Demo 1 | the ensembles |
+
+Start with `01`: it is the whole workflow, once, with every epymorph call in view. `02` is
+that workflow repeated at 25 forecast dates and scored, which is what the rest of this
+README is about.
+
 ## Workflow
 
-Run each model, then read `evaluation.ipynb`. From `analysis/`:
+Run each model, then read `02-evaluation.ipynb`. From `analysis/`:
 
 ```sh
 # Run all three at once. Each fit is single-threaded and uses about 0.5 GB, so on any
@@ -46,7 +57,7 @@ and runs 38 weeks, ten burn-in weeks precede the first forecast, and the 25 fore
 run 2025-11-22 to 2026-05-09, so the last four-week forecast reaches 2026-05-30. Note `Season.start_date` is the **simulation** start, with the
 burn-in inside the window; a FluSight challenge's dates are its *forecast* window instead.
 
-`evaluation.ipynb` only reads run outputs and never fits anything.
+`02-evaluation.ipynb` only reads run outputs and never fits anything.
 
 ## Layout
 
@@ -61,19 +72,22 @@ analysis/src/manuscript_analysis/demos/flu/
   run_season.py         fit and forecast one model, write its outputs
   evaluation.py         loading, scoring and every figure function
 analysis/notebooks/demo-flu/
-  evaluation.ipynb      diagnostics, scores, figures
+  01-model-and-forecast.ipynb  the models, one fit, one forecast
+  02-evaluation.ipynb   the manuscript's tables and figures
 
 data/demos/flu/observations.csv           fetched once, frozen, shared by every run
 results/demos/runs/flu/seed0/<model>/     the manuscript run; seed1/ is the replicate
   forecasts/<reference_date>.csv  fit.csv  params.csv  run.json
 ```
 
-`evaluation.ipynb` reads seed 0, and `figure_relative_wis_swarm` additionally reads seed 1
-through `evaluation.load_replicate()`.
+`02-evaluation.ipynb` reads both seeds: seed 0 for most of it, and seed 1 through
+`evaluation.load_replicate()` for the reproducibility table and Figure 2(d).
 
-**`evaluation.ipynb` is hand-maintained**: edit it directly. Its loading, scoring and
-figure code lives in `evaluation.py` so that the notebook and the manuscript exporter
-cannot disagree, which means a new figure is a function there plus a one-line cell here.
+**The notebooks are hand-maintained**: edit them directly. `01` writes the models out in
+full, so its last cell checks them against `models/` and fails if the two copies have
+drifted apart. `02`'s loading, scoring and figure code lives in `evaluation.py` so that
+the notebook and the manuscript exporter cannot disagree, which means a new figure is a
+function there plus a one-line cell here.
 
 Shared library code lives in `analysis/src/manuscript_analysis/demos/lib/`:
 `forecasting.py` (the rolling-origin loop and the output writers), `ipms/flu_age_mixing.py`

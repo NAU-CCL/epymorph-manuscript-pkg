@@ -15,6 +15,7 @@ Demo 2 (`demo-covid/evaluation.py`):
 | `plot_quantile_grid` | `figure_fit_by_age` (6 age bands over 2x3), `figure_eta_by_age` | `figure_fit` (quantity by node) |
 | `plot_rolling_forecast_grid` | `figure_rolling_forecasts`, `figure_rolling_forecasts_by_age` | `figure_rolling_forecasts`, at either scale |
 | `plot_line_panels` | `figure_wis_by_horizon`, `figure_calibration` (1 panel) | the same two (2 panels, one per quantity) |
+| `plot_single_forecast_grid` | `01-model-and-forecast.ipynb`: one origin, three models | the same |
 | `plot_ratio_swarm` | `figure_relative_wis_swarm` (51 jurisdictions) | `figure_county_relative_wis` (32 counties) |
 | `panel_grid` | the swarm's single axes | the swarm's, and `figure_relative_wis` |
 | `plot_contact_matrix` / `plot_flow_matrix` | `figure_contact_structures` | `figure_movement_structure` |
@@ -50,6 +51,7 @@ from manuscript_analysis.demos.lib.plots.timeseries import (
     plot_quantile_panels,
     plot_rolling_forecast_grid,
     plot_rolling_forecasts,
+    plot_single_forecast_grid,
 )
 
 __all__ = [
@@ -68,5 +70,6 @@ __all__ = [
     "plot_ratio_swarm",
     "plot_rolling_forecast_grid",
     "plot_rolling_forecasts",
+    "plot_single_forecast_grid",
     "swarm_offsets",
 ]

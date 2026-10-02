@@ -1,7 +1,7 @@
 """Loading, scoring and the manuscript figures for Demo 2.
 
 The counterpart to `demo-flu/evaluation.py`, and deliberately parallel to it: imported by
-both `evaluation.ipynb` and `export.py`, so a figure in the paper and
+both `02-evaluation.ipynb` and `export.py`, so a figure in the paper and
 the same figure in the notebook come from one function.
 
 Three ways this differs from Demo 1, all because Demo 2 is shaped differently:

@@ -42,9 +42,21 @@ They are not part of the three-model comparison, and nothing in the manuscript's
 figures reads them. `03-correlated-ou.ipynb` sets out the design, how the correlation
 was chosen without forecast scores, and the results.
 
+## The notebooks
+
+| notebook | what it does | needs |
+|---|---|---|
+| `01-model-and-forecast.ipynb` | builds the three models in epymorph, fits each up to two weeks before the winter peak, and issues one four-week forecast; then checks that its models are identical to the ones below | a Census API key; about 30 minutes |
+| `02-evaluation.ipynb` | every table and figure the manuscript reports for Demo 2 | the ensembles |
+| `03-correlated-ou.ipynb` | the correlated-OU sensitivity analysis | its own ensembles |
+
+Start with `01`: it is the whole workflow, once, with every epymorph call in view. `02` is
+that workflow repeated at 24 forecast dates and scored, which is what the rest of this
+README is about.
+
 ## Workflow
 
-Run each model, then read `evaluation.ipynb`. From `analysis/`:
+Run each model, then read `02-evaluation.ipynb`. From `analysis/`:
 
 ```sh
 # Run all three at once. They write to separate folders and share nothing but the
@@ -82,7 +94,7 @@ The sensitivity runs go to `results/demos/notebook/correlated-ou/covid/seed<N>/`
 by passing `-o`; `03-correlated-ou.ipynb` has the commands. That tree is gitignored and
 outside `MANIFEST.sha256`, so the manuscript's ensembles are untouched by it.
 
-`evaluation.ipynb` and `03-correlated-ou.ipynb` only read run outputs and never fit
+`02-evaluation.ipynb` and `03-correlated-ou.ipynb` only read run outputs and never fit
 anything.
 
 ## Layout
@@ -100,8 +112,9 @@ analysis/src/manuscript_analysis/demos/covid/
   run_season.py         fit and forecast one model, write its outputs
   evaluation.py         loading, scoring and every figure function
 analysis/notebooks/demo-covid/
-  evaluation.ipynb      diagnostics, scores, figures
-  03-correlated-ou.ipynb  the sensitivity analysis
+  01-model-and-forecast.ipynb  the models, one fit, one forecast
+  02-evaluation.ipynb   the manuscript's tables and figures
+  03-correlated-ou.ipynb       the sensitivity analysis
 
 data/demos/covid/observations.csv           fetched once, frozen, shared by every run
 results/demos/runs/covid/seed0/<model>/     the manuscript run; seed1/ is the replicate
@@ -109,9 +122,11 @@ results/demos/runs/covid/seed0/<model>/     the manuscript run; seed1/ is the re
 results/demos/notebook/correlated-ou/covid/ the sensitivity runs, same layout
 ```
 
-**The notebooks are hand-maintained**: edit them directly. Their loading, scoring and
-figure code lives in `evaluation.py` so the notebooks and the manuscript exporter cannot
-disagree, which means a new figure is a function there plus a one-line cell here.
+**The notebooks are hand-maintained**: edit them directly. `01` writes the models out in
+full, so its last cell checks them against `models/` and fails if the two copies have
+drifted apart. `02`'s loading, scoring and figure code lives in `evaluation.py` so the
+notebook and the manuscript exporter cannot disagree, which means a new figure is a
+function there plus a one-line cell here.
 
 Shared library code lives in `analysis/src/manuscript_analysis/demos/lib/`:
 `forecasting.py` (the rolling-origin loop, the scoring groups and the output writers),
@@ -157,8 +172,8 @@ Environment and dependencies are pinned in `analysis/pyproject.toml` and
 `analysis/uv.lock` (`epymorph==2.0.0b1`, Python 3.12). Each run records its own provenance
 in `run.json`, including the structural knobs that define the comparison:
 `aggregate_quantities`, `scoring_locations`, `movement_data_mode` and whether
-`forecast_dynamics` was used. Section 3 of `evaluation.ipynb` asserts that the three runs
-differ in none of the fields they must share.
+`forecast_dynamics` was used. `02-evaluation.ipynb` asserts that the three runs differ in
+none of the fields they must share.
 
 Initial conditions are drawn per node from a stream keyed on FIPS, so dropping a state from
 the roster does not change any surviving node's values, and all three models get the same

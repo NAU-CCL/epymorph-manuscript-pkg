@@ -28,9 +28,11 @@ them would move the target the models are scored against.
 `src/manuscript_analysis/demos/ADDING-FIGURES.md` -- how to add a figure, and which of
 the three places it belongs in. Read it before changing `export.py`.
 
-`notebooks/demo-flu/`, `notebooks/demo-covid/` -- the exploratory surface: run the models,
-load and score them, draw every panel, and render the composed manuscript figures. These
-are hand-maintained and have no generator; edit them directly.
+`notebooks/demo-flu/`, `notebooks/demo-covid/` -- the readable surface.
+`01-model-and-forecast.ipynb` builds each demo's models in epymorph and runs one fit and
+one forecast, with every epymorph call in view; `02-evaluation.ipynb` renders the
+manuscript's tables and figures from the ensembles. Demo 2's `03-correlated-ou.ipynb` is a
+sensitivity analysis. These are hand-maintained; edit them directly.
 
 ## Conventions
 
