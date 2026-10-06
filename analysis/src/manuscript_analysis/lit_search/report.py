@@ -115,12 +115,13 @@ def check_lexicon_listing():
 APPENDIX_CLAIMS = [
     ("pubmed_retrieved",   r"PubMed search returned \\textbf\{([\d,]+) records\}"),
     ("pubmed_screened",    r"\\textbf\{([\d,]+)\} included abstracts"),
-    ("pubmed_advanced",    r"advancing \\textbf\{([\d,]+) records\}"),
+    ("pubmed_advanced",    r"pre-filter advanced \\textbf\{([\d,]+) records\}"),
     ("lens_retrieved",     r"Lens\.org export returned \\textbf\{([\d,]+) records\}"),
     ("lens_duplicates",    r"([\d,]+) were duplicates with PubMed"),
     ("lens_advanced",      r"keyword filter led to \\textbf\{([\d,]+)\}"),
     ("pubmed_dropped",     r"The ([\d,]+) PubMed and [\d,]+ Lens\.org records"),
     ("lens_dropped",       r"PubMed and ([\d,]+) Lens\.org records"),
+    ("titlesweep",         r"\(\\textbf\{([\d,]+)\} records\); all were out of scope"),
     ("random_sample",      r"random sample of \\textbf\{([\d,]+)\}"),
     ("random_sample_seed", r"seed\s*\$?=\s*([\d,]+)"),
     # the sources table
