@@ -4,7 +4,8 @@ Write every number Appendix S1 quotes to one machine-readable file, and check th
 The appendix states about twenty counts across §S1.9 and §S1.10. Each one was, until now,
 a number somebody read off a terminal and typed into a draft. `counts.json` makes them an
 output of the pipeline, and `--check` reads them back out of the appendix and asserts they
-still match, which is the guarantee actually wanted.
+still match, which is the guarantee actually wanted. The Methods summary of the search
+quotes the headline counts too, and is checked the same way.
 
 Same idea as the `\\newcommand` macro file planned for the demo figures: the paper and the
 analysis cannot disagree, because one generates the other's numbers.
@@ -97,12 +98,12 @@ def check_lexicon_listing():
                 continue
             missing.append(f"{name}: {term!r}")
     if missing:
-        print(f"  lexicon listing: {len(missing)} term(s) screened on but not listed in S1.1:")
+        print(f"  lexicon listing: {len(missing)} term(s) screened on but not listed in S1:")
         for item in missing:
             print(f"    {item}")
         return len(missing)
     total = sum(len(v) for v in BLOCKS.values())
-    print(f"  lexicon listing: all {total} screened terms are listed in S1.1")
+    print(f"  lexicon listing: all {total} screened terms are listed in S1")
     return 0
 
 
@@ -126,12 +127,23 @@ APPENDIX_CLAIMS = {
 }
 
 
-def check_appendix(counts):
+# The Methods summary quotes the headline counts in plain prose, so it gets its own phrases.
+METHODS_CLAIMS = {
+    "total_screened":    r"yielded ([\d,]+) unique records with abstracts",
+    "total_advanced":    r"this advanced ([\d,]+) records to manual screening",
+    "total_dropped":     r"we audited the ([\d,]+) records it set aside",
+    "titlesweep":        r"named a package \(([\d,]+) records\)",
+    "random_sample":     r"a random sample of ([\d,]+) of the rest",
+}
+
+
+def check_claims(path, claims, counts):
+    """Pull each claimed count out of one manuscript file and compare it with the pipeline."""
     # Flattened, because LaTeX hard-wraps prose: a claim can sit across a line break and the
     # pattern should not have to know where the wrap happens to fall.
-    text = re.sub(r"\s+", " ", paths.APPENDIX.read_text(encoding="utf-8"))
+    text = re.sub(r"\s+", " ", path.read_text(encoding="utf-8"))
     ok, bad, unfound = 0, [], []
-    for key, pattern in APPENDIX_CLAIMS.items():
+    for key, pattern in claims.items():
         match = re.search(pattern, text)
         if not match:
             unfound.append(key)
@@ -142,10 +154,10 @@ def check_appendix(counts):
         else:
             bad.append((key, stated, counts[key]))
 
-    print(f"\nappendix check ({paths.APPENDIX.name}):")
-    print(f"  {ok} of {len(APPENDIX_CLAIMS)} counts match the pipeline")
+    print(f"\nmanuscript check ({path.name}):")
+    print(f"  {ok} of {len(claims)} counts match the pipeline")
     for key, stated, actual in bad:
-        print(f"  MISMATCH {key}: appendix says {stated:,}, pipeline says {actual:,}")
+        print(f"  MISMATCH {key}: {path.name} says {stated:,}, pipeline says {actual:,}")
     for key in unfound:
         print(f"  NOT FOUND {key}: the phrase this looks for is not in the draft")
     return not bad and not unfound
@@ -163,7 +175,9 @@ def main():
           f"and {paths.LEXICON_PROSE.name} ({blocks} blocks)")
 
     if "--check" in sys.argv:
-        ok = check_appendix(counts)
+        ok = check_claims(paths.APPENDIX, APPENDIX_CLAIMS, counts)
+        if not check_claims(paths.METHODS_SURVEY, METHODS_CLAIMS, counts):
+            ok = False
         if check_lexicon_listing():
             ok = False
         if not ok:

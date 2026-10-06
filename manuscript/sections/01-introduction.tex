@@ -1,147 +1,53 @@
-%% Ported from drafts/intro-v05.md on 2026-09-21 (markdown to LaTeX; prose unchanged except em-dash removal).
-%% This file is now the working copy: edit here, not in the markdown draft. Cite keys are from references.bib.
-
 \section{Introduction}\label{sec:intro}
 
-Meta-population models, in which spatially distinct sub-populations are connected by host
-movement, are among the most widely used tools for understanding regional infectious disease
-dynamics and for generating the forecasts on which public health decisions increasingly
-depend~\citep{grenfell_metapopulation_1997,keeling_modeling_2011,riley_large-scale_2007,rohani_opposite_1999}. During the COVID-19 pandemic, these models proved instrumental in projecting
-disease burden and evaluating intervention strategies across geographic scales from counties
-to nations~\citep{pei_differential_2020,cramer_evaluation_2022,bertozzi_challenges_2020}. Yet no existing software environment supports the full lifecycle of a
-meta-population modeling study, from model construction through parameter estimation to
-operational forecasting, within a single, modular framework. In practice, most researchers
-build bespoke implementations in which assumptions about disease transmission, host
-movement, and geographic structure are intertwined throughout custom codebases, making it
-difficult to compare alternative model formulations, adapt models to new pathogens, or
-reproduce published analyses~\citep{willem_lessons_2017,pollett_recommended_2021}.
+Meta-population models, in which spatially distinct sub-populations are connected by host movement, are among the most widely used tools for understanding regional infectious disease dynamics and for generating the forecasts on which public health decisions increasingly depend~\citep{grenfell_metapopulation_1997,keeling_modeling_2011,riley_large-scale_2007,rohani_opposite_1999}. 
+During the COVID-19 pandemic, these models proved instrumental in projecting disease burden and evaluating intervention strategies across geographic scales from counties to nations~\citep{pei_differential_2020,cramer_evaluation_2022,bertozzi_challenges_2020}. 
+Yet no existing software environment supports the full life cycle of a
+meta-population modeling study, from model construction through parameter estimation to operational forecasting, within a modular framework that allows users choices of advanced approaches to modeling and statistical inference. 
+In practice, most researchers build bespoke implementations of spatial models in which assumptions about disease transmission, host movement, and geographic structure are intertwined throughout custom code bases, making it difficult to compare alternative model formulations, adapt models to new pathogens, or even reproduce published analyses~\citep{willem_lessons_2017,pollett_recommended_2021}.
 
-Spatial epidemic models suffer from pervasive issues with both reproducibility and
-comparability. Our own systematic review of 109 spatial epidemiological studies of COVID-19
-found that only 30.6\% provided accessible code~\citep{oshinubi_systematic_2026}, and another study could only
-completely reproduce 4 of 100 randomly sampled COVID-19 modeling studies~\citep{henderson_reproducibility_2024}, a problem
-now recognized widely enough to have prompted a 22-element framework for reproducibility in
-computational epidemiology that current studies rarely satisfy~\citep{pokutnaya_implementation_2023}. These
-reproducibility failures compound a deeper comparability problem. Meta-population models
-exhibit high-dimensional state spaces and complex spatial interdependencies that necessitate
-sophisticated inference algorithms such as particle filters or ensemble Kalman filters~\citep{king_statistical_2016,ganyani_simulation_2021,ionides_iterated_2024}, yet implementing these methods requires substantial custom code for each model
-structure~\citep{asfaw_tutorial_2024,ning_iterated_2023,funk_choices_2020}. A result is that multi-model forecasting efforts, such as the CDC
-FluSight challenge~\citep{cdc_flusight_2026,loo_us_2024} cannot systematically isolate which modeling choices drive
-differences in forecast accuracy~\citep{shea_harnessing_2020,reich_collaborative_2022}. While ensembling models improve forecast quality~\citep{howerton_evaluation_2023,reich_collaborative_2019}, the inability to vary individual components (compartmental structure, movement
-assumptions, spatial resolution) while holding others constant, limits the field's ability
-to learn which structural elements of spatial, mechanistic models most affect forecasts.
-What is needed is modular software infrastructure that integrates the full forecasting
-workflow, from data acquisition through model specification, calibration, and probabilistic
-prediction, as a customizable but highly reproducible pipeline~\citep{lutz_applying_2019,moran_future_2025,birrell_evidence_2018}.
+Spatial epidemic models suffer from issues with both reproducibility and
+comparability. A pivotal study could only completely reproduce 4 of 100 randomly sampled COVID-19 modeling studies~\citep{henderson_reproducibility_2024}, a problem now recognized widely enough to have prompted a 22-element framework for reproducibility in
+computational epidemiology that current studies rarely satisfy~\citep{pokutnaya_implementation_2023}. 
+Our own systematic review of 109 spatial epidemiological studies of COVID-19 found that only 30.6\% provided accessible code~\citep{oshinubi_systematic_2026}.
+These reproducibility failures compound a deeper comparability problem. Meta-population models exhibit high-dimensional state spaces and complex spatial interdependencies that necessitate sophisticated inference algorithms such as particle filters or ensemble Kalman filters~\citep{king_statistical_2016,ganyani_simulation_2021,ionides_iterated_2024}, yet implementing these methods requires substantial custom code for each model structure~\citep{asfaw_tutorial_2024,ning_iterated_2023,funk_choices_2020}. A result is that multi-model forecasting efforts, such as the CDC
+FluSight challenge~\citep{cdc_flusight_2026,loo_us_2024} cannot systematically isolate which modeling choices drive differences in forecast accuracy~\citep{shea_harnessing_2020,reich_collaborative_2022}. 
+While ensembling models improve forecast quality~\citep{howerton_evaluation_2023,reich_collaborative_2019}, the inability to vary individual components (compartmental structure, movement
+assumptions, spatial resolution) while holding others constant, limits the field's ability to learn which structural elements of spatial, mechanistic models most affect forecasts.
+What is needed is modular software infrastructure that integrates the full forecasting workflow, from data acquisition through model specification, calibration, and probabilistic prediction, as a customizable but highly reproducible pipeline~\citep{lutz_applying_2019,moran_future_2025,birrell_evidence_2018}.
 
-Existing software addresses individual components of this workflow, but none spans it in
-full (Table~\ref{tab:comparison}), and the most capable systems sit at opposite ends of a spectrum. At one
-end, statistical inference toolkits, \texttt{pomp} and its spatiotemporal extension
-\texttt{spatPomp}~\citep{king_statistical_2016,ionides_iterated_2024,asfaw_tutorial_2024}, the \texttt{odin2}/\texttt{dust2}/\texttt{monty} stack~\citep{fitzjohn_reproducible_2021},
-and \texttt{LibBi} with its \texttt{rbi} interface~\citep{murray_bayesian_2015}, implement broad collections of
-fitting algorithms for partially observed Markov processes. \texttt{spatPomp} offers both a
-particle filter and an ensemble Kalman filter for geographic meta-populations~\citep{ionides_iterated_2024,ning_iterated_2023}.
-However, what these toolkits lack is modeling and data infrastructure: none ships an
-epidemiological model library, none retrieves data of any kind, and every model needs
-to be hand-coded (e.g, C snippets in \texttt{pomp}
-and \texttt{spatPomp}), which raises the barrier to entry. At the other end of the spectrum,
-epidemiology-specific pipelines supply domain-specific infrastructure but commit to a single
-inference strategy or a single model class. \texttt{FlepiMoP} couples meta-population
-compartmental models to Bayesian forecasting through a single Markov chain Monte Carlo
-scheme, and is the one comparator with a data layer of comparable ambition: its
-repository ships US county populations and commuting flows and pulls COVID-19 and
-influenza ground truth from public APIs, though only for the United States~\citep{lemaitre_flepimop_2024}. \texttt{Epydemix} offers single-population
-compartmental models with approximate Bayesian calibration and no meta-population
-structure, but retrieves population structures and contact matrices for more than 400
-regions worldwide~\citep{gozzi_epydemix_2025}. And \texttt{summer2}, allows multiple calibration backends through its companion
-package \texttt{estival} but provides no sequential filtering, no movement-based spatial
-coupling, and no automated data acquisition~\citep{trauer_data_2025}. Moreover, appendix S1 (Table S1)
-reports a reproducible, systematic comparison across the full software landscape.
+Existing software addresses individual components of this workflow, but none spans it in full (Table~\ref{tab:comparison}). On one hand, statistical inference toolkits that are powerful but not tailored to epidemiology, such as \texttt{pomp} and its spatiotemporal extension \texttt{spatPomp}~\citep{king_statistical_2016,ionides_iterated_2024,asfaw_tutorial_2024}, the \texttt{odin2}/\texttt{dust2}/\texttt{monty} stack~\citep{fitzjohn_reproducible_2021}, and \texttt{LibBi} with its \texttt{rbi} interface~\citep{murray_bayesian_2015}, implement broad collections of fitting algorithms for partially observed Markov processes. For instance, \texttt{spatPomp} offers both a particle filter and an ensemble Kalman filter for geographic meta-populations~\citep{ionides_iterated_2024,ning_iterated_2023}.
+However, what these toolkits lack is modeling and data infrastructure: none prove an epidemiological model library, none retrieves data of any kind, and every model needs to be hand-coded (e.g, C snippets), which raises the barrier to entry. 
+On the other hand, epidemiology-specific pipelines supply domain-specific infrastructure but most often commit to a single inference strategy or a single model class. 
+\texttt{FlepiMoP} is an outstanding example that couples meta-population compartmental models to Bayesian forecasting through a Markov chain Monte Carlo scheme and offers access to some data that is essential for epidemiological studies~\citep{lemaitre_flepimop_2024}. 
+\texttt{Epydemix} provides compartmental disease models with approximate Bayesian calibration, and provides contact matrices for more than 400
+regions worldwide, but there is no support for meta-population
+or spatial models~\citep{gozzi_epydemix_2025}. 
+And \texttt{summer2}, allows multiple calibration backends through its companion package \texttt{estival} but provides no sequential filtering, no movement-based spatial coupling, and no automated data acquisition~\citep{trauer_data_2025}. 
+In our supplementary materials, we provide a structured, reproducible comparison across the full software landscape (Methods).
 
-Bluntly, no existing package combines modular meta-population model construction, automated
-acquisition of demographic and surveillance data, multiple interchangeable inference
-algorithms, and an integrated forecasting pipeline within a single environment. Here we
-introduce \texttt{epymorph}, a Python package that provides this unified framework.
-\texttt{epymorph} implements a Geography, Population, Movement (GPM) framework~\citep{oshinubi_systematic_2026},
-under which a spatial model is decomposed into three interacting sub-models: an
-intra-population model (IPM) describing transmission and disease dynamics, including
-multi-strata structures such as age groups or multi-species transmission; a movement model
-(MM) representing how hosts move between spatially distinct sub-populations, from gravity
-kernels to empirical commuting flows; and a geographic model (GEO) supplying the attributes
-of the geography in which the model is deployed (e.g., sub-population sizes, locations, and
-local environmental and demographic features). \texttt{epymorph} assembles these sub-models
-into a single self-contained object that allows for model execution and calibration. Because
-the components are modular, a novel compartmental model can be deployed in a new geography,
-or its distance-based movement dynamics swapped for commuter-style movement, all by changing
+Bluntly, no existing package combines modular meta-population model construction, automated acquisition of demographic and surveillance data, multiple interchangeable inference algorithms, and an integrated forecasting pipeline within a single software environment (Table~\ref{tab:comparison}). 
+Here we introduce \texttt{epymorph}, a Python package that provides this unified framework.
+\texttt{epymorph} implements a Geography, Population, Movement (GPM) framework~\citep{oshinubi_systematic_2026}, under which a spatial model is decomposed into three interacting sub-models: an intra-population model (IPM) describing transmission and disease dynamics via a compartment model, including multi-strata structures such as age groups or multi-species transmission; a movement model (MM) representing how hosts or vectors move between spatially distinct sub-populations; and a geographic model (GEO) supplying the attributes of the geography in which the model is deployed (e.g., sub-population counts, local environmental and demographic features) (Fig.~\ref{fig:architecture}).
+\texttt{epymorph} assembles these sub-models into a single self-contained object that allows for model execution and calibration. 
+Because the components are modular, a novel compartmental model can be deployed in a new geography, or distance-based movement dynamics can ve swapped for commuter movement driven by real data, all by changing
 a single line of code.
 
-For U.S.-based studies, \texttt{epymorph} automates the acquisition of Census population
-data at resolutions from state to census block group, empirical commuting flows, PRISM
-climate data, and CDC surveillance data, removing the requirement that users be experts in
-munging diverse data sources. These data components supply covariate data to run a model and
-observational data for model-fitting, with each quantity returned conformed to the study's
-geographic scope and time frame. Studies outside the United States can use the same
-modeling, inference, and forecasting machinery, by supplying custom data through the same
-interface. Compiled models are executed as stochastic simulations and fit to observations
-using a choice of particle filtering~\citep{gordon_novel_1993,arulampalam_tutorial_2002} or ensemble Kalman filtering~\citep{evensen_ensemble_2003,lal_application_2021,abbas_joint_2025},
-accommodating stratified data and multiple simultaneous surveillance streams. Fitted models
-then feed a probabilistic forecasting pipeline that can, for example, simulate the effects
-of local or regional interventions.
-
-Here we demonstrate the key features of \texttt{epymorph} through
-% PLACEHOLDER: to finalize once the vignette is complete
-[DEMONSTRATION: e.g., age-stratified forecasting of influenza hospitalizations across
-multiple U.S. states], a workflow that exercises the full pipeline from automated data
-acquisition through model specification, calibration, and probabilistic forecasting.
-[HEADLINE RESULT: state one concrete quantitative finding enabled by the modular design,
-e.g., holding the disease model fixed and swapping only the movement model changed forecast
-skill (weighted interval score) by X\%, isolating the contribution of movement assumptions
-to forecast accuracy.] By making model components interchangeable, automating spatial and
-surveillance data workflows, and exposing multiple inference algorithms through a common
-interface, \texttt{epymorph} converts comparisons that previously required rewriting bespoke
-codebases into controlled computational experiments, providing the standardized,
-reproducible, and rapidly deployable modeling infrastructure that collaborative forecasting
-and pandemic preparedness demand~\citep{howerton_evaluation_2023,shea_harnessing_2020,reich_collaborative_2022}.
-
 % GENERATED by software-lit-search/src/table1_tex.py -- do not hand-edit.
-% Source of truth: software-lit-search/decisions/table-marks.csv
-\begin{table*}[tb]
-\centering
-\caption{\textbf{Capabilities of epymorph and eleven comparator packages for mechanistic epidemic modelling and forecasting.} \mkfull{}, the package provides a dedicated construct, API or data service for the capability; \mknone{}, it does not. Each cell is a binary judgement against a single stated criterion; the criteria, the evidence for every mark, and the two further packages surveyed are given in Supplementary \S\ref{sec:S1-3}. Packages are grouped by the role they are designed for: \emph{Pipelines}, end-to-end; \emph{Toolkits}, inference toolkits; \emph{Simulation tools}, simulation and calibration. Shown here are the capabilities that separate these packages; probabilistic calibration and uncertainty quantification is omitted because all fourteen provide it, which is itself worth recording. \textsuperscript{a}One package that retrieves both the model inputs and the calibration target, fits the model to them, and generates forecasts.}
-\label{tab:comparison}
-\footnotesize
-\setlength{\tabcolsep}{3.5pt}
-\renewcommand{\arraystretch}{1.1}
-\begin{tabular}{@{}lcccccccccccc@{}}
-\toprule
- & \multicolumn{3}{c}{\emph{\scriptsize Pipelines}} & \multicolumn{4}{c}{\emph{\scriptsize Toolkits}} & \multicolumn{5}{c}{\emph{\scriptsize Simulation tools}} \\
-\cmidrule(r){2-4}\cmidrule(lr){5-8}\cmidrule(l){9-13}
- & \rotatebox{90}{epymorph} & \rotatebox{90}{FlepiMoP} & \rotatebox{90}{MetaRVM} & \rotatebox{90}{spatPomp} & \rotatebox{90}{pomp} & \rotatebox{90}{odin/dust/mcstate} & \rotatebox{90}{pypfilt/epifx} & \rotatebox{90}{SimInf} & \rotatebox{90}{PyRossGeo} & \rotatebox{90}{surveillance (hhh4)} & \rotatebox{90}{Epydemix} & \rotatebox{90}{summer2/estival} \\
-\midrule
-\multicolumn{13}{@{}l}{\textbf{Automated data acquisition}} \\
-\quad Surveillance time series & \mkfull{} & \mkfull{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} \\
-\quad Population size and age structure & \mkfull{} & \mkfull{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mkfull{} & \mknone{} & \mkfull{} & \mknone{} \\
-\quad Movement or commuting flows & \mkfull{} & \mkfull{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} \\
-\quad Age-stratified contact matrices & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mkfull{} & \mknone{} & \mkfull{} & \mknone{} \\
-\quad Weather and environmental covariates & \mkfull{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} \\
-\quad Data for regions outside the United States & \mknone{} & \mkfull{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mkfull{} & \mknone{} & \mkfull{} & \mknone{} \\
-\addlinespace[3pt]
-\multicolumn{13}{@{}l}{\textbf{Model specification}} \\
-\quad Model specification language (DSL or declarative form) & \mkfull{} & \mkfull{} & \mknone{} & \mknone{} & \mknone{} & \mkfull{} & \mknone{} & \mkfull{} & \mknone{} & \mknone{} & \mkfull{} & \mkfull{} \\
-\quad Automatic model diagrams and data-requirement analysis & \mkfull{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} \\
-\quad Ready-made compartmental models supplied & \mkfull{} & \mkfull{} & \mkfull{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mkfull{} & \mkfull{} & \mknone{} & \mkfull{} & \mknone{} \\
-\addlinespace[3pt]
-\multicolumn{13}{@{}l}{\textbf{Population structure}} \\
-\quad Operator for demographic (age/risk) stratification & \mkfull{} & \mkfull{} & \mkfull{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mkfull{} & \mknone{} & \mkfull{} & \mkfull{} \\
-\quad Movement-based coupling between sub-populations & \mkfull{} & \mkfull{} & \mkfull{} & \mkfull{} & \mknone{} & \mknone{} & \mknone{} & \mkfull{} & \mkfull{} & \mknone{} & \mknone{} & \mknone{} \\
-\addlinespace[3pt]
-\multicolumn{13}{@{}l}{\textbf{Inference}} \\
-\quad Particle filter & \mkfull{} & \mknone{} & \mknone{} & \mkfull{} & \mkfull{} & \mkfull{} & \mkfull{} & \mkfull{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} \\
-\quad Ensemble Kalman filter & \mkfull{} & \mknone{} & \mknone{} & \mkfull{} & \mkfull{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} \\
-\addlinespace[3pt]
-\multicolumn{13}{@{}l}{\textbf{Forecasting}} \\
-\quad Forecast generation from a fitted model & \mkfull{} & \mkfull{} & \mknone{} & \mknone{} & \mknone{} & \mkfull{} & \mkfull{} & \mknone{} & \mkfull{} & \mkfull{} & \mkfull{} & \mknone{} \\
-\quad Data retrieval, fitting and forecasting in one package\textsuperscript{a} & \mkfull{} & \mkfull{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} & \mknone{} \\
-\bottomrule
-\end{tabular}
-\end{table*}
+\input{tables/table-1-maintext}
+
+For U.S.-based studies, \texttt{epymorph} automates the acquisition of Census population data at resolutions from state to census block group, empirical commuting flows, PRISM climate data, and CDC surveillance data, removing the requirement that users be experts in munging diverse data sources. 
+Our internal data machinery ensures that model inputs and outputs are harmonized, such that each quantity returned conforms to the study's geographic scope and time frame. 
+Importantly, studies outside the United States, or studies wanting to use custom geographic scopes, can still leverage the same modeling, inference, and forecasting machinery, by supplying custom data through the same
+interface. 
+This effectively exposes epymorph's simulation and inference framework to any spatial modeling domain based around compartmental models. 
+Compiled models are executed as stochastic simulations and fit to observations using a choice of particle filtering~\citep{gordon_novel_1993,arulampalam_tutorial_2002} or ensemble Kalman filtering~\citep{evensen_ensemble_2003,lal_application_2021,abbas_joint_2025}, accommodating stratified data and multiple simultaneous surveillance streams (e.g., fitting to cases and hospitalizations). 
+Fitted models then feed a probabilistic forecasting pipeline that can, for example, simulate the effects
+of locally-refined interventions through the forecast window. 
+
+Here we demonstrate key features of \texttt{epymorph} with two case studies, each of which compares competing models by running them through the an advanced forecasting pipeline.
+First, we test whether age-stratification and empirically derived contact mixing improve forecasts of influenza hospitalizations across the United States during the 2025-2026 season. 
+Second, we test the roles of spatial resolution and host movement in forecasting SARS-CoV-2 hospitalizations and deaths in three New England states during the 2020-2021 winter wave. 
+We find that empirical age-structured contact mixing improves influenza forecasts, increasingly so at longer horizons, whereas for SARS-CoV-2 a coarser State-level model outperforms county-level models at forecasting State-level data, although empirical commuting improves county-level forecasts relative to no movement.
+By making model components interchangeable, automating spatial and surveillance data workflows, and exposing multiple inference algorithms through a common interface, \texttt{epymorph} converts comparisons that previously required rewriting bespoke codebases into controlled computational experiments. 
+\texttt{epymorph} provide the standardized, reproducible, and rapidly deployable modeling infrastructure that collaborative forecasting and pandemic preparedness demand~\citep{howerton_evaluation_2023,shea_harnessing_2020,reich_collaborative_2022}.

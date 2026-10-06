@@ -13,7 +13,7 @@ deciding its provenance fails the check rather than passing unnoticed.
 Table 1 carries the 12 packages tabulated in the main text and omits the rows in `OMITTED`.
 
 **Table S1 was removed from the manuscript on 2026-09-21 (JM): it duplicated Table 1.** The
-appendix now carries the comparison in prose instead, in \S S1.3 and the capsules. The full
+appendix now carries the comparison in prose instead, in S1's criteria and package summaries. The full
 14-package grid is still written to `results/table-s1.tex` because it costs nothing and is
 the obvious thing to hand a reviewer who asks to see every package on every criterion, but
 **it is not part of the manuscript** and must not be pasted back in without deciding what it
@@ -165,8 +165,8 @@ CAPTION_T1 = (
     "\\textbf{Capabilities of epymorph and eleven other packages for mechanistic "
     "epidemic modeling and forecasting.} \\mkfull{}, the package provides a dedicated "
     "construct, API or data service for the capability; \\mknone{}, it does not. "
-    "Additional packages are discussed in Supplementary "
-    "\\S\\ref{sec:S1-3} and Table~\\ref{tab:S1}. Packages are grouped by the role they are "
+    "Additional packages are discussed in Supplementary Section S1. "
+    "Packages are grouped by the role they are "
     "designed for: \\emph{Pipelines}, end-to-end; \\emph{Toolkits}, inference toolkits; "
     "\\emph{Simulation tools}, simulation and calibration."
     "\\textsuperscript{a}One package that retrieves both the model inputs and the "
@@ -177,7 +177,7 @@ CAPTION_S1 = (
     "\\textbf{Feature comparison of the fourteen retained packages.} \\mkfull{}, the "
     "package provides a dedicated construct, API or data service for the capability; "
     "\\mknone{}, it does not. Each cell is a binary judgement against the criterion stated "
-    "in \\S\\ref{sec:S1-3}; borderline calls are argued there rather than softened into a "
+    "in \\S\\ref{sec:S1-criteria}; borderline calls are argued there rather than softened into a "
     "third symbol. Packages are grouped by the role they are designed for. This is the "
     "complete grid. Table~1 of the main text shows the twelve packages and the subset of "
     "capabilities that carry the argument; this table adds LibBi/rbi and epidemia, the "
