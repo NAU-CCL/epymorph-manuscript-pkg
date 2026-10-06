@@ -73,8 +73,9 @@ We reviewed every set-aside record whose title named a package, and a random sam
 Each retained package's capabilities were verified by reading its documentation (package website, CRAN or PyPI page, or software paper), with a second author spot-checking the results.
 We provide documentation of the decision-making process with the manuscript supplementary files. 
 
-\textbf{Discovery sources.} Table~\ref{tab:S1-sources} lists what each source surfaced. The
-registries and citation chaining supplied most of the established inference toolkits directly.
+\textbf{Discovery sources.} 
+Table~\ref{tab:S1-sources} lists what each source surfaced. The
+software registries and checking previously cited packages in published manuscripts (i.e., citation chaining) supplied most of the established inference toolkits directly.
 
 {\small\renewcommand{\arraystretch}{1.15}\setlength{\LTcapwidth}{\linewidth}
 \begin{longtable}{>{\raggedright\arraybackslash}p{0.15\linewidth}>{\raggedright\arraybackslash}p{0.21\linewidth}>{\raggedright\arraybackslash}p{0.33\linewidth}>{\raggedright\arraybackslash}p{0.19\linewidth}}
@@ -112,16 +113,15 @@ Of the remaining, the keyword filter led to \textbf{208} potential sources.
 The manual review discovered one new package meeting the criteria,
 MetaRVM~\citep{fadikar_developing_2025}.
 
-\textbf{Recall audit.} 
+\textbf{Double-checks (i.e., recall audit).} 
 The 1,927 PubMed and 461 Lens.org records that the keyword filter set aside were checked in two ways. 
-First, we reviewed every set-aside record whose title named a package together with an epidemiological term (\textbf{101} records); all were out of scope or already known to us. 
+First, we reviewed every set-aside record whose title named a package together with an epidemiological term (\textbf{101} records); all were out of scope or already known to us from the searches of software repositories. 
 Second, we reviewed a seeded random sample of \textbf{100} of the remaining set-aside records (seed $=20260724$), and found no additional packages.
 
 \textbf{Outcome.} 
-Beyond the two packages noted (summer2/estival from PubMed and MetaRVM
-from the Lens.org preprints), the database search and the search on software repositories led to the same outcomes. 
+Other than the two packages noted (summer2/estival from PubMed and MetaRVM from Lens.org), the database search and the search on software repositories led to the same outcomes. 
 Overall, the survey discovered 13 notable packages for comparison with epymorph, including the 11 in Table~1, as well as LibBi/rbi and epidemia (\S\ref{sec:S1-summaries}; Figure~\ref{fig:S1-flow}). 
-We also summarize 22 related tools that fall outside the focus of the comparison (Table~\ref{tab:S1-context}). 
+We also summarize 22 related tools that fell outside the focus of the comparison (Table~\ref{tab:S1-context}). 
 
 \begin{figure}[htbp]
 \centering
@@ -182,36 +182,16 @@ epidemia & Hamiltonian Monte Carlo (Stan) \\
 \end{longtable}}
 
 
-\textbf{Borderline calls.} 
-\emph{Movement-based coupling.} surveillance/hhh4 is the closest
-call: it has inter-unit transmission terms and a dedicated coupling API (\texttt{neighbourhood}
-weight matrices, \texttt{W\_powerlaw} with an estimated decay parameter), but the coupling is a
-fitted regression weight and nothing is transported, so it scores \mknone{}. epidemia pools
-\emph{parameters} across regions through multilevel priors, with no cross-region transmission
-term, so its regions are statistically linked but epidemiologically independent. pomp is
-single-population; spatPomp is its spatial extension. \emph{Demographic stratification.} Five
-packages do real work through machinery that is not a stratification operator, and all five
-score \mknone{}: odin and LibBi supply array dimensions with indexed equations (odin's
-documentation works through age- and vaccination-structured examples, making it the strongest
-of the five), SimInf ships age-stratified template models but cannot stratify anything else,
-spatPomp separates the spatial index from the within-unit state vector so that strata could
-occupy the latter, and epidemia's group structure can carry strata. \emph{Inference.} LibBi's
-extended Kalman filter is a deterministic Kalman variant, not an ensemble Kalman filter, so its
-EnKF cell is \mknone{}. PyRoss's \texttt{evidence\_smc} is a density-tempered SMC sampler over
-parameter space for computing model evidence, not a sequential filter over latent states, and
-its latent-state inference uses a Gaussian (system-size expansion) approximation; its
-particle-filter cell is therefore \mknone{}. SimInf's three calibration methods
-(\texttt{abc}, \texttt{pfilter}, \texttt{pmcmc}) postdate its published description and were
-verified against the current package. \emph{Forecast evaluation.} Only surveillance/hhh4
-(\texttt{scores}, \texttt{pit}, \texttt{calibrationTest}) and pypfilt/epifx (continuous ranked
-probability scores) score forecasts in-package. epymorph and FlepiMoP both leave scoring to the
-forecast hubs and their dedicated scoring packages, which we judge the right division of labor
-rather than a gap, so forecast scoring is not a row of Table~1.
+\textbf{Forecast scoring.}
+Only surveillance/hhh4 and pypfilt/epifx score forecasts in-package. epymorph and FlepiMoP both
+leave scoring to the forecast hubs and their dedicated scoring packages, which we judge the
+right division of labor rather than a gap, so forecast scoring is not a row of Table~1.
 
 \subsection{Package summaries}\label{sec:S1-summaries}
 
-Packages compared in Table~1 are grouped as in the table. Packages that were assessed but not
-tabulated follow, and Table~\ref{tab:S1-context} lists the remaining tools.
+Packages compared in Table~1 appear in the order of its columns. Where a mark was a close call,
+the summary explains it. Packages that were assessed but not tabulated follow, and
+Table~\ref{tab:S1-context} lists the remaining tools.
 
 \textbf{Pipelines.}
 
@@ -240,18 +220,24 @@ tabulated follow, and Table~\ref{tab:S1-context} lists the remaining tools.
   \textbf{spatPomp} (R): the spatiotemporal extension of pomp for geographic meta-populations,
   with a guided intermediate-resampling filter, block particle filter, adapted bagged filter
   and ensemble Kalman filter, and parameter estimation by iterated filtering. Models are
-  hand-coded, with no built-in epidemiological structures or data
-  services~\citep{ionides_iterated_2024,asfaw_tutorial_2024}.
+  hand-coded, with no built-in epidemiological structures or data services. The spatial index
+  is kept separate from the within-unit state vector, so strata could be placed in the latter,
+  but nothing stratifies a model, so it scores \mknone{} for demographic
+  stratification~\citep{ionides_iterated_2024,asfaw_tutorial_2024}.
 \item
   \textbf{pomp} (R): inference for partially observed Markov processes, with particle,
   ensemble Kalman and ensemble-adjustment Kalman filters, iterated filtering, particle MCMC,
-  ABC and Bayesian SMC. Single-population; models are hand-coded as C snippets; no data
-  acquisition~\citep{king_statistical_2016}.
+  ABC and Bayesian SMC. Single-population, with spatPomp as its spatial extension; models are
+  hand-coded as C snippets; no data acquisition~\citep{king_statistical_2016}.
 \item
   \textbf{odin/dust/mcstate} (R): stochastic state-space models written in the odin
   domain-specific language, with particle filtering, particle MCMC, SMC\textsuperscript{2} and
-  iterated filtering; no ensemble Kalman filter. Reorganized in 2024 as odin2/dust2/monty
-  (dust2 runs the filters, monty succeeds mcstate)~\citep{fitzjohn_reproducible_2021}.
+  iterated filtering; no ensemble Kalman filter. Array dimensions with indexed equations let a
+  modeler build stratified models, and the documentation works through age- and
+  vaccination-structured examples, but this is general machinery rather than an operator that
+  stratifies a model, so it scores \mknone{} for demographic stratification; of the packages
+  scored this way, odin comes closest. Reorganized in 2024 as odin2/dust2/monty (dust2 runs the
+  filters, monty succeeds mcstate)~\citep{fitzjohn_reproducible_2021}.
 \item
   \textbf{pypfilt/epifx} (Python): a bootstrap particle filter for online estimation and
   forecasting (pypfilt) with an epidemic modeling layer (epifx) that provides mechanistic
@@ -266,18 +252,29 @@ tabulated follow, and Table~\ref{tab:S1-context} lists the remaining tools.
 \item
   \textbf{SimInf} (R): stochastic meta-population simulation by the Gillespie algorithm, with
   template models (SIR, SISe, SEIR), and calibration by ABC-SMC, a bootstrap particle filter
-  and particle MCMC; not oriented toward sequential forecasting~\citep{widgren_siminf_2019}.
+  and particle MCMC; not oriented toward sequential forecasting. The three calibration methods
+  (\texttt{abc}, \texttt{pfilter}, \texttt{pmcmc}) postdate the published description, which
+  covers simulation only, and were verified against the current package. It ships
+  age-stratified template models but cannot stratify other models, so it scores \mknone{} for
+  demographic stratification~\citep{widgren_siminf_2019}.
 \item
   \textbf{PyRoss/PyRossGeo} (Python): Bayesian inference (MAP, MCMC, nested sampling) for age-
   and contact-structured compartmental models, with spatial commuting through the PyRossGeo
-  companion. No particle or ensemble Kalman filter (see \S\ref{sec:S1-criteria}). Ships
+  companion. Its \texttt{evidence\_smc} routine is a density-tempered SMC sampler over parameter
+  space for computing model evidence, not a sequential filter over latent states, and latent
+  states are handled by a Gaussian (system-size expansion) approximation, so it scores
+  \mknone{} for the particle filter despite the routine's name. Ships
   household, workplace, school and community contact matrices for several countries, which
   epymorph does not~\citep{adhikari_inference_2020}.
 \item
   \textbf{surveillance (hhh4)} (R): endemic--epidemic regression for areal count time series
   with neighborhood coupling and one-step-ahead or simulated forecasts, fit by penalized
-  likelihood; one of two surveyed packages that score forecasts
-  in-package~\citep{meyer_spatio-temporal_2017,paul_predictive_2011}.
+  likelihood; one of two surveyed packages that score forecasts in-package (\texttt{scores},
+  \texttt{pit}, \texttt{calibrationTest}). It is the closest call in Table~1 on movement-based
+  coupling: it has transmission terms between units and a dedicated coupling API
+  (\texttt{neighbourhood} weight matrices, \texttt{W\_powerlaw} with an estimated decay
+  parameter), but the coupling is a fitted regression weight and nothing is transported, so it
+  scores \mknone{}~\citep{meyer_spatio-temporal_2017,paul_predictive_2011}.
 \item
   \textbf{Epydemix} (Python): single-population compartmental models with approximate Bayesian
   calibration (rejection, budget-constrained rejection, ABC-SMC). A companion repository
@@ -302,12 +299,17 @@ the same rows, but adding them would lengthen Table~1 without changing the compa
   \textbf{LibBi/rbi} (C++/CUDA with an R interface): a state-space modeling language with
   particle filtering, particle MCMC, SMC\textsuperscript{2} and an extended Kalman filter,
   parallelized for GPUs and clusters. A general state-space engine whose epidemiological use is
-  through \texttt{rbi.helpers}; development has slowed~\citep{murray_bayesian_2015}.
+  through \texttt{rbi.helpers}; development has slowed. Its extended Kalman filter is a
+  deterministic Kalman variant, not an ensemble Kalman filter. Like odin, it supplies array
+  dimensions that can carry strata, but no operator that stratifies a
+  model~\citep{murray_bayesian_2015}.
 \item
   \textbf{epidemia} (R): semi-mechanistic Bayesian modeling with renewal-equation dynamics, fit
   by Hamiltonian Monte Carlo through Stan, estimating reproduction numbers, latent infections
-  and intervention effects. A renewal model rather than a compartmental one; supports regional
-  partial pooling but not movement-based coupling~\citep{scott_epidemia_2021}.
+  and intervention effects. A renewal model rather than a compartmental one. Regions share
+  \emph{parameters} through multilevel priors, with no transmission term between them, so they
+  are statistically linked but epidemiologically independent; its group structure can carry
+  strata, but nothing stratifies a model~\citep{scott_epidemia_2021}.
 \end{itemize}
 
 {\small\renewcommand{\arraystretch}{1.15}\setlength{\LTcapwidth}{\linewidth}
@@ -373,8 +375,8 @@ documented behaviour rather than its name.
 
 Binary marks sharpen the comparison but flatten real differences in strength: odin's array
 dimensions and pomp's hand-written C snippets both score \mknone{} for demographic
-stratification, though the first does much more of the work. \S\ref{sec:S1-criteria} carries
-those distinctions. Our criteria, centred on mechanistic state-space inference, deliberately
+stratification, though the first does much more of the work. The package summaries
+(\S\ref{sec:S1-summaries}) carry those distinctions. Our criteria, centred on mechanistic state-space inference, deliberately
 exclude agent-based and purely statistical forecasting tools that some readers may consider
 adjacent. A keyword pre-filter can only find packages whose abstracts describe what they do:
 summer2/estival was missed by an earlier vocabulary centred on filtering and recovered only
