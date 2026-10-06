@@ -1,113 +1,90 @@
-%% Restructured 2026-10-06: the search's sources, criteria and headline counts are summarized in
-%% the main-text Methods (sections/02c-methods-software-survey.tex); this file carries the full
-%% protocol, the criteria behind Table 1, and the package summaries. The pipeline's --check reads
-%% both files: keep the phrases that carry the counts, and the term-set paragraph, intact.
 
 \section{Survey of epidemic modeling software}\label{sec:S1}
 
-This section supplements the software survey described in the Methods. It gives the full
-search protocol and its results (\S\ref{sec:S1-search}), the criterion behind each row of
-Table~1 and the borderline calls (\S\ref{sec:S1-criteria}), a summary of every package the
-survey identified (\S\ref{sec:S1-summaries}), and the survey's limitations
-(\S\ref{sec:S1-limitations}). Package capabilities were verified against primary
-documentation as of September 2026. Every count reported here is regenerated from the archived
-search exports by the code in the manuscript repository.
+Here we provide the full search protocol and its results (\S\ref{sec:S1-search}), as well as descriptions of the criterion of
+Table~1 (\S\ref{sec:S1-criteria}).
+We also include summaries of each key package we identified (\S\ref{sec:S1-summaries}), regardless of if it was included in the main table.
+Finally, we discuss search limitations (\S\ref{sec:S1-limitations}). 
 
 \subsection{Search protocol and results}\label{sec:S1-search}
 
-We describe this as a structured, reproducible search rather than a PRISMA systematic review:
-the aim is an auditable, repeatable procedure proportionate to a survey of software, not a
-formal evidence synthesis. A systematic review of spatial epidemic modeling \emph{studies} is
-reported separately~\citep{oshinubi_systematic_2026}.
+We describe this as a structured, reproducible search rather than a PRISMA systematic review.
+The goal is a repeatable procedure, rather than a synthetic assessment of the existing literature and software landscape. 
 
-\textbf{Sources.} We used two kinds of source. \emph{Discovery sources} were browsed or
-followed to completion: curated software registries (the CRAN Task View on Epidemiology,
-rOpenSci, Bioconductor, PyPI and the Journal of Open Source Software), Google Scholar, a
-GitHub topic search (\texttt{epidemics}, \texttt{particle-filter},
-\texttt{data-assimilation}) to catch packages outside PyPI and CRAN, and backward and forward
-citation chaining from three anchor papers (pomp~\citep{king_statistical_2016},
-spatPomp~\citep{asfaw_tutorial_2024}, FlepiMoP~\citep{lemaitre_flepimop_2024}). These have no
-meaningful denominator, so we report the packages they surfaced rather than a record count
-(Table~\ref{tab:S1-sources}). \emph{Counted sources} were two bibliographic databases, PubMed
-and Lens.org, whose result sets were exported in full and screened under one procedure. We
-chose them over Scopus or Web of Science because software is often announced in venues the
-subscription indexes cover poorly: Lens.org indexes preprint servers, the Journal of Open
-Source Software and conference proceedings alongside journal articles, and both databases
-permit a full, scriptable export.
+\textbf{Sources.} 
+As mentioned in the main text, we searched software repositories (the CRAN Task View on Epidemiology, rOpenSci, Bioconductor, PyPI and the Journal of Open Source Software), Google Scholar, and conducted a GitHub topic search (\texttt{epidemics}, \texttt{particle-filter},
+\texttt{data-assimilation}).
+We also looked at the references of three key manuscripts on the topic (pomp~\citep{king_statistical_2016},
+spatPomp~\citep{asfaw_tutorial_2024}, FlepiMoP~\citep{lemaitre_flepimop_2024}). 
 
-\textbf{Search window and string.} The database search is restricted to records from 2020
-onward, since its purpose is to surface recently released packages. Packages found through the
-discovery sources are eligible regardless of publication year, which keeps established
-comparators such as pomp (2016) and SimInf (2019) in scope. The query combines three concept
-blocks as \texttt{A AND B AND C}, with terms within each block joined by \texttt{OR}. On
-Lens.org it was applied to title, abstract, keyword and field of study; on PubMed to all
-fields.
+We then conducted two broad literature searches using standard databases, PubMed and Lens.org.
+For each, the full set of results was exported and screened with the same procedure. 
+We chose these two databases for breadth and reproducibility.
+Lens.org indexes preprint servers, the Journal of Open Source Software and conference proceedings in addition to standard journal articles, and both databases permit a full, scriptable export (Table~\ref{tab:S1-sources}).
+
+\textbf{Search window and string.} 
+We searched records 2020 onward, to focuson on recently released packages. 
+However, packages found through the search of software repositories were assessed regardless of publication year, which allowed us to retain well-tested comparators such as pomp (2016) and SimInf (2019). 
+We constructed a three-part search string as blocks of terms (i.e., blocks \texttt{A AND B AND C}, with terms within each block joined by \texttt{OR}. 
+On Lens.org the full search string was applied to title, abstract, keyword and field of study, and on PubMed it was applied to all fields.
 
 \begin{itemize}\raggedright
 \item
-  \textbf{A (domain):}
+  \textbf{A (epidemiological domain):}
   \texttt{epidemic OR epidemiological OR "infectious disease" OR "disease transmission" OR compartmental OR metapopulation OR "meta-population" OR "state-space"}
 \item
-  \textbf{B (method):}
+  \textbf{B (inference method):}
   \texttt{"particle filter" OR "sequential Monte Carlo" OR SMC OR "ensemble Kalman" OR "Kalman filter" OR "data assimilation" OR "partially observed Markov" OR Bayesian OR "Markov chain Monte Carlo" OR MCMC OR "approximate Bayesian computation" OR ABC OR "uncertainty quantification" OR calibration OR inference}
 \item
-  \textbf{C (artifact):}
+  \textbf{C (signal of software):}
   \texttt{software OR package OR library OR toolkit OR "R package" OR "Python package"}
 \end{itemize}
 
-\textbf{Inclusion and exclusion criteria.} A package is retained if it (1) is a released,
-installable package or library, not a one-off analysis script; (2) simulates or fits
-mechanistic compartmental or state-space epidemic models; (3) provides at least one built-in
+\textbf{Inclusion and exclusion criteria.} 
+We retained a package in the search if it 
+(1) is a released, installable package or library; 
+(2) simulates or fits
+mechanistic compartmental or state-space epidemic models; 
+(3) provides at least one built-in
 method for Bayesian inference or uncertainty quantification (e.g., particle filter, ensemble
-Kalman filter, particle MCMC, SMC\textsuperscript{2}, MCMC/HMC, ABC or nested sampling); (4)
-is available as of the verification date; and (5) has English documentation. We exclude (a)
-agent-based or simulation-only tools with no built-in inference (e.g., Covasim, MetaWards,
-GLEAM, Starsim); (b) estimators of the reproduction number without a general forecasting engine
-(e.g., EpiEstim, EpiNow2); (c) general-purpose statistical or probabilistic-programming
-toolkits without epidemiological structure (e.g., Stan, PyMC, Pyro); and (d) packages with no
-release or repository activity in the preceding five years. The boundary between a package we
-compare and one we note as context is therefore epidemiological focus, not inference method: an
-epidemic-specific package qualifies whether it calibrates by MCMC, ABC or a filter, whereas a
-general Bayesian toolkit does not.
+Kalman filter, particle MCMC, SMC\textsuperscript{2}, MCMC/HMC, ABC or nested sampling); 
+(4) is available as of the search date; and 
+(5) has documentation in the English language. 
 
-\textbf{Screening.} Screening proceeds in three stages. (1) \emph{Keyword pre-filter.} Each
-record's title, abstract and keywords are scored for the co-occurrence of three term sets: a
-\emph{software} set (package, software, toolkit, toolbox, library, framework, open-source,
-freely available, available at/from, GitHub/CRAN/PyPI, implemented in, R package, Python
-package, Julia, ``we present/introduce/develop''), an \emph{inference} set (particle filter,
-sequential Monte Carlo, SMC, ensemble Kalman, Kalman filter, data assimilation, Bayesian,
-Markov chain Monte Carlo, MCMC/pMCMC, approximate Bayesian, ABC-SMC, state-space, nested sampling, Hamiltonian Monte
-Carlo, uncertainty quantification, quantified uncertainty, emulation, history matching,
-iterated filtering, parameter estimation, calibration, likelihood), and an
-\emph{epidemiology} set (epidemic, compartmental, SEIR, SIR model, metapopulation,
-transmission, infectious disease, outbreak, forecast, and the major named pathogens:
-influenza, COVID, dengue, malaria, measles, mpox, Ebola, pandemic). Records matching all
-three sets advance to manual review; the remainder are set aside. The same term sets are
-applied to both databases, and the pipeline verifies that this paragraph lists every term the
-screen runs on. (2) \emph{Recall audit.} The set-aside records are audited three ways: records
-with software and epidemiology terms but no inference term (``near misses'') are re-examined;
-every set-aside record whose title carries a software-name cue together with an epidemiology
-term is reviewed; and a seeded random sample of the remainder is reviewed to bound the miss
-rate there. (3) \emph{Manual screening and verification.} Advanced and recovered records are
-screened on title and abstract against the criteria, by rule where the disposition is
-unambiguous (the record names a package already in the register, or falls squarely under an
-exclusion criterion) and individually otherwise. Each retained package's capabilities are then
-verified against its primary documentation (package website, CRAN or PyPI page, or software
-paper), with a second author spot-checking the results. Every disposition and its reason is
-recorded per record.
+We excluded
+(a) agent-based or simulation-only tools with no built-in (public-facing) inference (e.g., Covasim, MetaWards, GLEAM, Starsim); 
+(b) estimators of the pathogen reproduction number only (e.g., EpiEstim, EpiNow2); 
+(c) general-purpose statistical or probabilistic-programming toolkits without specific capabilities built for epidemiological studies (e.g., Stan, PyMC, Pyro); and 
+(d) packages with no release or repository activity in the last five years. 
+Although we do not compare all packages that we found to \texttt{epymorph} explicitly in the main table, we provide more context below. 
+The decision to not compare fully was based on epidemiological focus, regardless of inference method. 
+An epidemic-specific package was counted whether it calibrated by MCMC, ABC or a filter, whereas a general Bayesian toolkit with no epidemiological model framework did not count.
+
+\textbf{Screening.} 
+We conducted screening of the full list of results in a three step protocol. 
+(1) Each record's title, abstract and keywords were checked for the co-occurrence of three term sets: 
+a \emph{software} set (package, software, toolkit, toolbox, library, framework, open-source, freely available, available at/from, GitHub/CRAN/PyPI, implemented in, R package, Python package, Julia, ``we present/introduce/develop''), an 
+\emph{inference} set (particle filter, sequential Monte Carlo, SMC, ensemble Kalman, Kalman filter, data assimilation, Bayesian, Markov chain Monte Carlo, MCMC/pMCMC, approximate Bayesian, ABC-SMC, state-space, nested sampling, Hamiltonian Monte Carlo, uncertainty quantification, quantified uncertainty, emulation, history matching, iterated filtering, parameter estimation, calibration, likelihood), and an
+\emph{epidemiology} set (epidemic, compartmental, SEIR, SIR model, metapopulation, transmission, infectious disease, outbreak, forecast, and the major named pathogens: influenza, COVID, dengue, malaria, measles, mpox, Ebola, pandemic). 
+Records matching all three sets were then searched manually.
+(2) \emph{Double-check of records that were set aside.} 
+We double-checked, specifically by taking a random sample of the set aside records to review manually to check for misses. 
+(3) \emph{Manual screening and verification.} 
+Each retained package's capabilities were verified by reading its documentation (package website, CRAN or PyPI page, or software paper), with a second author spot-checking the results.
+We provide documentation of the decision-making process with the manuscript supplementary files. 
 
 \textbf{Discovery sources.} Table~\ref{tab:S1-sources} lists what each source surfaced. The
 registries and citation chaining supplied most of the established inference toolkits directly.
 
 {\small\renewcommand{\arraystretch}{1.15}\setlength{\LTcapwidth}{\linewidth}
 \begin{longtable}{>{\raggedright\arraybackslash}p{0.15\linewidth}>{\raggedright\arraybackslash}p{0.21\linewidth}>{\raggedright\arraybackslash}p{0.33\linewidth}>{\raggedright\arraybackslash}p{0.19\linewidth}}
-\caption{Packages surfaced by each source.}\label{tab:S1-sources}\\
+\caption{Packages discovered by each source.}\label{tab:S1-sources}\\
 \toprule
-\textbf{Source} & \textbf{Approach} & \textbf{Packages surfaced} & \textbf{Disposition} \\
+\textbf{Source} & \textbf{Approach} & \textbf{Packages noted} & \textbf{Outcome} \\
 \midrule
 \endfirsthead
 \toprule
-\textbf{Source} & \textbf{Approach} & \textbf{Packages surfaced} & \textbf{Disposition} \\
+\textbf{Source} & \textbf{Approach} & \textbf{Packages noted} & \textbf{Outcome} \\
 \midrule
 \endhead
 \bottomrule
@@ -121,81 +98,88 @@ PubMed export & 2,403 records retrieved, 2,364 with abstracts screened & summer2
 Lens.org export & 1,009 records retrieved (journal, conference and preprint) & MetaRVM; gemlib, tsgc, eSIR, NGSSEML & 1 compared package, 4 context tools \\
 \end{longtable}}
 
-\textbf{Database results.} The PubMed query returned \textbf{2,403 records}, of which
-\textbf{2,364 carried abstracts} and were screened. The pre-filter advanced \textbf{437
-records}; \textbf{1,927} were set aside. Most advanced records were out of scope on
-inspection: clinical prediction models, network meta-analyses, cost-effectiveness studies,
-phylogenetic and genomic pipelines, pharmacokinetic software, and disease-mapping or nowcasting
-utilities. Others were applications of packages already in the register. The PubMed screen
-yielded one new package meeting the criteria, summer2/estival~\citep{trauer_data_2025}. It was
-found through the inference terms \emph{calibration} and \emph{parameter estimation}: its
-source paper never names a filter, so a vocabulary centred on filtering cannot see it.
 
-The Lens.org export returned \textbf{1,009 records} (663 journal articles, 298 preprints and
-48 conference papers). De-duplication against PubMed removed \textbf{340} overlaps,
-leaving \textbf{669 novel records}, of which the pre-filter advanced \textbf{208}. Manual review
-recovered packages already in the register (EpiILM, Pathogen.jl, Bernadette, spatPomp, PyRoss,
-epidemia, hmer, MEmilio and ParticleDA.jl) and yielded one new package meeting the criteria,
-MetaRVM~\citep{fadikar_developing_2025}. MetaRVM exists only as a preprint, and several other packages in this survey first appeared
-as preprints (spatPomp, PyRoss, epidemia, LibBi, MEmilio), so including preprints was
-necessary for a survey of software.
 
-\textbf{Recall audit.} The 1,927 PubMed and 461 Lens.org records set aside
-(\textbf{2,388} in total) were audited three ways. First, the near-miss stratum is empty: no
-set-aside record carries software and epidemiology terms without an inference term, because the
-inference set already includes vocabulary such as ``uncertainty quantification'',
-``parameter estimation'' and ``calibration''. Second, every set-aside record whose title
-carried a software-name cue together with an epidemiology term was reviewed: \textbf{101
-records}, all of which proved out of scope or already in the register. Third, from the
-\textbf{1,585} set-aside records carrying no software-name cue in the title, a
-seeded random sample of \textbf{100} (seed 20260724) was reviewed, again finding no in-scope
-package. Zero misses in 100 gives a rule-of-three upper 95\% bound of about 3\% on that
-stratum.
+\textbf{Database results.} 
+The PubMed search returned \textbf{2,403 records}, of which \textbf{2,364} included abstracts and were screened. 
+The keyword pre-filter led to advancing \textbf{437 records} of those records; 
+Most of the screened sources were obviously not relevant upon inspection, such as clinical prediction models, network meta-analyses, phylogenetic and genomic pipelines, or disease-mapping. 
+The PubMed screen yielded one new package meeting the criteria, summer2/estival~\citep{trauer_data_2025}. 
 
-\textbf{Outcome.} Screening 3,033 unique records under one lexicon, advancing \textbf{645} to
-manual review, added two packages to the comparison (summer2/estival from PubMed and MetaRVM
-from the Lens.org preprints). Beyond those two, the database and discovery sources converged on
-the same packages. In all, the survey retained 13 packages for comparison with epymorph: the
-11 in Table~1, and LibBi/rbi and epidemia, which were assessed on the same criteria but are not
-tabulated (\S\ref{sec:S1-summaries}). A further 22 tools are summarized as context
-(Table~\ref{tab:S1-context}). Excluded were agent-based simulators (Starsim, UVA-EpiHiper;
-criterion a), reproduction-number estimators (EpiEstim, EpiNow2, EpiLPS; criterion b),
-general-purpose toolkits (Stan, PyMC, Pyro, aghq; criterion c), and methods papers with no
-released package.
+The Lens.org export returned \textbf{1,009 records} (663 journal articles, 298 preprints and 48 conference papers). 
+340 were duplicates with PubMed.
+Of the remaining, the keyword filter led to \textbf{208} potential sources. 
+The manual review discovered one new package meeting the criteria,
+MetaRVM~\citep{fadikar_developing_2025}.
+
+\textbf{Recall audit.} 
+The 1,927 PubMed and 461 Lens.org records that were not manually searched were subject to our double check. 
+Of greatest note, we took a seeded, random sample of \textbf{100} (seed$=20260724$) was reviewed, but no additional packages were noted.
+
+\textbf{Outcome.} 
+Beyond the two packages noted (summer2/estival from PubMed and MetaRVM
+from the Lens.org preprints), the database search and the search on software repositories led to the same outcomes. 
+Overall, the survey discovered 13 noteable packages for comparison with epymorph, including the 11 in Table~1, as well as LibBi/rbi and epidemia (\S\ref{sec:S1-summaries}). 
+We decided to summarize an additional 22 tools (Table~\ref{tab:S1-context}) that did not meet all inclusion criteria but were subjectively considered interesting. 
 
 \textbf{Figure S1. Software identification and selection flow.} [Figure to be rendered from
 \texttt{results/lit-search/prisma-flow.mermaid}.]
 
 \subsection{Criteria behind Table 1}\label{sec:S1-criteria}
 
-In Table~1, \mkfull{} means the package provides a dedicated API, construct or data service
-for the capability, and \mknone{} means it does not. Every cell is binary. A mark is never a
-claim that a user could implement the capability, since every package surveyed is
-programmable; where a package achieves something through general-purpose machinery rather than
-a dedicated construct, it scores \mknone{}, and the closest such calls are argued below.
+In Table~1, a filled circle (\mkfull{}) means the package provides a dedicated API, construct or data service for the capability, and an empty circle (\mknone{}) means it does not. 
+We recognize that some of these capabilities may be feasible if the user custom-codes something, but we do not count this. 
+The feature must be built-in and natively supported with the current release. 
 
-\textbf{Criteria.} The data rows require retrieval from a source, or data shipped for reuse as
-model inputs; a data set that exists only to run the package's own examples does not count.
-\emph{Model specification language} requires a domain-specific language or a declarative form
-for compartments and transitions. \emph{Ready-made compartmental models} requires model objects
-the user instantiates, not worked examples to copy. \emph{Operator for demographic
-stratification} requires a construct that stratifies a model, not an array dimension the
-modeler can use that way. \emph{Movement-based coupling} requires that individuals or infection
-pressure are transported between units by a modeled flow, not that units are statistically
-correlated. \emph{Forecast generation} requires a facility for producing forecasts from a
-fitted model.
+\textbf{Criteria.} 
+The data rows require automated retrieval from an external source, or data that is provided within the software environment.
+We also did not count a data set that exists only to run the package's examples, but that could not easily be re-purposed.
+\emph{Model specification language} requires a domain-specific language or a custom-built declarative form for the compartments and transitions. 
+\emph{Ready-made compartmental models} requires model objects
+the user can use 'out of the box'. 
+\emph{Operator for demographic stratification} requires a construct that stratifies a model, not just an object the user fills in (e.g., a properly formatted matrix). 
+\emph{Movement-based coupling} requires that individuals or infection
+pressure are transported between spatial nodes, and this movement has some sort of method to declare the flow rate or patterns.
+A mere correlation between nodes is not sufficient. 
+\emph{Forecast generation} requires a function or method for producing forecasts from a fitted model, not something that would require heavy custom-coding from the user. 
 
-\textbf{Inference methods offered.} epymorph: PF, EnKF. FlepiMoP: MCMC, EMCEE ensemble.
-spatPomp: PF (GIRF, block, ABF), EnKF, iterated filtering. pomp: PF, EnKF/EAKF, iterated
-filtering, particle MCMC, ABC, Bayesian SMC. odin/dust/mcstate: PF, particle MCMC,
-SMC\textsuperscript{2}, iterated filtering. LibBi/rbi: PF, particle MCMC,
-SMC\textsuperscript{2}, extended Kalman. SimInf: ABC-SMC, PF, particle MCMC. PyRossGeo: MAP,
-MCMC, nested sampling, density-tempered SMC for model evidence. surveillance (hhh4): penalized
-likelihood. Epydemix: ABC (rejection, budget-constrained, ABC-SMC). summer2/estival: MCMC/HMC
-and SMC via PyMC, gradient-free optimization via nevergrad. pypfilt/epifx: PF. epidemia:
-Hamiltonian Monte Carlo (Stan). MetaRVM: Bayesian optimization.
+{\small\renewcommand{\arraystretch}{1.15}\setlength{\LTcapwidth}{\linewidth}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.25\linewidth}>{\raggedright\arraybackslash}p{0.69\linewidth}}
+\caption{Inference methods offered by each package.}\label{tab:S1-inference}\\
+\toprule
+\textbf{Package} & \textbf{Inference methods} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Package} & \textbf{Inference methods} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\multicolumn{2}{@{}l}{\emph{Pipelines}} \\
+epymorph & PF, EnKF \\
+FlepiMoP & MCMC, EMCEE ensemble \\
+MetaRVM & Bayesian optimization \\
+\addlinespace[3pt]
+\multicolumn{2}{@{}l}{\emph{Toolkits}} \\
+spatPomp & PF (GIRF, block, ABF), EnKF, iterated filtering \\
+pomp & PF, EnKF/EAKF, iterated filtering, particle MCMC, ABC, Bayesian SMC \\
+odin/dust/mcstate & PF, particle MCMC, SMC\textsuperscript{2}, iterated filtering \\
+LibBi/rbi & PF, particle MCMC, SMC\textsuperscript{2}, extended Kalman filter \\
+pypfilt/epifx & PF \\
+\addlinespace[3pt]
+\multicolumn{2}{@{}l}{\emph{Simulation tools}} \\
+SimInf & ABC-SMC, PF, particle MCMC \\
+PyRossGeo & MAP, MCMC, nested sampling, density-tempered SMC for model evidence \\
+surveillance (hhh4) & Penalized likelihood \\
+Epydemix & ABC (rejection, budget-constrained, ABC-SMC) \\
+summer2/estival & MCMC/HMC and SMC via PyMC; gradient-free optimization via nevergrad \\
+epidemia & Hamiltonian Monte Carlo (Stan) \\
+\end{longtable}}
 
-\textbf{Borderline calls.} \emph{Movement-based coupling.} surveillance/hhh4 is the closest
+
+\textbf{Borderline calls.} 
+\emph{Movement-based coupling.} surveillance/hhh4 is the closest
 call: it has inter-unit transmission terms and a dedicated coupling API (\texttt{neighbourhood}
 weight matrices, \texttt{W\_powerlaw} with an estimated decay parameter), but the coupling is a
 fitted regression weight and nothing is transported, so it scores \mknone{}. epidemia pools

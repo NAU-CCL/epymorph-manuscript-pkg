@@ -13,7 +13,8 @@ python3 -m manuscript_analysis.lit_search           # screen, audit, register, c
 python3 -m manuscript_analysis.lit_search --check   # also verify the manuscript
 ```
 
-Runs from any directory. Python 3, standard library only, plus `openpyxl` for the register.
+Runs from any directory. Python 3, standard library only, plus `openpyxl` for the register
+and matplotlib (which arrives with epymorph) for the flow figure.
 
 ## Three kinds of file, one rule each
 
@@ -39,7 +40,7 @@ report.py                counts.json, lexicon prose, and the appendix check
 tables.py                verifies the worksheet's bib keys and DOIs against the bibliography
 table1_tex.py            projects Table 1 from the worksheet into results/, with a drift check
 validate_decisions.py    checks screen-decisions.csv and the register against the codebook
-prisma.py                generates the PRISMA flow from counts.json + the register
+prisma.py                draws the PRISMA flow (PNG, plus mermaid) from counts.json + the register
 manifest.py              checksums data/ and results/; alarms if data/ ever changes
 
 ../../../../data/lit-search/raw/        the archived search exports, 2026-07-15
@@ -62,11 +63,12 @@ manifest.py              checksums data/ and results/; alarms if data/ ever chan
   recall-nearmiss.csv  recall-titlesweep.csv  recall-sample.csv
   counts.json              every number the appendix quotes
   software-candidate-register.xlsx  the register, rebuilt from decisions/
-  prisma-flow.mermaid  prisma-flow.html   Figure S1, generated
+  figS-software-search-flow.png  Figure S1, generated; published to Overleaf's figures/
+  prisma-flow.mermaid  prisma-flow.html   the same flow as text and as a browser viewer
   MANIFEST.sha256          sha256 of every file in data/ and results/
   table-1-maintext.tex     Table 1 as LaTeX, generated from decisions/table-marks.csv
   table-s1.tex             Table S1 as LaTeX
-  lexicon-prose.txt        the §S1.1 term listing, generated from lexicon.py
+  lexicon-prose.txt        S1's term listing, generated from lexicon.py
 ```
 
 Planning notes that used to sit beside the code (`refactor-plan-v01.md`,
@@ -97,11 +99,12 @@ Reproduce any of it by re-running the pipeline; the numbers above are regenerate
 
 Eight assertions, all of which pass today:
 
-1. **The appendix's numbers match the pipeline.** 14 counts pulled out of the live
-   `S1-software-landscape.tex` by the phrase that carries them and compared against
-   `counts.json`. This is the guarantee the whole pipeline exists to provide: a number
+1. **The manuscript's numbers match the pipeline.** Every count S1 and the Methods
+   subsection (`02c-methods-software-survey.tex`) quote is pulled out of the live text by the
+   phrase that carries it and compared against `counts.json`. When the prose is reworded,
+   update the phrases in `report.py` (`APPENDIX_CLAIMS`, `METHODS_CLAIMS`). This is the guarantee the whole pipeline exists to provide: a number
    cannot drift between the analysis and the paper without the check failing.
-2. **Appendix S1.3 lists every term the screen runs on**, in both directions, so the
+2. **S1 lists every term the screen runs on**, in both directions, so the
    reported protocol and the executed screen cannot diverge.
 3. **Every disposition is present**: all 645 advanced records carry a decision and a reason.
 4. **The decision vocabularies hold**, in `screen-decisions.csv` and in the register, against

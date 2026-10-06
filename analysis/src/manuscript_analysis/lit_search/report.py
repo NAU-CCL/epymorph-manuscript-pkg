@@ -81,10 +81,10 @@ def check_lexicon_listing():
               f"{paths.APPENDIX}")
         return 0
     text = paths.APPENDIX.read_text(encoding="utf-8")
-    found = re.search(r"scored for the co-occurrence of three term sets:(.*?)"
+    found = re.search(r"co-occurrence of three term sets:(.*?)"
                       r"Records matching all", text, re.S)
     if not found:
-        sys.exit("S1.1's pre-filter paragraph could not be located in the appendix")
+        sys.exit("S1's pre-filter paragraph could not be located in the appendix")
     para = re.sub(r"\s+", " ", found.group(1)).lower()
 
     missing = []
@@ -107,34 +107,34 @@ def check_lexicon_listing():
     return 0
 
 
-# Every count the appendix quotes, mapped to the phrase that carries it. The regex pulls
-# the number out of the live draft so a drifted figure is caught rather than assumed.
-APPENDIX_CLAIMS = {
-    "pubmed_retrieved":  r"query returned \\textbf\{([\d,]+) records\}",
-    "pubmed_screened":   r"\\textbf\{([\d,]+) carried abstracts\}",
-    "pubmed_advanced":   r"pre-filter advanced \\textbf\{([\d,]+) records\}",
-    "pubmed_dropped":    r"\\textbf\{([\d,]+)\} were set aside",
-    "lens_retrieved":    r"export returned \\textbf\{([\d,]+) records\}",
-    "lens_duplicates":   r"removed \\textbf\{([\d,]+)\} overlaps",
-    "lens_novel":        r"leaving \\textbf\{([\d,]+) novel records\}",
-    "lens_advanced":     r"pre-filter advanced \\textbf\{([\d,]+)\}\.",
-    "total_dropped":     r"\(\\textbf\{([\d,]+)\} in total\) were audited",
-    "titlesweep":        r"\\textbf\{([\d,]+) records\}, all of which proved out of",
-    "nocue_stratum":     r"from the \\textbf\{([\d,]+)\} set-aside records carrying no",
-    "random_sample":     r"seeded random sample of \\textbf\{([\d,]+)\}",
-    "total_screened":    r"Screening ([\d,]+) unique records under one lexicon",
-    "total_advanced":    r"advancing \\textbf\{([\d,]+)\} to manual review",
-}
+# Every count the manuscript quotes, as (count, phrase that carries it). The regex pulls the
+# number out of the live draft so a drifted figure is caught rather than assumed. A count may
+# be quoted more than once (in prose and in a table), so this is a list, not a dict. Each
+# pattern anchors on the few words next to the number, so that copy-editing the sentence
+# around it does not break the check.
+APPENDIX_CLAIMS = [
+    ("pubmed_retrieved",   r"PubMed search returned \\textbf\{([\d,]+) records\}"),
+    ("pubmed_screened",    r"\\textbf\{([\d,]+)\} included abstracts"),
+    ("pubmed_advanced",    r"advancing \\textbf\{([\d,]+) records\}"),
+    ("lens_retrieved",     r"Lens\.org export returned \\textbf\{([\d,]+) records\}"),
+    ("lens_duplicates",    r"([\d,]+) were duplicates with PubMed"),
+    ("lens_advanced",      r"keyword filter led to \\textbf\{([\d,]+)\}"),
+    ("pubmed_dropped",     r"The ([\d,]+) PubMed and [\d,]+ Lens\.org records"),
+    ("lens_dropped",       r"PubMed and ([\d,]+) Lens\.org records"),
+    ("random_sample",      r"random sample of \\textbf\{([\d,]+)\}"),
+    ("random_sample_seed", r"seed\s*\$?=\s*([\d,]+)"),
+    # the sources table
+    ("pubmed_retrieved",   r"([\d,]+) records retrieved, [\d,]+ with abstracts screened"),
+    ("pubmed_screened",    r"records retrieved, ([\d,]+) with abstracts screened"),
+    ("lens_retrieved",     r"([\d,]+) records retrieved \(journal, conference"),
+]
 
 
-# The Methods summary quotes the headline counts in plain prose, so it gets its own phrases.
-METHODS_CLAIMS = {
-    "total_screened":    r"yielded ([\d,]+) unique records with abstracts",
-    "total_advanced":    r"this advanced ([\d,]+) records to manual screening",
-    "total_dropped":     r"we audited the ([\d,]+) records it set aside",
-    "titlesweep":        r"named a package \(([\d,]+) records\)",
-    "random_sample":     r"a random sample of ([\d,]+) of the rest",
-}
+# The Methods summary quotes the headline counts.
+METHODS_CLAIMS = [
+    ("total_screened",     r"yielded ([\d,]+) unique records with abstracts"),
+    ("total_advanced",     r"led to ([\d,]+) records for manual screening"),
+]
 
 
 def check_claims(path, claims, counts):
@@ -143,7 +143,7 @@ def check_claims(path, claims, counts):
     # pattern should not have to know where the wrap happens to fall.
     text = re.sub(r"\s+", " ", path.read_text(encoding="utf-8"))
     ok, bad, unfound = 0, [], []
-    for key, pattern in claims.items():
+    for key, pattern in claims:
         match = re.search(pattern, text)
         if not match:
             unfound.append(key)

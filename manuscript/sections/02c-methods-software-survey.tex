@@ -1,23 +1,18 @@
 \subsection{Survey of epidemic modeling software}\label{sec:methods-survey}
 
-To place \texttt{epymorph} among existing software (Table~\ref{tab:comparison}), we conducted a structured, reproducible search for released packages that simulate or fit mechanistic epidemic models.
-We describe it as a structured search rather than a systematic review, because the aim was an auditable and repeatable survey of software rather than a formal evidence synthesis.
-The full protocol, the search string, and a summary of every package identified are given in Supplementary Section S1.
+We conducted a structured, reproducible search of software packages that simulate and/or fit spatial, mechanistic models of disease (Table~\ref{tab:comparison}).
+We refer to this search as `structured` rather than a systematic review, because the aim was to conduct a repeatable survey of software rather than a formal synthesis.
+The full methods are detailed in Supplementary Section S1.
 
-We drew packages from two kinds of sources.
-First, we browsed curated software registries (the CRAN Task View on Epidemiology, rOpenSci, Bioconductor, PyPI, and the Journal of Open Source Software), searched Google Scholar and GitHub, and followed citations backward and forward from three anchor papers~\citep{king_statistical_2016,asfaw_tutorial_2024,lemaitre_flepimop_2024}.
-Second, we searched two bibliographic databases, PubMed and Lens.org, for records from 2020 onward.
-We used Lens.org because it indexes preprints, conference proceedings, and the Journal of Open Source Software, where software is often first announced.
-The query required terms from three groups: the domain (e.g., epidemic, compartmental, metapopulation), the inference method (e.g., particle filter, ensemble Kalman, Bayesian, calibration), and the software itself (e.g., package, library, toolkit).
+We first searched software registries (the CRAN Task View on Epidemiology, rOpenSci, Bioconductor, PyPI, and the Journal of Open Source Software), Google Scholar, and GitHub, and we also used references in key prior studies~\citep{king_statistical_2016,asfaw_tutorial_2024,lemaitre_flepimop_2024}.
+Next, we searched PubMed and Lens.org.
+The query (full query string is in the Supplementary Materials) combined the domain (e.g., epidemic, compartmental, metapopulation), inference methods (e.g., particle filter, ensemble Kalman, Bayesian, calibration), and software keywords (e.g., package, library, toolkit).
 
-A package was included if it was released and installable, simulated or fit mechanistic compartmental or state-space epidemic models, provided at least one built-in method for Bayesian inference or uncertainty quantification, and had English documentation.
-We excluded agent-based simulators without built-in inference, tools that only estimate the reproduction number, general-purpose statistical toolkits without epidemiological structure (e.g., Stan, PyMC), and packages with no activity in the preceding five years.
+A package was included if it simulated and/or fit mechanistic compartmental or state-space epidemic models, provided at least one built-in method for Bayesian inference or uncertainty quantification, and we restricted to those including documentation in the English language.
+We excluded agent-based simulators without built-in inference, tools that only estimate the pathogen's basic reproduction number ($R0$) or time-varying reproduction number ($R_t$), and general-purpose statistical inference toolkits (e.g., Stan, PyMC) that did not provide epidemiology-focused support.
 
-Together, the two databases yielded 3,033 unique records with abstracts.
-Because this is too many to read in full, a keyword filter first advanced only the records whose title, abstract, or keywords mentioned software, inference, and epidemiology together, and this advanced 645 records to manual screening.
-To measure what the filter missed, we audited the 2,388 records it set aside, reviewing every record whose title named a package (101 records) and a random sample of 100 of the rest, and we found no missed package that met our criteria.
-
-The capabilities of each retained package were verified against its primary documentation (package website, CRAN or PyPI page, or software paper) as of September 2026, with a second author spot-checking the results.
-In Table~\ref{tab:comparison}, a capability is marked present only if the package provides a dedicated construct, API, or data service for it; a capability that a user could program themselves does not count, because every package surveyed is programmable.
-The survey retained 13 packages for comparison with \texttt{epymorph}: the 11 in Table~\ref{tab:comparison}, and two more (\texttt{LibBi} and \texttt{epidemia}) that are described in Supplementary Section S1.
-The archived search exports, every screening decision, and the code that produces the counts above are provided with the manuscript's code.
+The search yielded 3,033 unique records with abstracts, and we then filtered by keyword searches on the title and abstract, which led to 645 records for manual screening.
+For each package that we observed, we verified its capabilities against its primary documentation (e.g., published manuscript, package website) as of September 2026.
+In Table~\ref{tab:comparison}, a capability is marked present only if the package provides a dedicated, built-in method for it, as opposed to a capability that a user could feasibly program themselves.
+The survey retained 13 packages for comparison with \texttt{epymorph}, the 11 in Table~\ref{tab:comparison}, and two more related candidates (\texttt{LibBi} and \texttt{epidemia}) that we describe in the Supplementary materials.
+All search outputs, manual decision, and code is provided in the archived version of the manuscript.
