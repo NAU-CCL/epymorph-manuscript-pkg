@@ -2,13 +2,13 @@
 % Regenerate:  python -m manuscript_analysis.demos.tables
 \begin{table}[tb]
 \centering
-\caption{\textbf{Demo 2: mean log WIS by state and quantity.} Ratio columns are relative log WIS. The final column is the informative contrast for the movement question: the same 32 counties with commuting on against commuting off, at identical spatial resolution.}
+\caption{\textbf{COVID-19 case study: mean log WIS by state and quantity.} Ratio columns are relative log WIS. The final column is the informative contrast for the movement question: the same 32 counties with commuting on against commuting off, at identical spatial resolution.}
 \label{tab:covid-by-state}
-\footnotesize
+\scriptsize
 \setlength{\tabcolsep}{5pt}
 \begin{tabular}{@{}llrrrrrr@{}}
 \toprule
-jurisdiction & quantity & \textbf{counties + commuting} & \textbf{counties, no movement} & \textbf{no spatial structure} & \textbf{movement / state} & \textbf{county / state} & \textbf{movement / county} \\
+state & quantity & \begin{tabular}[b]{@{}r@{}}\textbf{counties +} \\ \textbf{commuting}\end{tabular} & \begin{tabular}[b]{@{}r@{}}\textbf{counties,} \\ \textbf{no movement}\end{tabular} & \begin{tabular}[b]{@{}r@{}}\textbf{no spatial} \\ \textbf{structure}\end{tabular} & \begin{tabular}[b]{@{}r@{}}\textbf{commuting} \\ \textbf{/ state}\end{tabular} & \begin{tabular}[b]{@{}r@{}}\textbf{no movement} \\ \textbf{/ state}\end{tabular} & \begin{tabular}[b]{@{}r@{}}\textbf{commuting /} \\ \textbf{no movement}\end{tabular} \\
 \midrule
 CT & hospital census & 0.137 & 0.144 & 0.118 & 1.103 & 1.161 & 0.949 \\
 CT & weekly deaths & 0.141 & 0.140 & 0.119 & 1.086 & 1.057 & 1.027 \\
