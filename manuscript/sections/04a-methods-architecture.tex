@@ -122,6 +122,7 @@ Specifically, there are methods to help a user to select and aggregate, for exam
 A likelihood function defines the observation model relating predicted to observed quantities, and \texttt{epymorph} provides Poisson, negative binomial, and Gaussian likelihoods.
 Users can of course write their own likelihood function as a sub-class.
 Each parameter designated as `unknown' is given a prior distribution and a model for how it evolves over time in the stochastic simulation, for example static dynamics, Brownian motion, or mean-reverting (Ornstein--Uhlenbeck) dynamics~\citep{drennan_estimating_2026}.
+The Ornstein--Uhlenbeck process is simulated from its exact solution rather than a discretized approximation, and when it is applied on the log scale, as in the case studies below, the parameter follows a Black--Karasinski process that stays positive while reverting toward a long-run mean.
 
 Two families of sequential Bayesian fitting algorithms are currently implemented behind a common interface. 
 The first is a particle filter, and our implementation normalizes particle weights in the log domain for numerical stability~\citep{gordon_novel_1993,arulampalam_tutorial_2002}. 

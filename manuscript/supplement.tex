@@ -1,3 +1,8 @@
+%% Supplementary Information: a separate document, as Nature Communications requires.
+%% It lives at the project root, beside main.tex, so every path is root-relative. Overleaf's
+%% BibTeX cannot read files in a parent folder (../references.bib), which is why a root file
+%% inside supplementary/ compiled here but lost its references in Overleaf.
+%% To compile in Overleaf: Menu > Main document > supplement.tex.
 \documentclass[12pt]{article}
 \usepackage[margin=2.5cm]{geometry}
 \usepackage{graphicx,amsmath,amssymb,booktabs}
@@ -12,7 +17,7 @@
 
 % Feature-support marks (same macros as main.tex)
 \newcommand{\mkfull}{\CIRCLE}
-% \mkpart deliberately not defined: the comparison is binary by design (see S1.3).
+% \mkpart deliberately not defined: the comparison is binary by design.
 \newcommand{\mknone}{\Circle}
 
 \emergencystretch=3em
@@ -22,18 +27,18 @@
 \renewcommand{\thetable}{S\arabic{table}}
 \renewcommand{\thefigure}{S\arabic{figure}}
 
-\title{Supplementary Information}
+\title{Supplementary Information for\\[4pt]
+\large epymorph turns spatial epidemic model comparisons into controlled forecasting experiments}
 \author{}
 \date{}
 
 \begin{document}
 \maketitle
 
-\input{S1-software-landscape}
-\input{S2-parameter-estimation}
+\input{supplementary/S1-software-landscape}
+\input{supplementary/S2-case-study-figures}
 
-%% Compile from inside supplementary/ (paths below are relative to this folder).
-\bibliographystyle{../sn-nature}
-\bibliography{../references}
+\bibliographystyle{sn-nature}
+\bibliography{references}
 
 \end{document}

@@ -4,7 +4,6 @@
 Here we provide the full search protocol and its results (\S\ref{sec:S1-search}), as well as the criteria behind
 Table~1 (\S\ref{sec:S1-criteria}).
 We also include summaries of each key package we identified (\S\ref{sec:S1-summaries}), whether or not it was included in the main table.
-Finally, we discuss search limitations (\S\ref{sec:S1-limitations}). 
 
 \subsection{Search protocol and results}\label{sec:S1-search}
 
@@ -125,7 +124,7 @@ We also summarize 22 related tools that fell outside the focus of the comparison
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\textwidth]{../figures/figS-software-search-flow.png}
+\includegraphics[width=\textwidth]{figures/figS-software-search-flow.png}
 \caption{Software identification and selection flow.}\label{fig:S1-flow}
 \end{figure}
 
@@ -189,21 +188,15 @@ right division of labor rather than a gap, so forecast scoring is not a row of T
 
 \subsection{Package summaries}\label{sec:S1-summaries}
 
-Packages compared in Table~1 appear in the order of its columns. Where a mark was a close call,
-the summary explains it. Packages that were assessed but not tabulated follow, and
-Table~\ref{tab:S1-context} lists the remaining tools.
+Here we briefly summarize packages that were identified but that did not make it to the full comparison, and Table~\ref{tab:S1-context} lists additional tools.
+Sometimes adding a filled circle was a close call, which we describe below.
 
 \textbf{Pipelines.}
 
 \begin{itemize}
 \item
-  \textbf{FlepiMoP} (Python and R): a meta-population compartmental pipeline configured in
-  YAML, whose \texttt{compartments} and \texttt{seir: transitions} sections are a declarative
-  model specification, with Bayesian inference by a custom MCMC with an EMCEE ensemble sampler
-  and an integrated forecasting workflow. Its data layer ships US county populations, US
-  commuting flows and global age-structure tables, and retrieves COVID-19 and influenza ground
-  truth from the Delphi Epidata API and CDC FluSight. No particle or ensemble Kalman filter.
-  The closest comparator to epymorph~\citep{lemaitre_flepimop_2024}.
+  \textbf{FlepiMoP} (Python and R): a meta-population compartmental pipeline configured in YAML, whose \texttt{compartments} and \texttt{seir: transitions} sections are a declarative model specification, with Bayesian inference by a custom MCMC and an integrated forecasting workflow. 
+  It supplies data on US county populations, US commuting flows and global age-structure tables, and it retrieves COVID-19 and influenza data from the Delphi Epidata API and CDC FluSight~\citep{lemaitre_flepimop_2024}.
 \item
   \textbf{MetaRVM} (R): a meta-population compartmental package for subpopulations defined by
   geography, demographics or other strata, developed with the Chicago Department of Public
@@ -356,31 +349,4 @@ NGSSEML (R) & Non-Gaussian state-space models~\citep{santos_ngsseml_2021} & Not 
 ParticleDA.jl (Julia) & Distributed particle-filter data assimilation & Not epidemiological \\
 \end{longtable}}
 
-General-purpose filtering and probabilistic-programming libraries (\texttt{particles},
-\texttt{filterpy}, \texttt{Stone Soup}, \texttt{SMCPy}, Stan, PyMC and Pyro) can fit epidemic
-models with user-written code but supply no epidemiological or meta-population structure, and
-are excluded under criterion (c).
-
-\subsection{Limitations}\label{sec:S1-limitations}
-
-This survey is a snapshot, and package capabilities change. Re-verification changed seven
-marks between June and September 2026, most of them after we read each primary reference in
-full rather than in abstract, and several changed in a comparator's favour: pomp gained the
-ensemble Kalman filter, SimInf the particle filter and two further calibration methods, FlepiMoP
-automated surveillance acquisition and declarative model specification, and surveillance/hhh4
-forecast scoring, while PyRossGeo lost the particle filter. The PyRossGeo case shows a hazard
-of feature comparisons built from vocabulary: a routine named for SMC\textsuperscript{2} turned
-out not to filter latent states, so we verified each filtering mark against the function's
-documented behaviour rather than its name.
-
-Binary marks sharpen the comparison but flatten real differences in strength: odin's array
-dimensions and pomp's hand-written C snippets both score \mknone{} for demographic
-stratification, though the first does much more of the work. The package summaries
-(\S\ref{sec:S1-summaries}) carry those distinctions. Our criteria, centred on mechanistic state-space inference, deliberately
-exclude agent-based and purely statistical forecasting tools that some readers may consider
-adjacent. A keyword pre-filter can only find packages whose abstracts describe what they do:
-summer2/estival was missed by an earlier vocabulary centred on filtering and recovered only
-once the inference set included \emph{calibration} and \emph{parameter estimation}, which is
-why we rely on the recall audit rather than the pre-filter. Finally, we did not search Scopus
-or Web of Science; a package indexed in neither PubMed nor Lens.org could in principle be
-missed, although the two databases and the discovery sources converged on the same packages.
+General-purpose filtering and probabilistic-programming libraries (\texttt{particles}, \texttt{filterpy}, \texttt{Stone Soup}, \texttt{SMCPy}, Stan, PyMC and Pyro) can fit epidemic models with user-written code but supply no epidemiological or meta-population structure, and are therefore excluded.

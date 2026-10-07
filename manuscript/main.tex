@@ -30,14 +30,41 @@
 
 \begin{document}
 
-\title[Short title -- PLACEHOLDER]{Full article title -- PLACEHOLDER}
+\title[epymorph modeling and forecasting]{epymorph turns spatial epidemic model comparisons into controlled forecasting experiments}
 
 \author*[1]{\fnm{Joseph R.} \sur{Mihaljevic}}\email{joseph.mihaljevic@nau.edu}
-\affil*[1]{\orgdiv{PLACEHOLDER Department}, \orgname{Northern Arizona University}, \orgaddress{\city{Flagstaff}, \state{AZ}, \country{USA}}}
+\author[1]{\fnm{Tyler} \sur{Coles}}
+\author[1]{\fnm{Jeffrey} \sur{Covington}}
+\author[2]{\fnm{Avery} \sur{Drennan}}
+\author[1]{\fnm{Kayode} \sur{Oshinubi}}
+\author[1,3]{\fnm{Crystal} \sur{Hepp}}
+\author[4]{\fnm{Tim} \sur{Lant}}
+\author[5]{\fnm{Esma} \sur{Gel}}
+\author[6,7]{\fnm{Sanjay} \sur{Mehrotra}}
+\author[8]{\fnm{Samantha} \sur{Sabo}}
+\author[9]{\fnm{Ye} \sur{Chen}}
+\author[1]{\fnm{Eck} \sur{Doerry}}
 
-\abstract{PLACEHOLDER -- abstract not yet written.}
+\affil*[1]{\orgdiv{School of Informatics, Computing, and Cyber Systems}, \orgname{Northern Arizona University}, \orgaddress{\city{Flagstaff}, \state{AZ}, \country{USA}}}
+\affil[2]{\orgname{PLACEHOLDER: affiliation to be confirmed}}
+\affil[3]{\orgdiv{Pathogen and Microbiome Division}, \orgname{Translational Genomics Research Institute}, \orgaddress{\city{Flagstaff}, \state{AZ}, \country{USA}}}
+\affil[4]{\orgdiv{Office of the Vice President for Research, Knowledge Enterprise}, \orgname{Arizona State University}, \orgaddress{\city{Tempe}, \state{AZ}, \country{USA}}}
+\affil[5]{\orgdiv{Department of Supply Chain Management and Analytics}, \orgname{University of Nebraska--Lincoln}, \orgaddress{\city{Lincoln}, \state{NE}, \country{USA}}}
+\affil[6]{\orgdiv{Department of Industrial Engineering and Management Sciences}, \orgname{Northwestern University}, \orgaddress{\city{Evanston}, \state{IL}, \country{USA}}}
+\affil[7]{\orgdiv{Center for Engineering and Health, Feinberg School of Medicine}, \orgname{Northwestern University}, \orgaddress{\city{Chicago}, \state{IL}, \country{USA}}}
+\affil[8]{\orgdiv{Center for Health Equity Research, College of Health and Human Services}, \orgname{Northern Arizona University}, \orgaddress{\city{Flagstaff}, \state{AZ}, \country{USA}}}
+\affil[9]{\orgdiv{Department of Mathematics and Statistics}, \orgname{Northern Arizona University}, \orgaddress{\city{Flagstaff}, \state{AZ}, \country{USA}}}
 
-\keywords{epidemic modeling, metapopulation, epymorph, PLACEHOLDER}
+\abstract{
+Meta-population models are widely used to understand and forecast regional epidemics, but they are often built as complex code in which assumptions about transmission, movement and geography are intertwined, making models hard to reproduce and the effect of any single component hard to isolate. 
+Here we present \texttt{epymorph}, a Python package that constructs spatial epidemiological models from interchangeable components, automatically retrieves and configures data, and provides built-in Bayesian filters for estimating time- and space-varying parameters and generating probabilistic forecasts. 
+We use two forecasting experiments to show how epymorph turns model design decisions into controlled, reproducible hypothesis tests. 
+Across the 2025–2026 U.S. influenza season, stratifying the population by age improved forecasts of hospital admissions, but only with an empirically-derived contact matrix. 
+For the 2020–2021 SARS-CoV-2 winter wave, commuting data improved county-level forecasts of hospital census, yet a state-level model provided the best state-level forecasts.
+By making model components interchangeable, \texttt{epymorph} turns comparisons that once required rewriting code into reproducible experiments.
+}
+
+\keywords{epidemic modeling, metapopulation, disease forecasting, Bayesian inference}
 
 \maketitle
 
@@ -53,19 +80,20 @@
 %% ===================================================================
 
 \input{sections/01-introduction}
-\input{sections/03-results}
-\input{sections/02a-methods-arch}
-\input{sections/02b-methods-application}
-\input{sections/02c-methods-software-survey}
-\input{sections/04-discussion}
+\input{sections/02-results}
+\input{sections/03-discussion}
+\input{sections/04a-methods-architecture}
+\input{sections/04b-methods-software-survey}
+\input{sections/04c-methods-case-studies}
 
 \backmatter
 
 \bmhead{Supplementary information}
 See the accompanying Supplementary Information document.
 
-\bmhead{Acknowledgements}
-PLACEHOLDER
+\bmhead{Acknowledgments}
+Research reported in this publication was supported by the National Institute of Allergy and Infectious Diseases of the National Institutes of Health under award number R01AI168144, and by the Southwest Health Equity Research Collaborative at Northern Arizona University (U54MD012388), which was sponsored by the National Institute on Minority Health and Health Disparities (NIMHD).
+We thank Tessa wells for the illustration of Figure 1. 
 
 \section*{Declarations}
 \begin{itemize}

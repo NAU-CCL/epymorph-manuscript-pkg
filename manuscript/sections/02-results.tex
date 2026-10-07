@@ -68,7 +68,7 @@ The homogeneous model therefore serves as a control: it has the same age classes
 Because the two stratified models are built from a single \texttt{epymorph} model definition that differs by one argument, and all three models share the same data, initial conditions, and priors, differences in forecast skill can be attributed to model structure alone. 
 Specifically, we effectively re-ran the CDC FluSight challenge~\citep{cdc_flusight_2026} retrospectively for each model.
 Each week between November 2025 and May 2026, we assimilated the new weekly-provided hospitalization data using the built-in ensemble Kalman filter. 
-We then used \texttt{epymorph}'s forecast simulator to forward simulate the calibrated ensemble four weeks ahead, and we did this routine in a rolling fashion across the whole season.
+We then used \texttt{epymorph}'s forecast simulator to forward simulate the calibrated ensemble four weeks ahead, and we did this routine in a rolling fashion across the whole season (Supplementary Fig.~S2).
 The stratified models were fit to admissions in each age class, whereas the unstratified model was fit to their total per jurisdiction. 
 We scored every model's forecasts on the total admissions (not age-stratified), with the weighted interval score~\citep{bracher_evaluating_2021} on log-transformed counts (log WIS; Methods).
 
@@ -103,7 +103,7 @@ As in the influenza case study, the no-movement model serves as a control, which
 
 This case study also demonstrates fitting to multiple data sources at a fine spatial scale. 
 Each model was fit simultaneously to the weekly hospital census, which the model represents as the hospitalized compartment ($H$), and to weekly deaths, which the model represents as a flow (the transition from hospitalized to dead, $H \rightarrow D$), under a single likelihood. 
-Following the same rolling-forecast protocol as the influenza case study, we produced four-week forecasts across 24 weeks between October 2020 and March 2021. 
+Following the same rolling-forecast protocol as the influenza case study, we produced four-week forecasts across 24 weeks between October 2020 and March 2021 (Supplementary Fig.~S3). 
 To score all three models on the same targets, we summed the county models' forecasts to state totals and computed the log WIS.
 
 At the state scale, the reference model (with no intra-state heterogeneities or movement) forecast the hospital census best (Table~\ref{tab:covid-skill}), with relative log WIS of 1.08 for the commuting model and 1.12 for the no-movement model. 
@@ -117,5 +117,5 @@ Specifically, commuting improved forecasts of the hospital census in 25 / 32 cou
 Overall, at a fixed spatial resolution, accounting for realistic inter-county and inter-state movement improved forecasts, particularly of the hospital census.
 However, the added resolution itself, accounting for spatial heterogeneities, did not improve forecasts of aggregate, state-level total values. 
 This is likely due in part to the accumulation of error as 32 county forecasts are summed to three states. 
-Effectively, summing independent county realizations likely cancels the stochastic noise that a single state-level node retains.
+Effectively, summing independent county realizations likely cancels the stochastic noise that a single state-level node retains (Supplementary Fig.~S4).
 Future directions could use \texttt{epymorph} to induce more covariation at the county-level to better account for state-level noise. 
