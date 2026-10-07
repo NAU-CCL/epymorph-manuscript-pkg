@@ -100,7 +100,7 @@ Reproduce any of it by re-running the pipeline; the numbers above are regenerate
 Eight assertions, all of which pass today:
 
 1. **The manuscript's numbers match the pipeline.** Every count S1 and the Methods
-   subsection (`02c-methods-software-survey.tex`) quote is pulled out of the live text by the
+   subsection (`04b-methods-software-survey.tex`) quote is pulled out of the live text by the
    phrase that carries it and compared against `counts.json`. When the prose is reworded,
    update the phrases in `report.py` (`APPENDIX_CLAIMS`, `METHODS_CLAIMS`). This is the guarantee the whole pipeline exists to provide: a number
    cannot drift between the analysis and the paper without the check failing.

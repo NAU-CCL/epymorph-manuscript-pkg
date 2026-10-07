@@ -29,7 +29,7 @@ APPLY=0
 # Built with a read loop rather than `mapfile`, which is bash 4+; macOS ships bash 3.2.
 PATHS=()
 while IFS= read -r rel; do PATHS+=("$rel"); done < <(
-  cd "$OVERLEAF" && ls main.tex references.bib sections/*.tex supplementary/*.tex 2>/dev/null
+  cd "$OVERLEAF" && ls main.tex supplement.tex references.bib sections/*.tex supplementary/*.tex 2>/dev/null
 )
 
 differing=0

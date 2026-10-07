@@ -175,7 +175,7 @@ Generated figures, tables and numbers travel the other way, via
 
 | | written by | direction |
 |---|---|---|
-| `main.tex`, `sections/`, `supplementary/`, `references.bib` | a human, in Overleaf | Overleaf -> here |
+| `main.tex`, `supplement.tex`, `sections/`, `supplementary/`, `references.bib` | a human, in Overleaf | Overleaf -> here |
 | `figures/`, `tables/`, `manuscript-numbers.tex` | this repository's scripts | here -> Overleaf |
 
 No file is ever written by both sides, so neither script can lose an edit the other made.

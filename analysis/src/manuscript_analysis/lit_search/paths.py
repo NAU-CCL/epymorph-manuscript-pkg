@@ -58,7 +58,7 @@ BIB = MANUSCRIPT / "references.bib"
 APPENDIX = MANUSCRIPT / "supplementary" / "S1-software-landscape.tex"
 INTRO = MANUSCRIPT / "sections" / "01-introduction.tex"
 # The Methods summary of the search; it quotes the headline counts, so --check reads it too.
-METHODS_SURVEY = MANUSCRIPT / "sections" / "02c-methods-software-survey.tex"
+METHODS_SURVEY = MANUSCRIPT / "sections" / "04b-methods-software-survey.tex"
 
 BOM = "﻿"
 """Written at the head of every CSV so Excel and Numbers read the UTF-8 correctly."""
