@@ -57,7 +57,6 @@ __all__ = [
     "Evaluation",
     "figure_calibration",
     "figure_contact_structures",
-    "figure_eta_by_age",
     "figure_fit_by_age",
     "figure_relative_wis_swarm",
     "figure_rolling_forecasts",
@@ -327,10 +326,6 @@ def relative_by_unit(ev: Evaluation, model: str) -> np.ndarray:
     )
 
 
-# Backwards-compatible alias: the notebook and the sensitivity analyses call this.
-relative_by_state = relative_by_unit
-
-
 def focus_states(ev: Evaluation, count: int = 3) -> list[str]:
     """The first `count` of `REFERENCE_STATES` that this evaluation actually scores.
 
@@ -581,79 +576,6 @@ def figure_rolling_forecasts_by_age(
         ),
         figure_width=DOUBLE_COLUMN,
         panel_height=1.7,
-        subfig=subfig,
-    )
-    return fig
-
-
-def figure_eta_by_age(
-    ev: Evaluation,
-    state: str,
-    model: str,
-    levels=DEMO_QUANTILE_LEVELS,
-    ncols: int = 3,
-    title: str | None = AUTO_TITLE,
-    subfig=None,
-):
-    """The per-age contact correction `exp(eta_i)` through the season, one state.
-
-    Section 8's table reports the `eta_i` at the final date only. This shows the whole
-    trajectory, which is where the filter's age-specific learning is actually visible.
-
-    Only *differences* between the `eta_i` are identified: a shift common to all six is
-    indistinguishable from a shift in `q(t)`. Each date is therefore recentred by the
-    mean of the six medians at that date, which is one scalar per date and so a
-    monotone shift of every quantile rather than a reordering of them.
-
-    Bands rather than bars, unlike the fit panels: the correction is a continuous
-    process being tracked, not a sequence of separate predictions.
-    """
-    fips = {abbr: code for code, abbr in ev.labels.items()}[state]
-    params = ev.runs[model].params
-    params = params[params["location"] == fips]
-
-    names = sorted(n for n in params["parameter"].unique() if "log_eta" in n)
-    if not names:
-        raise ValueError(
-            f"{model} estimates no log_eta, so it has no per-age correction to show"
-        )
-
-    levels = list(levels)
-    median = levels.index(0.5)
-
-    stacked, dates = [], None
-    for name in names:
-        values, coords = quantile_array(
-            params[params["parameter"] == name], ["date"], levels=levels
-        )
-        stacked.append(values)
-        dates = pd.to_datetime(coords["date"])
-    stacked = np.stack(stacked)                        # (bands, dates, levels)
-    common = stacked[:, :, median].mean(axis=0)        # absorbed by q(t)
-    centred = stacked - common[None, :, None]
-
-    panels = []
-    for label, band in zip(flu_season.STRATA_LABELS, centred):
-        panels.append({
-            "dates": dates,
-            "quantiles": {q: np.exp(band[:, i]) for i, q in enumerate(levels)},
-            "color": COLORS[model],
-            "title": label,
-            "reference": 1.0,
-        })
-
-    fig, _ = plot_quantile_grid(
-        panels,
-        ncols=ncols,
-        style="bands",
-        ylabels="contact multiplier\nexp(centred eta)",
-        reference_label="no correction",
-        title=resolve_title(
-            title, f"{LABELS[model]}, {state}: per-age contact correction"
-        ),
-        figure_width=DOUBLE_COLUMN,
-        panel_height=1.7,
-        sharey=True,
         subfig=subfig,
     )
     return fig

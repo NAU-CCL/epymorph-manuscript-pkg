@@ -158,6 +158,5 @@ for what the supplement might still want:
 | panel | what it shows |
 |---|---|
 | `flu.figure_fit_by_age`, prior and posterior | the six fitted channels, before and after the update |
-| `flu.figure_eta_by_age` | the per-age contact correction through the season |
 | `covid.figure_fit(ev, "state")` | the state model's fit, displaced when Figure 3(b) became the county fit |
 | `covid.figure_rolling_forecasts(ev, "county", ...)` | the movement-off contrast at the same counties |

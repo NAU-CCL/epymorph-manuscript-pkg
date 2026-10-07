@@ -551,6 +551,19 @@ def write_outputs(
             f"{result.forecast.shape[2]} forecast nodes"
         )
 
+    # Demo 1's runs were written before the `scale` column existed, and MANIFEST.sha256
+    # holds them without it; Demo 2's carry it. Restored 2026-10-07 so that both demos
+    # reproduce byte for byte. The restructure gives each demo its own writer, which
+    # retires this switch.
+    columns = [
+        "reference_date", "target", "horizon", "target_end_date",
+        "location", "scale", "quantity", "quantile", "value",
+    ]
+    sort_keys = ["scale", "horizon", "location", "quantity", "quantile"]
+    if model.disease == "Influenza":
+        columns.remove("scale")
+        sort_keys.remove("scale")
+
     for position, reference_date in enumerate(result.reference_dates):
         # Two resolutions of the same forecast when the geography is coarsened for
         # scoring, told apart by an explicit `scale` column rather than by the shape of
@@ -587,13 +600,7 @@ def write_outputs(
             for h in frame["horizon"]
         ]
         frame["target"] = f"wk inc {model.disease.lower()} hosp"
-        frame = frame[[
-            "reference_date", "target", "horizon", "target_end_date",
-            "location", "scale", "quantity", "quantile", "value",
-        ]]
-        frame.sort_values(
-            ["scale", "horizon", "location", "quantity", "quantile"]
-        ).to_csv(
+        frame[columns].sort_values(sort_keys).to_csv(
             output_folder / "forecasts" / f"{reference_date}.csv", index=False
         )
 

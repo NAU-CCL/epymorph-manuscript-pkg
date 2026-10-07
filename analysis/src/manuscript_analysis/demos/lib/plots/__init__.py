@@ -12,12 +12,12 @@ Demo 2 (`demo-covid/evaluation.py`):
 
 | here | Demo 1 uses it for | Demo 2 uses it for |
 |---|---|---|
-| `plot_quantile_grid` | `figure_fit_by_age` (6 age bands over 2x3), `figure_eta_by_age` | `figure_fit` (quantity by node) |
+| `plot_quantile_grid` | `figure_fit_by_age` (6 age bands over 2x3) | `figure_fit` (quantity by node) |
 | `plot_rolling_forecast_grid` | `figure_rolling_forecasts`, `figure_rolling_forecasts_by_age` | `figure_rolling_forecasts`, at either scale |
 | `plot_line_panels` | `figure_wis_by_horizon`, `figure_calibration` (1 panel) | the same two (2 panels, one per quantity) |
 | `plot_single_forecast_grid` | `01-model-and-forecast.ipynb`: one origin, three models | the same |
 | `plot_ratio_swarm` | `figure_relative_wis_swarm` (51 jurisdictions) | `figure_county_relative_wis` (32 counties) |
-| `panel_grid` | the swarm's single axes | the swarm's, and `figure_relative_wis` |
+| `panel_grid` | the swarm's single axes | the swarm's |
 | `plot_contact_matrix` / `plot_flow_matrix` | `figure_contact_structures` | `figure_movement_structure` |
 
 The two matrix figures are the deliberate exception: a 6x6 annotated contact matrix and a
@@ -42,13 +42,11 @@ from manuscript_analysis.demos.lib.plots.matrices import (
     plot_flow_matrix,
 )
 from manuscript_analysis.demos.lib.plots.timeseries import (
-    plot_forecast_fan,
     plot_line_panels,
     plot_observations,
     plot_quantile_bands,
     plot_quantile_bars,
     plot_quantile_grid,
-    plot_quantile_panels,
     plot_rolling_forecast_grid,
     plot_rolling_forecasts,
     plot_single_forecast_grid,
@@ -60,13 +58,11 @@ __all__ = [
     "panel_grid",
     "plot_contact_matrix",
     "plot_flow_matrix",
-    "plot_forecast_fan",
     "plot_line_panels",
     "plot_observations",
     "plot_quantile_bands",
     "plot_quantile_bars",
     "plot_quantile_grid",
-    "plot_quantile_panels",
     "plot_ratio_swarm",
     "plot_rolling_forecast_grid",
     "plot_rolling_forecasts",

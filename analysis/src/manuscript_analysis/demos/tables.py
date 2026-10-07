@@ -45,8 +45,6 @@ from manuscript_analysis.demos.flu import evaluation as flu
 from manuscript_analysis.demos.lib.figures import use_manuscript_style
 from manuscript_analysis.demos.lib.scoring import SCORE_LABELS
 
-HERE = Path(__file__).resolve().parent
-
 OUTPUT_DIR = paths.TABLES
 """Where the tables land. The one thing to repoint when the demos move into
 `epymorph-manuscript-pkg`, exactly as `export_manuscript.OUTPUT_DIR` is."""

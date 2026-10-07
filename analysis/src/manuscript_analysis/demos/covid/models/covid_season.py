@@ -346,22 +346,25 @@ def _observations_mismatch(path: Path) -> str:
 
 @cache
 def observations(path: Path = OBSERVATIONS_CSV) -> Observed:
-    """Both quantities, loaded from the frozen CSV, fetching it first if absent.
+    """Both quantities, loaded from the frozen CSV.
 
-    Refetched if it does not cover the season window or its locations, so a changed
-    season cannot be silently fitted to stale data. Demo 1 grew this guard after a
-    redefined window was quietly reused; Demo 2 had no equivalent until 2026-09-17.
-
-    Refetching is deterministic despite the suppressed-death imputation, which draws from
-    `np.random.default_rng(FILL_SEED)`, so the same window always yields the same target.
+    The file is evidence: it is the target every model is scored against. If it is
+    missing, or does not cover the season's window and locations, this stops rather than
+    fetching; `fetch_observations()` is the deliberate way to replace it. (A refetch is
+    deterministic despite the suppressed-death imputation, which draws from
+    `np.random.default_rng(FILL_SEED)`.)
     """
-    if path.exists():
-        stale = _observations_mismatch(path)
-        if stale:
-            print(f"refetching {path.name}: {stale}")
-            path.unlink()
     if not path.exists():
-        fetch_observations(path)
+        raise FileNotFoundError(
+            f"{path} is missing. It is frozen evidence and is not refetched "
+            "automatically: restore it from git, or call fetch_observations()."
+        )
+    stale = _observations_mismatch(path)
+    if stale:
+        raise ValueError(
+            f"{path.name} does not match the season: {stale}. It is not refetched "
+            "automatically; call fetch_observations() to replace it deliberately."
+        )
     table = pd.read_csv(path, dtype={"location": str}, parse_dates=["date"])
     locations = list(scope().node_ids)
 

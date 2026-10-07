@@ -175,14 +175,6 @@ _SEQUENTIAL_BLUE = [
     "#0d366b",
 ]
 
-_NEUTRAL = "#f0efec"
-_DIVERGING_RED = ["#7d1f1f", "#a83232", "#cc4342", "#e34948", "#ee7f7e", "#f6b8b7"]
-
 SEQUENTIAL = LinearSegmentedColormap.from_list("epy_sequential", _SEQUENTIAL_BLUE)
 """Single-hue light-to-dark ramp, for continuous magnitude."""
 
-DIVERGING = LinearSegmentedColormap.from_list(
-    "epy_diverging",
-    [*_DIVERGING_RED, _NEUTRAL, *reversed(_SEQUENTIAL_BLUE[3:9])],
-)
-"""Red to neutral gray to blue, for values with a meaningful midpoint."""

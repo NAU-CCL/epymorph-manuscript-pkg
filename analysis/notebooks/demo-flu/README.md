@@ -101,9 +101,10 @@ every model is fitted and scored against it, so all three share an identical tar
 
 **This file is deliberately frozen.** The ADRIO reads CDC's `mpgq-jmmr`, whose title ends in
 "(Preliminary)" and which CDC updates every Wednesday, so the counts move: a re-run two weeks
-after the first gave a materially different result from the same code. It is refetched
-automatically when the season window changes, and deleting it forces a refetch. Expect the
-numbers to move if you do.
+after the first gave a materially different result from the same code. It is never
+refetched automatically: if the file is missing or does not cover the season window,
+loading stops with an error, and `flu_season.fetch_observations()` is the deliberate way to
+replace it. Expect the numbers to move if you do.
 
 A finalized sibling dataset, `ua7e-t2fy`, has identical columns and coverage and currently
 differs from the preliminary one by 15 admissions across the whole season, but no epymorph

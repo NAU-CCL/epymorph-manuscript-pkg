@@ -271,20 +271,6 @@ def interval_coverage(
     )
 
 
-def median_absolute_error(
-    observations: np.ndarray,
-    forecasts: np.ndarray,
-    quantile_levels: Sequence[float] = DEMO_QUANTILE_LEVELS,
-    transform: Transform | None = None,
-) -> np.ndarray:
-    """Absolute error of the predictive median, on the scale ``transform`` gives."""
-    levels = _check_levels(quantile_levels)
-    median_index = int(np.flatnonzero(np.isclose(levels, 0.5))[0])
-    observations = _apply(transform, observations)
-    forecasts = _apply(transform, forecasts)
-    return np.abs(observations - forecasts[..., median_index])
-
-
 def relative_wis(
     scores: np.ndarray,
     baseline: np.ndarray,

@@ -293,18 +293,24 @@ def fetch_observations(path: Path = OBSERVATIONS_CSV) -> Path:
 
 @cache
 def observations(path: Path = OBSERVATIONS_CSV) -> Observed:
-    """Weekly admissions, loaded from the CSV, fetching it first if absent.
+    """Weekly admissions, loaded from the frozen CSV.
 
-    The file is refetched if it does not cover the season window or the season's
-    jurisdictions, so a changed season cannot be silently fitted to stale data.
+    The file is evidence: CDC revises these series weekly, so a refetch would move the
+    target every model is scored against. If it is missing, or does not cover the
+    season's window and jurisdictions, this stops rather than fetching;
+    `fetch_observations()` is the deliberate way to replace it.
     """
-    if path.exists():
-        stale = _observations_mismatch(path)
-        if stale:
-            print(f"refetching {path.name}: {stale}")
-            path.unlink()
     if not path.exists():
-        fetch_observations(path)
+        raise FileNotFoundError(
+            f"{path} is missing. It is frozen evidence and is not refetched "
+            "automatically: restore it from git, or call fetch_observations()."
+        )
+    stale = _observations_mismatch(path)
+    if stale:
+        raise ValueError(
+            f"{path.name} does not match the season: {stale}. It is not refetched "
+            "automatically; call fetch_observations() to replace it deliberately."
+        )
     table = pd.read_csv(path, dtype={"location": str}, parse_dates=["date"])
 
     dates = np.array(sorted(table["date"].unique()))

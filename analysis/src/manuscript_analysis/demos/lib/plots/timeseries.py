@@ -257,52 +257,6 @@ def plot_quantile_grid(
     return fig, axs
 
 
-def plot_quantile_panels(
-    dates: Sequence,
-    quantiles: Sequence[Mapping[float, np.ndarray]],
-    observed: Sequence[np.ndarray] | None = None,
-    titles: Sequence[str] | None = None,
-    colors: Sequence | None = None,
-    reference: Sequence[float] | None = None,
-    style: str = "bars",
-    ylabel: str | None = None,
-    suptitle: str | None = None,
-    median_label: str = "Median",
-    observed_label: str = "Observed",
-    reference_label: str = "Prior mean",
-    figure_width: float = 7.20,
-    panel_height: float = 2.1,
-    share_y: bool = False,
-) -> tuple[Figure, np.ndarray]:
-    """A single row of quantile panels, addressed by parallel sequences.
-
-    Kept for the archived notebooks in each demo's `old/`, which call it this way. New
-    code should build panel mappings and call `plot_quantile_grid`, which lays out any
-    number of rows and is what both demos' live figures use.
-    """
-    if observed is not None and len(observed) != len(quantiles):
-        raise ValueError("observed must have one entry per panel")
-
-    panels = []
-    for index, levels in enumerate(quantiles):
-        panels.append({
-            "dates": dates,
-            "quantiles": levels,
-            "observed": None if observed is None else observed[index],
-            "color": "tab:blue" if colors is None else colors[index],
-            "title": None if titles is None else titles[index],
-            "reference": None if reference is None else reference[index],
-        })
-
-    fig, axs = plot_quantile_grid(
-        panels, style=style, ylabels=ylabel, title=suptitle,
-        median_label=median_label, observed_label=observed_label,
-        reference_label=reference_label,
-        figure_width=figure_width, panel_height=panel_height, sharey=share_y,
-    )
-    return fig, axs.ravel()
-
-
 def plot_rolling_forecasts(
     ax: Axes,
     origins: Sequence,
@@ -438,54 +392,6 @@ def plot_rolling_forecast_grid(
         legend_from=drawn if legend else None,
     )
     return fig, axs
-
-
-def plot_forecast_fan(
-    ax: Axes,
-    forecasts: Sequence[tuple[Sequence, Mapping[float, np.ndarray]]],
-    colors: Sequence | None = None,
-    interval: float = 0.95,
-    alpha: float = 0.25,
-    label: str | None = None,
-) -> None:
-    """Overlay several short forecast trajectories on one axis.
-
-    The rolling-origin figure: each origin contributes one short ribbon starting
-    where its forecast starts, so the reader sees how the forecast issued at each
-    point compares with what happened.
-
-    Parameters
-    ----------
-    forecasts :
-        One ``(dates, quantiles)`` pair per origin. The dates differ between
-        origins, which is the whole point, so they are supplied per forecast
-        rather than shared.
-    interval :
-        Nominal coverage of the single shaded band. One band per origin, because
-        nested bands from many origins are unreadable when overlaid.
-    label :
-        Legend label, applied to the first forecast only so the legend has one
-        entry rather than one per origin.
-    """
-    lower_level = (1.0 - interval) / 2.0
-    for index, (dates, quantiles) in enumerate(forecasts):
-        color = "tab:blue" if colors is None else colors[index]
-        ax.fill_between(
-            dates,
-            _level(quantiles, lower_level),
-            _level(quantiles, 1.0 - lower_level),
-            color=color,
-            alpha=alpha,
-            linewidth=0,
-            label=f"{interval:.0%} PI" if index == 0 else None,
-        )
-        ax.plot(
-            dates,
-            _level(quantiles, 0.5),
-            color=color,
-            linewidth=0.9,
-            label=label if index == 0 else None,
-        )
 
 
 def plot_line_panels(

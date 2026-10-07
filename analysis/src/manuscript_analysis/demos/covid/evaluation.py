@@ -74,7 +74,6 @@ __all__ = [
     "figure_fit",
     "figure_movement_structure",
     "figure_parameter_correlation",
-    "figure_relative_wis",
     "figure_rolling_forecasts",
     "figure_wis_by_horizon",
     "focus_counties",
@@ -130,10 +129,6 @@ UNCORRELATED = {
 """Each correlated model's twin: the same model with independent county shocks."""
 
 QUANTITIES = ("census", "deaths")
-QUANTITY_LABELS = {
-    "census": "hospital census (mean weekly inpatients)",
-    "deaths": "weekly deaths",
-}
 AXIS_LABELS = {
     "census": "hospital census",
     "deaths": "weekly deaths",
@@ -787,51 +782,6 @@ def figure_wis_by_horizon(
         share_y=False,
         subfig=subfig,
     )
-    return fig
-
-
-def figure_relative_wis(
-    ev: Evaluation,
-    replicate: Evaluation | None = None,
-    title: str | None = None,
-    subfig=None,
-):
-    """Figure 3(d): per-state WIS ratio against the baseline, by quantity.
-
-    Grouped bars rather than Demo 1's swarm: with three states there is no distribution
-    to show, and naming all three is honest here in a way naming 51 was not. Each bar
-    carries a marker per seed when a replicate is passed, for the same reason Demo 1's
-    figure shows both seeds: with two replicates, draw the replicates.
-    """
-    structured = [m for m in MODELS if m != BASELINE]
-    fig, axs = panel_grid(
-        1, len(QUANTITIES), subfig=subfig,
-        figsize=(DOUBLE_COLUMN, 2.4), sharey=True,
-    )
-    axs = axs[0]
-    width = 0.8 / len(structured)
-    positions = np.arange(len(ev.locations))
-
-    for quantity, ax in zip(QUANTITIES, axs):
-        for offset, model in enumerate(structured):
-            x = positions + (offset - (len(structured) - 1) / 2) * width
-            ratios = relative_by_unit(ev, model, quantity)
-            ax.bar(x, ratios, width=width * 0.9, color=COLORS[model],
-                   label=LABELS[model])
-            if replicate is not None:
-                other = relative_by_unit(replicate, model, quantity)
-                ax.scatter(x, other, s=10, facecolor="white",
-                           edgecolor="black", linewidth=0.6, zorder=3)
-        ax.axhline(1.0, color="black", linewidth=0.8)
-        ax.set_xticks(positions)
-        ax.set_xticklabels([ev.labels[c] for c in ev.locations])
-        ax.set_title(AXIS_LABELS[quantity], fontsize=7)
-    axs[0].set_ylabel(f"{SCORE_LABELS[ev.scale]} relative to\n{LABELS[BASELINE]}")
-    axs[0].legend(fontsize=6)
-    if replicate is not None:
-        axs[-1].set_xlabel("open marker: seed 1", fontsize=6)
-    if title is not None:
-        fig.suptitle(title)
     return fig
 
 

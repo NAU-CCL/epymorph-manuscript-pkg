@@ -151,8 +151,9 @@ a census and a death count are not commensurate.
 suppressed for disclosure control, and they are imputed by a truncated-Poisson draw from
 the region's own per-capita mortality that week (1,762 imputed deaths across the season).
 The draw uses a fixed seed, so a refetch is deterministic, but re-deriving it would still
-change the target every model is scored against. It is refetched automatically when the
-season window changes.
+change the target every model is scored against. It is never refetched automatically: if
+the file is missing or does not cover the season window, loading stops with an error, and
+`covid_season.fetch_observations()` is the deliberate way to replace it.
 
 Unlike Demo 1, the underlying data are **not** revised: `ite7-j2w7` last changed 2023-04-05
 and `aemt-mg7g` 2024-11-01.

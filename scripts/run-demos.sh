@@ -45,8 +45,9 @@ run_group() {          # run_group <demo> <realizations> <seed> <model>...
     python -m "manuscript_analysis.demos.${demo}.run_season" \
       "$spec" -n "$realizations" --seed "$seed" &
     pids+=($!)
-    # Each fit is single-threaded, so run up to $JOBS of them at once.
-    while [ "$(jobs -rp | wc -l)" -ge "$JOBS" ]; do wait -n; done
+    # Each fit is single-threaded, so run up to $JOBS of them at once. Polls rather than
+    # `wait -n`, which needs bash 4.3 and macOS ships bash 3.2.
+    while [ "$(jobs -rp | wc -l)" -ge "$JOBS" ]; do sleep 10; done
   done
   for pid in "${pids[@]}"; do wait "$pid"; done
 }
