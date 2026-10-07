@@ -10,6 +10,7 @@ has the detail; the top-level `README.md` has the workflow they fit into.
 | `check.sh` | the regression suite: the lit-search pipeline's eight checks, the demo tables against a fresh generation, and the ensembles against `MANIFEST.sha256` | ~1-2 min |
 | `sync-manuscript.sh` | mirrors the prose from the Overleaf clone into `manuscript/`; reports by default, copies with `--apply` | seconds |
 | `publish-results.sh` | copies generated figures, tables and numbers into the Overleaf clone; reports by default, copies with `--apply` | seconds |
+| `build-docx.sh` | Word copies of the manuscript and supplement for collaborators to comment on, into `results/manuscript-docx/` (not in git); needs pandoc | seconds |
 
 `sync-manuscript.sh` and `publish-results.sh` are two one-way mirrors over disjoint sets of
 files, not a bidirectional sync; see "Keeping the manuscript in step" in the top-level

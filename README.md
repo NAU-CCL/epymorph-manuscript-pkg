@@ -137,7 +137,7 @@ results/            organised by producer, mirroring data/
   demos/runs/       the ensembles. NOT in git.
   lit-search/       shortlists, register, PRISMA flow, Table 1
 scripts/            run-demos.sh, build-figures.sh, check.sh,
-                    sync-manuscript.sh, publish-results.sh
+                    sync-manuscript.sh, publish-results.sh, build-docx.sh
 ```
 
 Each subdirectory has its own README with the detail.
