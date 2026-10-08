@@ -3,95 +3,39 @@
 Three influenza models, identical in every respect but one, fitted and forecast over the
 2025-26 season and scored against each other.
 
-| model | import path | structure |
-|---|---|---|
-| multi-strata, empirical mixing | `models.multi_strata_flu:empirical` | six age strata, the Mistry et al. contact matrix projected onto this demography |
-| multi-strata, homogeneous mixing | `models.multi_strata_flu:homogeneous` | six age strata, but contact in proportion to group size |
-| single-strata | `models.single_strata` | one population, no age structure |
+| model | structure |
+|---|---|
+| `multi-strata-empirical` (empirical mixing) | six age groups, the Mistry et al. contact matrix projected onto each state's age distribution |
+| `multi-strata-homogeneous` (homogeneous mixing) | six age groups, but contact in proportion to group size |
+| `single-strata` (no age structure) | one population |
 
-The two multi-strata models live in one module because they differ by one argument. If
-they ever differ by more than that, the shared module is the bug.
+## Where it is
 
-## The notebooks
+**`analysis/src/manuscript_analysis/demo-flu.ipynb`** is the whole analysis, read top to
+bottom: the data, the age-mixing model, one fit and forecast of the `single-strata` model
+explained, the two stratified models as one change each, the rolling forecasts of all
+three at both seeds, and the scores, figures and tables the manuscript reports for Demo 1.
+It is run by papermill (`scripts/run-demos.sh`, `scripts/build-figures.sh`) and can be
+opened in Jupyter where it lives. A run already on disk with the same settings is reused;
+a missing one is fitted, four at a time. At 300 realizations a stratified model takes
+about 3 to 4 hours and the single-strata model about 25 minutes.
 
-| notebook | what it does | needs |
-|---|---|---|
-| `01-model-and-forecast.ipynb` | builds the three models in epymorph, fits each up to two weeks before the season's peak, and issues one four-week forecast; then checks that its models are identical to the ones below | a Census API key; about an hour |
-| `02-evaluation.ipynb` | every table and figure the manuscript reports for Demo 1 | the ensembles |
-
-Start with `01`: it is the whole workflow, once, with every epymorph call in view. `02` is
-that workflow repeated at 25 forecast dates and scored, which is what the rest of this
-README is about.
-
-## Workflow
-
-Run each model, then read `02-evaluation.ipynb`. From `analysis/`:
-
-```sh
-# Run all three at once. Each fit is single-threaded and uses about 0.5 GB, so on any
-# multi-core machine this costs the same wall-clock as the slowest model rather than
-# the sum of all three. They write to separate folders and share nothing but the
-# read-only observations file.
-for spec in models.multi_strata_flu:empirical models.multi_strata_flu:homogeneous \
-            models.single_strata; do
-  uv run python -m manuscript_analysis.demos.flu.run_season $spec --seed 0 &
-done
-wait
-```
-
-`../scripts/run-demos.sh` does this for both demos and both seeds.
-
-Each writes to `results/demos/runs/flu/seed<N>/<model name>/`. A folder produced under the
-*same* configuration is skipped; one produced under a different season window, burn-in,
-seed or ensemble size is re-run, and `--force` re-runs regardless. `--help` lists the
-options; the defaults reproduce the manuscript run (300 realizations, seed 0, and the
-season's own 10-week burn-in and 4-week horizon).
-
-**300 realizations, not 100.** At 100 the per-jurisdiction comparison was not reproducible
-across seeds; at 300 it largely is. At 300 a stratified model takes about 3 to 4 hours
-(empirical mixing about 4, homogeneous about 3.2) and the single-strata model about 25
-minutes, so `-n 100` is useful while iterating and should not be used for results.
+| file | what |
+|---|---|
+| `manuscript_analysis/demo-flu.ipynb` | the models, the walkthrough, the runs, the scores, figures and tables |
+| `manuscript_analysis/flu_inputs.py` | data preparation that is not epymorph: the frozen observations, severity, the contact matrices, initial conditions |
+| `manuscript_analysis/runs.py`, `scoring.py`, `plots.py`, `util.py` | writing and reading runs, scoring, drawing a panel, writing a table; shared with Demo 2 |
+| `data/demos/flu/observations.csv` | the CDC observations, fetched once and frozen |
+| `data/raw/flu-population-*.npz`, `data/raw/mistry/` | the ACS age structure and the Mistry contact matrix, frozen with their provenance |
+| `results/demos/runs/flu/seed<N>/<model>/` | the runs: `forecasts/<reference_date>.csv`, `fit.csv`, `params.csv`, `run.json` |
+| `scripts/fetch_flu_observations.py` | how the observations were fetched; no build runs it |
 
 The season spans the full FluSight 2025-26 challenge: the simulated window opens 2025-09-13
 and runs 38 weeks, ten burn-in weeks precede the first forecast, and the 25 forecast dates
-run 2025-11-22 to 2026-05-09, so the last four-week forecast reaches 2026-05-30. Note `Season.start_date` is the **simulation** start, with the
-burn-in inside the window; a FluSight challenge's dates are its *forecast* window instead.
+run 2025-11-22 to 2026-05-09, so the last four-week forecast reaches 2026-05-30.
 
-`02-evaluation.ipynb` only reads run outputs and never fits anything.
-
-## Layout
-
-```
-analysis/src/manuscript_analysis/demos/flu/
-  seasons.py            what is being forecast and over what window
-  models/
-    flu_season.py       everything the models share: scope, demography, severity,
-                        observations, initial conditions, priors, parameter table
-    multi_strata_flu.py the two stratified models
-    single_strata.py    the unstratified model
-  run_season.py         fit and forecast one model, write its outputs
-  evaluation.py         loading, scoring and every figure function
-analysis/notebooks/demo-flu/
-  01-model-and-forecast.ipynb  the models, one fit, one forecast
-  02-evaluation.ipynb   the manuscript's tables and figures
-
-data/demos/flu/observations.csv           fetched once, frozen, shared by every run
-results/demos/runs/flu/seed0/<model>/     the manuscript run; seed1/ is the replicate
-  forecasts/<reference_date>.csv  fit.csv  params.csv  run.json
-```
-
-`02-evaluation.ipynb` reads both seeds: seed 0 for most of it, and seed 1 through
-`evaluation.load_replicate()` for the reproducibility table and Figure 2(d).
-
-**The notebooks are hand-maintained**: edit them directly. `01` writes the models out in
-full, so its last cell checks them against `models/` and fails if the two copies have
-drifted apart. `02`'s loading, scoring and figure code lives in `evaluation.py` so that
-the notebook and the manuscript exporter cannot disagree, which means a new figure is a
-function there plus a one-line cell here.
-
-Shared library code lives in `analysis/src/manuscript_analysis/demos/lib/`:
-`forecasting.py` (the rolling-origin loop and the output writers), `ipms/flu_age_mixing.py`
-(the multi-strata builder), `scoring.py`, `contacts.py`, `plots/`.
+**300 realizations, not 100.** At 100 the per-jurisdiction comparison was not reproducible
+across seeds; at 300 it largely is.
 
 ## Data
 
@@ -103,8 +47,8 @@ every model is fitted and scored against it, so all three share an identical tar
 "(Preliminary)" and which CDC updates every Wednesday, so the counts move: a re-run two weeks
 after the first gave a materially different result from the same code. It is never
 refetched automatically: if the file is missing or does not cover the season window,
-loading stops with an error, and `flu_season.fetch_observations()` is the deliberate way to
-replace it. Expect the numbers to move if you do.
+loading stops with an error. `scripts/fetch_flu_observations.py` records how it was made,
+and writes a fresh copy to compare; expect the numbers to move.
 
 A finalized sibling dataset, `ua7e-t2fy`, has identical columns and coverage and currently
 differs from the preliminary one by 15 admissions across the whole season, but no epymorph
@@ -115,20 +59,17 @@ total (about 0.25% short); the reported total is stored as a `total_reported` ro
 checking, but every model is fitted on the sum of bands. And Puerto Rico is forecast,
 as FluSight requires, but excluded from the model comparison, because its influenza
 seasonality is tropical rather than temperate and these models assume a single winter
-peak (`seasons.UNSCORED_STATES`).
+peak (`UNSCORED` in the notebook).
 
 ## Reproducibility
 
 Environment and dependencies are pinned in `analysis/pyproject.toml` and
-`analysis/uv.lock` (`epymorph==2.0.0b1`, Python 3.12). Each run records its own provenance
-in `run.json`: season, realizations, window, seed, elapsed time, and the observations file
-it used. `models.flu_season.parameter_table()` returns every fixed parameter with its value
-and units.
+`analysis/uv.lock` (`epymorph==2.0.0b1`, Python 3.12). Each run records its settings in
+`run.json`. A fixed seed reproduces a run byte for byte on the same platform, whether it
+runs alone or in a parallel worker.
 
-The ACS age structure and the Mistry contact matrix are frozen in `data/raw/` with their
-provenance, so the runs and the evaluation need no Census API key or download. The
-exception is `01-model-and-forecast.ipynb`, which fetches the age structure live to show the
-ADRIOs at work.
+The ACS age structure (the table and each group's sum) and the Mistry contact matrix are
+frozen in `data/raw/` with their provenance, so nothing here needs a Census API key.
 
 ## Where the reasoning lives
 
@@ -137,7 +78,7 @@ working folder, not in this repository:
 
 - `demo-flu/contact-matrix-methods.md`: contact structure, projection, mixing variants
 - `demo-flu/ihr-revision.md`: severity, and why the foundational demo's values were rebuilt
-- `demo-flu/refactor-plan-v01.md`: the package's structure and how it was verified
+- `demo-flu/refactor-plan-v01.md`: the package's structure before the restructure
 - `demo-flu/demo-plan-v02.md`: the demo's design
 - `demo-flu/state-contact-sources.ipynb`: the robustness check
   `contact-matrix-methods.md` section 9.0 cites by name

@@ -31,20 +31,17 @@ python -m manuscript_analysis.lit_search --check
 if [ -d results/demos/runs ]; then
   echo
   echo "== the demos =="
-  printf '  %-44s' "tables agree with a fresh generation"
-  python -m manuscript_analysis.demos.tables --check >/dev/null && echo OK
-  printf '  %-44s' "figures agree with a fresh build"
-  python -m manuscript_analysis.demos.export --check >/dev/null && echo OK
-  # Demo 2's figures and tables come from its notebook, rerun into a scratch folder. It
-  # refits only its walkthrough model, and stops rather than fit if a run is missing.
-  printf '  %-44s' "demo-covid.ipynb agrees with a fresh run"
-  scratch=$(mktemp -d)
-  if ! python -m papermill analysis/src/manuscript_analysis/demo-covid.ipynb \
-      "$scratch/demo-covid.ipynb" --cwd analysis/src/manuscript_analysis \
-      -p output_dir "$scratch" -p fit_missing_runs False > "$scratch/papermill.log" 2>&1; then
-    echo "FAILED"; tail -20 "$scratch/papermill.log"; exit 1
-  fi
-  python - "$scratch" <<'PYTHON'
+  # Each demo's figures and tables come from its notebook, rerun into a scratch folder.
+  # It refits only its walkthrough model, and stops rather than fit if a run is missing.
+  for demo in demo-flu demo-covid; do
+    printf '  %-44s' "$demo.ipynb agrees with a fresh run"
+    scratch=$(mktemp -d)
+    if ! python -m papermill "analysis/src/manuscript_analysis/$demo.ipynb" \
+        "$scratch/$demo.ipynb" --cwd analysis/src/manuscript_analysis \
+        -p output_dir "$scratch" -p fit_missing_runs False > "$scratch/papermill.log" 2>&1; then
+      echo "FAILED"; tail -20 "$scratch/papermill.log"; exit 1
+    fi
+    python - "$scratch" <<'PYTHON'
 import sys
 from manuscript_analysis.util import drifted
 problems = drifted(sys.argv[1], "results/demos")
@@ -53,7 +50,8 @@ if problems:
     sys.exit(1)
 print("OK")
 PYTHON
-  rm -rf "$scratch"
+    rm -rf "$scratch"
+  done
   printf '  %-44s' "run outputs match MANIFEST.sha256"
   python -m manuscript_analysis.demos.manifest --check >/dev/null && echo OK
 else

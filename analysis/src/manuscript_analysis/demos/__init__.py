@@ -5,11 +5,9 @@ Demo 1 (`flu`) asks it of demographic structure, Demo 2 (`covid`) of spatial str
 movement. The three models within each demo differ only in data, never in code, which is
 the claim the manuscript rests on.
 
-- `lib/` — everything not specific to one demo: the forecasting loop, scoring, plotting,
-  IPMs and parameter functions. Was `demolib/` in the working folder.
-- `flu/`, `covid/` — each demo's season definition, models, and its evaluation and figure
-  functions.
-- `export.py`, `tables.py` — the manuscript's figures and tables. Layout and presentation
-  only; every number comes from a demo's own `evaluation` module.
-- `paths.py` — where everything lives.
+The demos themselves are `manuscript_analysis/demo-flu.ipynb` and `demo-covid.ipynb`
+(restructure steps 4-6). What is left here until step 7 flattens the layout:
+
+- `paths.py` — where the runs, tables and figures live.
+- `manifest.py` — the checksums of the runs, `results/demos/MANIFEST.sha256`.
 """

@@ -912,7 +912,7 @@ def plot_contact_matrix(
     """Draw a contact matrix as an annotated heatmap.
 
     Rows are the contactor, columns the contactee, matching the matrix
-    convention throughout `manuscript_analysis.demos.lib.contacts`.
+    convention throughout `manuscript_analysis.flu_inputs`.
 
     Parameters
     ----------

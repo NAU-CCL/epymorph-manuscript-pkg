@@ -136,7 +136,8 @@ data/
 analysis/
   pyproject.toml                       one uv environment
   src/manuscript_analysis/
-    demos/          the two vignettes: lib/, flu/, covid/, export.py, tables.py
+    demo-flu.ipynb, demo-covid.ipynb   the two vignettes, top to bottom
+    *_inputs.py, runs.py, scoring.py, plots.py, util.py   what they use that is not epymorph
     lit_search/     the software-landscape search pipeline
   notebooks/        the driver notebooks
 manuscript/         LaTeX, one file per section; round-trips with Overleaf

@@ -55,8 +55,10 @@ def forecast_table(
     `(horizons, locations, quantities, levels)`. Demo 2 writes two: `scored`, the three
     states every model is compared at, and for the county models `model`, the same
     forecast at their own counties. A `scale` column tells them apart, so nothing reading
-    the file can mix a state and a county by accident.
+    the file can mix a state and a county by accident. Demo 1 has one scale, and passes
+    it as `None`: its files have no `scale` column.
     """
+    with_scale = list(scales) != [None]
     blocks = []
     for scale, (values, locations) in scales.items():
         horizons = np.arange(values.shape[0])
@@ -64,7 +66,8 @@ def forecast_table(
             values, levels,
             {"horizon": horizons, "location": locations, "quantity": quantities},
         )
-        block.insert(0, "scale", scale)
+        if with_scale:
+            block.insert(0, "scale", scale)
         blocks.append(block)
     table = pd.concat(blocks, ignore_index=True)
     table.insert(0, "reference_date", str(reference_date))
@@ -72,11 +75,21 @@ def forecast_table(
         str(reference_date + np.timedelta64(7 * int(h), "D")) for h in table["horizon"]
     ]
     table["target"] = target
-    columns = [
-        "reference_date", "target", "horizon", "target_end_date",
-        "location", "scale", "quantity", "quantile", "value",
-    ]
-    return table[columns].sort_values(["scale", "horizon", "location", "quantity", "quantile"])
+    columns = ["reference_date", "target", "horizon", "target_end_date", "location",
+               *(["scale"] if with_scale else []), "quantity", "quantile", "value"]
+    sort_keys = [*(["scale"] if with_scale else []), "horizon", "location", "quantity", "quantile"]
+    return table[columns].sort_values(sort_keys)
+
+
+def with_total(ensemble: np.ndarray, levels) -> np.ndarray:
+    """Quantiles of each quantity, then of their sum, as one more quantity.
+
+    The sum is taken within each realization before any quantile, because quantiles do
+    not add: the sum of six age groups' medians is not the median of the total.
+    """
+    each = quantiles(ensemble, levels)
+    total = quantiles(ensemble.sum(axis=-1), levels)
+    return np.concatenate([each, total[..., np.newaxis, :]], axis=-2)
 
 
 def fit_table(
@@ -86,17 +99,21 @@ def fit_table(
     locations: Sequence[str],
     quantities: Sequence[str],
     levels,
+    add_total: bool = False,
 ) -> pd.DataFrame:
     """`fit.csv`: the filter's weekly fit at the model's own nodes.
 
     `posterior` is after each week's update, so it is a fit; `prior` is before it, so it is
     a genuine one-week-ahead prediction. Both are `(realizations, weeks, nodes, quantities)`.
+    `add_total` adds the quantities' sum as a quantity named `total` (see `with_total`).
     """
     tables = []
     for series, ensemble in (("posterior", posterior), ("prior", prior)):
+        values = with_total(ensemble, levels) if add_total else quantiles(ensemble, levels)
+        names = [*quantities, "total"] if add_total else list(quantities)
         table = quantile_table(
-            quantiles(ensemble, levels), levels,
-            {"target_end_date": dates, "location": locations, "quantity": quantities},
+            values, levels,
+            {"target_end_date": dates, "location": locations, "quantity": names},
         )
         table.insert(0, "series", series)
         tables.append(table)

@@ -1,8 +1,10 @@
 """An ADRIO wrapper that persists values and their acquisition provenance.
 
 Copied from Tyler Coles's `reproducible-manuscript-poc` (`analysis/fair_epymorph_poc/data.py`,
-commit ef4fd7a, 2026-09-28), unchanged apart from this docstring and one condition in
-`inspect`, marked CHANGED, so that it can cache an ADRIO whose result has an open-ended axis.
+commit ef4fd7a, 2026-09-28), unchanged apart from this docstring and two changes, each
+marked CHANGED: a condition in `inspect`, so that it can cache an ADRIO whose result has an
+open-ended axis; and the wrapped ADRIO's requirements passed through, so that it can cache
+an ADRIO that takes another as input (`PopulationByAge` takes the age table).
 It is headed for epymorph itself; once it is released there, import it from epymorph and
 delete this file.
 
@@ -128,6 +130,10 @@ class ProvenanceCachedADRIO[ResultT: np.generic, ValueT: np.generic](
         self._wrapped = wrapped
         self._cache_path = Path(cache_path)
         self._description = description
+        # CHANGED from the original, which declared no requirements, so an ADRIO that
+        # needs another attribute (PopulationByAge needs population_by_age_table) never
+        # received it on a cache miss. A cached result is read without them either way.
+        self.requirements = wrapped.requirements
 
     @property
     def result_format(self) -> ResultFormat:

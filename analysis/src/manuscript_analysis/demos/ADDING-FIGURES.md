@@ -1,10 +1,10 @@
 # Adding a figure
 
-> **Mid-restructure (step 5, 2026-10-08).** Demo 2's figures are now laid out in
-> `manuscript_analysis/demo-covid.ipynb` (section 9) from panels in
-> `manuscript_analysis/plots.py`, and `covid/evaluation.py` is gone. What follows still
-> describes Demo 1, which moves the same way in step 6; step 9 rewrites this file for
-> "helpers draw a panel, the notebook lays out the figure".
+> **Out of date (restructure steps 5-6, 2026-10-08).** Both demos' figures are now laid
+> out in their notebooks (`demo-flu.ipynb`, `demo-covid.ipynb`, section 9) from panels in
+> `manuscript_analysis/plots.py`; `export.py` and the `evaluation.py` modules are gone.
+> What follows describes the old layout; step 9 rewrites this file for "helpers draw a
+> panel, the notebook lays out the figure".
 
 Three places a figure can live, and which one is right depends on **who needs it**, not on
 how much work it is.

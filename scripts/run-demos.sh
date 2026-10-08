@@ -1,63 +1,31 @@
 #!/usr/bin/env bash
-# Regenerate the demos' run outputs: every model, both ensemble seeds.
+# Regenerate the demos' runs, then their figures and tables: each demo is one notebook.
 #
-# This is the expensive half of the analysis, roughly 8-10 hours wall clock on one
-# machine. It writes ~1 GB into results/demos/runs/, which git does not carry. A run
-# folder produced under the SAME configuration is skipped, so re-running this script
-# after an interruption resumes rather than starts over.
+# This is the expensive half of the analysis, about 5 hours on one machine without the
+# archived runs (Demo 1's two stratified models take about four hours each, four runs at a
+# time). It writes ~1 GB into results/demos/runs/, which git does not carry. A run already
+# on disk with the same settings is reused, so re-running this after an interruption
+# resumes rather than starts over.
 #
-# A fixed seed reproduces an ensemble byte for byte on the same platform (verified
-# 2026-09-22). On a different platform expect the scores to agree and the bytes not to;
-# compare results/demos/tables/ rather than the ensembles.
+# A fixed seed reproduces a run byte for byte on the same platform (verified 2026-10-08,
+# in parallel workers). On a different platform expect the scores to agree and the bytes
+# not to; compare results/demos/tables/ rather than the runs.
 #
-# Usage:  scripts/run-demos.sh [--seeds "0 1"] [--jobs N]
+# The executed notebooks, outputs and all, are written to results/demos/notebook/.
+#
+# Usage:  scripts/run-demos.sh
 set -euo pipefail
-
-SEEDS="0 1"
-JOBS=3
-while [ $# -gt 0 ]; do
-  case "$1" in
-    --seeds) SEEDS="$2"; shift 2 ;;
-    --jobs)  JOBS="$2";  shift 2 ;;
-    *) echo "unknown option: $1" >&2; exit 2 ;;
-  esac
-done
 
 cd "$(dirname "$0")/.."
 export PYTHONPATH="analysis/src${PYTHONPATH:+:$PYTHONPATH}"
+export PYTHONHASHSEED=0  # as in build-figures.sh
 
-FLU_MODELS=(
-  "models.multi_strata_flu:empirical"
-  "models.multi_strata_flu:homogeneous"
-  "models.single_strata"
-)
-
-run_group() {          # run_group <demo> <realizations> <seed> <model>...
-  local demo=$1 realizations=$2 seed=$3; shift 3
-  local pids=()
-  for spec in "$@"; do
-    echo "  [$demo seed $seed] $spec"
-    python -m "manuscript_analysis.demos.${demo}.run_season" \
-      "$spec" -n "$realizations" --seed "$seed" &
-    pids+=($!)
-    # Each fit is single-threaded, so run up to $JOBS of them at once. Polls rather than
-    # `wait -n`, which needs bash 4.3 and macOS ships bash 3.2.
-    while [ "$(jobs -rp | wc -l)" -ge "$JOBS" ]; do sleep 10; done
-  done
-  for pid in "${pids[@]}"; do wait "$pid"; done
-}
-
-for seed in $SEEDS; do
-  echo "== influenza, seed $seed (R=300) =="
-  run_group flu 300 "$seed" "${FLU_MODELS[@]}"
+for demo in demo-flu demo-covid; do
+  echo "== $demo =="
+  python -m papermill "analysis/src/manuscript_analysis/$demo.ipynb" \
+    "results/demos/notebook/$demo.ipynb" --cwd analysis/src/manuscript_analysis \
+    -p output_dir "$PWD/results/demos"
 done
 
-# Demo 2 is one notebook, which fits whichever of its runs are missing, both seeds, four
-# at a time; --seeds and --jobs do not apply to it. The executed copy is the record.
-echo "== covid, seeds 0 and 1 (R=600), demo-covid.ipynb =="
-PYTHONHASHSEED=0 python -m papermill analysis/src/manuscript_analysis/demo-covid.ipynb \
-  results/demos/notebook/demo-covid.ipynb --cwd analysis/src/manuscript_analysis \
-  -p output_dir "$PWD/results/demos"
-
 echo
-echo "done. Demo 2's figures and tables are written; for Demo 1's: scripts/build-figures.sh"
+echo "done: the runs, figures and tables are written."
