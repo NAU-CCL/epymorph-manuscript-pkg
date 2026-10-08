@@ -27,6 +27,7 @@ from epymorph.time import TimeFrame
 from epymorph.util import pairwise_haversine, to_date_value_array
 from scipy.stats import poisson
 
+from manuscript_analysis.data import ProvenanceCachedADRIO
 from manuscript_analysis.demos.lib.forecasting import Quantity
 from manuscript_analysis.demos.lib.ipms.covid_seirhd import (
     CENSUS_COMPARTMENT,
@@ -165,10 +166,26 @@ def time_frame() -> TimeFrame:
     return TimeFrame.of(start_date=SEASON.start_date, duration_days=7 * SEASON.weeks)
 
 
+def _frozen(adrio, name: str, what: str) -> ProvenanceCachedADRIO:
+    """`adrio`, read from `data/raw/` once it is frozen there.
+
+    The first call fetches it, which needs the Census API key, and freezes it with its
+    provenance; every later call, on any machine, reads the file. The file is named for the
+    season's states and ACS vintage, so a changed season gets its own file rather than
+    reading a stale one.
+    """
+    states = "-".join(SEASON.states).lower()
+    return ProvenanceCachedADRIO(
+        adrio,
+        cache_path=paths.RAW / f"covid-{name}-{SEASON.census_year}-{states}.npz",
+        description=f"{what}; {SEASON.census_year} vintage; {', '.join(SEASON.states)}",
+    )
+
+
 @cache
 def population() -> np.ndarray:
     return (
-        Population()
+        _frozen(Population(), "population-counties", "ACS 5-year population per county")
         .with_context(scope=scope(), time_frame=time_frame())
         .inspect().result.astype(np.int64)
     )
@@ -177,7 +194,7 @@ def population() -> np.ndarray:
 @cache
 def state_population() -> np.ndarray:
     return (
-        Population()
+        _frozen(Population(), "population-states", "ACS 5-year population per state")
         .with_context(scope=state_scope(), time_frame=time_frame())
         .inspect().result.astype(np.int64)
     )
@@ -210,7 +227,9 @@ def state_of_county() -> np.ndarray:
 def commuters() -> np.ndarray:
     """The commuting flows the movement model uses, and nothing else does."""
     flows = np.asarray(
-        Commuters().with_context(scope=scope(), time_frame=time_frame()).inspect().result
+        _frozen(Commuters(), "commuters-counties", "ACS commuting flows between counties")
+        .with_context(scope=scope(), time_frame=time_frame())
+        .inspect().result
     ).astype(np.int64)
     if flows.shape != (scope().nodes, scope().nodes):
         raise ValueError(f"commuters is {flows.shape}, expected a square county matrix")

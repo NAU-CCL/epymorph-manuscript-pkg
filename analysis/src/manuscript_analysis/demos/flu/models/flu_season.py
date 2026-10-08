@@ -27,6 +27,7 @@ from epymorph.geography.us_census import StateScope
 from epymorph.time import TimeFrame
 from epymorph.util import to_date_value_array
 
+from manuscript_analysis.data import ProvenanceCachedADRIO
 from manuscript_analysis.demos.lib.contacts import (
     FLU_STRATA,
     SourceContacts,
@@ -149,10 +150,29 @@ class Demography(NamedTuple):
     """(N,) population per node, keyed by stratum name."""
 
 
+def _frozen_age_table(states) -> ProvenanceCachedADRIO:
+    """The ACS age table for `states`, read from `data/raw/` once it is frozen there.
+
+    The first call fetches it, which needs the Census API key, and freezes it with its
+    provenance; every later call, on any machine, reads the file. The file is named for the
+    ACS vintage and the states, so a changed season gets its own file rather than reading a
+    stale one. (For `FLU_2025` the modelled states are all of them, so `demography` and
+    `reference_demography` share one file.)
+    """
+    return ProvenanceCachedADRIO(
+        PopulationByAgeTable(),
+        cache_path=paths.RAW / f"flu-population-by-age-{SEASON.acs_year}-{len(states)}-states.npz",
+        description=(
+            f"ACS 5-year population by age (table B01001) per state; "
+            f"{SEASON.acs_year} vintage; {', '.join(states)}"
+        ),
+    )
+
+
 @cache
 def demography() -> Demography:
     table = (
-        PopulationByAgeTable()
+        _frozen_age_table(SEASON.states)
         .with_context(scope=scope())
         .inspect()
         .result.astype(np.int64)
@@ -179,7 +199,7 @@ def reference_demography() -> Demography:
     """
     reference_scope = StateScope.in_states(list(ALL_STATES), year=SEASON.acs_year)
     table = (
-        PopulationByAgeTable()
+        _frozen_age_table(ALL_STATES)
         .with_context(scope=reference_scope)
         .inspect()
         .result.astype(np.int64)

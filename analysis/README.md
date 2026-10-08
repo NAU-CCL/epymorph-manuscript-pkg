@@ -10,10 +10,12 @@ package, the driver notebooks that call it, and the tests.
 One environment, pinned by `pyproject.toml` and `uv.lock`. Installing the package is what
 lets a notebook `import manuscript_analysis` from anywhere, with no `sys.path` inserts.
 
-The demography and commuting ADRIOs need a free Census API key in a `.env` at the
-repository root; copy `.env.example`. The CDC surveillance data does **not** need one,
-because it is frozen in `data/demos/` -- those series are revised weekly, so re-fetching
-them would move the target the models are scored against.
+No API key is needed to build or check anything: the CDC surveillance series are frozen in
+`data/demos/` (they are revised weekly, so re-fetching them would move the target the
+models are scored against), and the Census and contact-matrix inputs in `data/raw/`, each
+with a provenance record (`src/manuscript_analysis/data.py`). A free Census API key in a
+`.env` at the repository root (copy `.env.example`) is needed only to refresh a frozen
+input, or for the `01` notebooks, which fetch live to show how.
 
 ## What is here
 

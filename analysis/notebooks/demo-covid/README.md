@@ -181,9 +181,10 @@ the roster does not change any surviving node's values, and all three models get
 state-level values at a given seed. `models.covid_season.parameter_table()` returns every
 fixed parameter with its value and units.
 
-`CENSUS_API_KEY` must be set in the repository-root `.env` for the ACS population and
-commuting ADRIOs. The county internal points the correlated models use come from TIGER,
-which needs no key.
+The ACS population and commuting inputs are frozen in `data/raw/` with their provenance,
+so the runs and the evaluation need no Census API key. The exception is
+`01-model-and-forecast.ipynb`, which fetches them live to show the ADRIOs at work. The county internal points the correlated
+models use come from TIGER, which needs no key.
 
 ## Where the reasoning lives
 

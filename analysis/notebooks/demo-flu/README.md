@@ -125,7 +125,10 @@ in `run.json`: season, realizations, window, seed, elapsed time, and the observa
 it used. `models.flu_season.parameter_table()` returns every fixed parameter with its value
 and units.
 
-`CENSUS_API_KEY` must be set in the repository-root `.env` for the ACS demography ADRIOs.
+The ACS age structure and the Mistry contact matrix are frozen in `data/raw/` with their
+provenance, so the runs and the evaluation need no Census API key or download. The
+exception is `01-model-and-forecast.ipynb`, which fetches the age structure live to show the
+ADRIOs at work.
 
 ## Where the reasoning lives
 

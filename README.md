@@ -46,12 +46,16 @@ the frozen observations they were computed from.
 
 ```bash
 cd analysis && uv sync
-cp .env.example .env          # then add a free Census API key
 ```
 
-The key is needed for the demography and commuting data the models pull from the Census
-API. It is **not** needed for the CDC surveillance series: those are revised weekly, so
-they are frozen in `data/demos/` rather than re-fetched.
+No API key is needed to build or check anything. Every external input is frozen in the
+repository: the CDC surveillance series in `data/demos/` (they are revised weekly, so
+re-fetching would move the target the models are scored against), and the Census
+demography, commuting and contact-matrix inputs in `data/raw/`, each with a provenance
+record. epymorph downloads Census TIGER geography once per machine, which needs no key.
+
+A free Census API key, in a `.env` copied from `.env.example`, is needed only to refresh a
+frozen input deliberately, or to run the `01` notebooks, which fetch live to show how.
 
 ### 2. Get the ensembles
 

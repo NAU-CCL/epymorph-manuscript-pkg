@@ -48,13 +48,18 @@ are actually exercised; `load_setting_mixture` and `prefetch` were removed outri
 Recover any of them from git history or the superseded notebook if needed.
 """
 
+import json
 from collections.abc import Sequence
+from datetime import UTC, datetime
+from hashlib import sha256
 from io import BytesIO
 from pathlib import Path
 from typing import NamedTuple
 
 import numpy as np
 from epymorph.cache import load_or_fetch_url
+
+from manuscript_analysis.demos import paths
 
 # Grouped by purpose rather than sorted: the point is to show a reader which
 # seven names carry the models.
@@ -142,10 +147,34 @@ class SourceContacts(NamedTuple):
     """The strata, once aggregated. `None` while still at single-year resolution."""
 
 
+MISTRY_DIR = paths.RAW / "mistry"
+"""The Mistry files the models read, frozen with their provenance. `CACHE_PATH`, in
+epymorph's own cache, is only where a first download lands on its way here."""
+
+
 def _fetch(path: str) -> BytesIO:
-    """Fetch a file from the pinned Mistry release, via the epymorph cache."""
+    """A file from the pinned Mistry release, read from `data/raw/` once it is frozen there.
+
+    The first call downloads it and freezes it beside a provenance record; every later call,
+    on any machine, reads the file and checks it against that record.
+    """
     url = f"{MISTRY_BASE_URL}/{path}"
-    return load_or_fetch_url(url, CACHE_PATH / path.replace("/", "_"))
+    local = MISTRY_DIR / path.replace("/", "_")
+    record = local.with_suffix(".provenance.json")
+    if not local.exists():
+        data = load_or_fetch_url(url, CACHE_PATH / path.replace("/", "_")).getvalue()
+        local.parent.mkdir(parents=True, exist_ok=True)
+        local.write_bytes(data)
+        record.write_text(json.dumps({
+            "url": url,
+            "sha256": sha256(data).hexdigest(),
+            "frozen_at_utc": datetime.now(UTC).isoformat(timespec="seconds"),
+            "license": "Apache-2.0 (https://github.com/mobs-lab/mixing-patterns)",
+        }, indent=2) + "\n")
+    data = local.read_bytes()
+    if json.loads(record.read_text())["sha256"] != sha256(data).hexdigest():
+        raise ValueError(f"{local} no longer matches {record.name}")
+    return BytesIO(data)
 
 
 def _location_stem(location: str) -> str:
