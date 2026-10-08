@@ -119,8 +119,10 @@ Each demo has two notebooks, in `notebooks/demo-flu/` and `notebooks/demo-covid/
   demo, from the ensembles. `scripts/build-figures.sh` is the same work without the
   commentary.
 
-Demo 2 has a third, `03-correlated-ou.ipynb`, a sensitivity analysis outside the
-manuscript's comparison.
+Demo 2 is being restructured into one notebook,
+`analysis/src/manuscript_analysis/demo-covid.ipynb`, which replaces its
+`01-model-and-forecast.ipynb` and also makes the runs; its `02-evaluation.ipynb` follows
+in a later step.
 
 ---
 

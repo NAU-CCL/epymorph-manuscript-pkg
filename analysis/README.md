@@ -30,11 +30,16 @@ input, or for the `01` notebooks, which fetch live to show how.
 `src/manuscript_analysis/demos/ADDING-FIGURES.md` -- how to add a figure, and which of
 the three places it belongs in. Read it before changing `export.py`.
 
-`notebooks/demo-flu/`, `notebooks/demo-covid/` -- the readable surface.
-`01-model-and-forecast.ipynb` builds each demo's models in epymorph and runs one fit and
-one forecast, with every epymorph call in view; `02-evaluation.ipynb` renders the
-manuscript's tables and figures from the ensembles. Demo 2's `03-correlated-ou.ipynb` is a
-sensitivity analysis. These are hand-maintained; edit them directly.
+`src/manuscript_analysis/demo-covid.ipynb` -- Demo 2, top to bottom: the data, the
+models in epymorph, one fit and forecast explained, and the rolling forecasts of every
+model at both seeds. Its data preparation is in `covid_inputs.py` and its run writer in
+`runs.py`. Demo 1 follows the same shape in restructure step 6.
+
+`notebooks/demo-flu/`, `notebooks/demo-covid/` -- the rest of the readable surface.
+Demo 1's `01-model-and-forecast.ipynb` builds its models in epymorph and runs one fit and
+one forecast, with every epymorph call in view; each demo's `02-evaluation.ipynb` renders
+the manuscript's tables and figures from the runs. These are hand-maintained; edit them
+directly.
 
 ## Conventions
 

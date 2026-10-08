@@ -2,6 +2,7 @@
 
 Three COVID models over the 2020-21 season, identical but for geography and movement: 32 counties with ACS commuting flows, the same counties with no movement, or 3 states with no spatial resolution.
 
-`models/` holds the model definitions and the season's shared setup; `seasons.py` says
-what is forecast and over what window; `evaluation.py` loads, scores and draws.
+The models and their runs are in `manuscript_analysis/demo-covid.ipynb`. `evaluation.py`
+loads, scores and draws the runs; `geography.py` serves it the frozen geography until
+restructure step 5 moves the evaluation into the notebook.
 """

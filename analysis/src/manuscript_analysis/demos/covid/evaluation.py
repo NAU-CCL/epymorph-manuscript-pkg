@@ -17,7 +17,7 @@ Three ways this differs from Demo 1, all because Demo 2 is shaped differently:
 Figure numbering follows `drafts/figure-plan-v01.md`, where this is Figure 3.
 """
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from pathlib import Path
 from typing import NamedTuple
 
@@ -43,42 +43,36 @@ from manuscript_analysis.demos.lib.plots import (
 from manuscript_analysis.demos.lib.results import (
     align_observations,
     load_observations,
-    load_run,
     load_runs,
     quantile_array,
 )
 from manuscript_analysis.demos.lib.scoring import (
     DEMO_QUANTILE_LEVELS,
     HEADLINE_SCALE,
-    SCORE_LABELS,
     SCALES,
+    SCORE_LABELS,
     check_scale,
     interval_coverage,
     relative_wis,
     weighted_interval_score,
 )
 
-from .models import covid_season
+from . import geography
 
 __all__ = [
     "BASELINE",
     "COLORS",
-    "CORRELATED_MODELS",
     "Evaluation",
-    "correlated_county_table",
-    "correlated_table",
     "county_relative",
     "county_scores",
     "figure_calibration",
     "figure_county_relative_wis",
     "figure_fit",
     "figure_movement_structure",
-    "figure_parameter_correlation",
     "figure_rolling_forecasts",
     "figure_wis_by_horizon",
     "focus_counties",
     "load",
-    "load_correlated",
     "load_replicate",
     "node_forecasts",
     "relative_by_unit",
@@ -109,24 +103,6 @@ LABELS = {
     "county": "counties, no movement",
     "state": "no spatial structure",
 }
-
-CORRELATED_MODELS = (
-    "county-correlated",
-    "county-correlated-strong",
-    "movement-correlated",
-    "movement-correlated-strong",
-)
-"""The correlated-OU sensitivity analysis: the two county models with their counties'
-parameter shocks correlated in space. Not part of the main comparison, so not in `MODELS`;
-see `covid_season.CORRELATION_FITTED` and `CORRELATION_STRONG`."""
-
-UNCORRELATED = {
-    "county-correlated": "county",
-    "county-correlated-strong": "county",
-    "movement-correlated": "movement",
-    "movement-correlated-strong": "movement",
-}
-"""Each correlated model's twin: the same model with independent county shocks."""
 
 QUANTITIES = ("census", "deaths")
 AXIS_LABELS = {
@@ -181,8 +157,8 @@ def _node_labels() -> dict[str, str]:
     Both are needed because Demo 2's figures are drawn at two scales: the scored states
     and, for the county models, their own 32 counties.
     """
-    states = covid_season.state_scope()
-    counties = covid_season.scope()
+    states = geography.state_scope()
+    counties = geography.scope()
     return {
         **dict(zip(states.node_ids, states.labels)),
         **dict(zip(counties.node_ids, counties.labels)),
@@ -243,13 +219,8 @@ def load(
     levels: Sequence[float] = DEMO_QUANTILE_LEVELS,
     observations_csv: str | Path | None = None,
     scale: str = HEADLINE_SCALE,
-    extra_runs: Mapping[str, str | Path] | None = None,
 ) -> Evaluation:
     """Load every model's output, align it to the observations, and score it.
-
-    `extra_runs` maps further model names to their own run folders, for runs that live
-    outside `output_root`, such as the correlated-OU sensitivity runs. They are scored
-    exactly like `models`, against the same target.
 
     `scale` names the scale the scores are computed on: `"log"`, the default and what
     the manuscript reports, transforms observations and forecasts by `log(x + 1)` before
@@ -263,8 +234,6 @@ def load(
     transform = check_scale(scale)
     output_root = Path(output_root or paths.runs("covid", seed=0))
     runs = load_runs(output_root, list(models))
-    for name, folder in (extra_runs or {}).items():
-        runs[name] = load_run(folder)
     models = list(runs)
 
     observations = _harmonize_dates(load_observations(
@@ -348,104 +317,6 @@ def load_replicate(
         levels=levels,
         scale=scale,
     )
-
-
-def load_correlated(
-    seed: int = 0,
-    models: Sequence[str] = CORRELATED_MODELS,
-    scale: str = HEADLINE_SCALE,
-) -> Evaluation:
-    """The main three models plus whichever correlated-OU runs exist, at one seed.
-
-    Loaded in one `Evaluation` so every model is scored against the same target, and so
-    a correlated model can be compared with its uncorrelated twin. A run that has not
-    finished is left out rather than raising, so this can be read while runs are going.
-    """
-    root = paths.correlated_runs("covid", seed=seed)
-    present = {
-        name: root / name for name in models if (root / name / "run.json").exists()
-    }
-    return load(
-        output_root=paths.runs("covid", seed=seed),
-        models=MODELS,
-        scale=scale,
-        extra_runs=present,
-    )
-
-
-def correlated_table(
-    ev: Evaluation, levels: Sequence[float] = DEMO_QUANTILE_LEVELS
-) -> pd.DataFrame:
-    """The sensitivity analysis at the scored (state) scale, every loaded model.
-
-    `rel uncorrelated` compares a correlated model with its twin. `median / observed` is
-    the sum of forecast medians over the sum of observations at the longest horizon,
-    where the county models' upward drift was largest; coverage is given there too.
-    """
-    label = SCORE_LABELS[ev.scale]
-    median = list(levels).index(0.5)
-    last = len(ev.horizons) - 1
-    rows = []
-    for quantity in QUANTITIES:
-        q = QUANTITIES.index(quantity)
-        observed = ev.observed[:, last, :, q]
-        for model in ev.forecasts:
-            twin = UNCORRELATED.get(model)
-            medians = ev.forecasts[model][:, last, :, q, median]
-            rows.append({
-                "quantity": quantity,
-                "model": model,
-                label: ev.scores[model][quantity].total.mean(),
-                f"rel {label}": relative_pooled(ev, model, quantity),
-                "rel uncorrelated": (
-                    relative_pooled(ev, model, quantity, against=twin)
-                    if twin else np.nan
-                ),
-                "cov50": ev.coverage[0.50][model][quantity].mean(),
-                "cov95": ev.coverage[0.95][model][quantity].mean(),
-                f"cov95 h{ev.horizons[last]}":
-                    ev.coverage[0.95][model][quantity][:, last].mean(),
-                f"median / observed h{ev.horizons[last]}":
-                    medians.sum() / observed.sum(),
-            })
-    return pd.DataFrame(rows).set_index(["quantity", "model"])
-
-
-def correlated_county_table(
-    ev: Evaluation, levels: Sequence[float] = DEMO_QUANTILE_LEVELS
-) -> pd.DataFrame:
-    """The same models at their own 32 counties: the sanity check on the design.
-
-    Correlating the shocks leaves each county's own process unchanged, so without
-    movement a county's forecast should be statistically unchanged and `rel uncorrelated`
-    should sit near 1. Only the state sums should move.
-    """
-    label = SCORE_LABELS[ev.scale]
-    transform = SCALES[ev.scale]
-    rows = []
-    for quantity in QUANTITIES:
-        for model in ev.forecasts:
-            if model == BASELINE:
-                continue
-            frame = node_forecasts(ev, model)
-            frame = frame[frame["quantity"] == quantity]
-            values, _ = quantile_array(frame, DIMS, levels=levels)
-            observed = align_observations(frame, DIMS, ev.observations, quantity=quantity)
-            scores = weighted_interval_score(observed, values, levels, transform).total
-            twin = UNCORRELATED.get(model)
-            rows.append({
-                "quantity": quantity,
-                "model": model,
-                label: scores.mean(),
-                "rel uncorrelated": (
-                    float(relative_wis(scores, county_scores(ev, twin, quantity)[0]))
-                    if twin else np.nan
-                ),
-                "cov95": np.nanmean(
-                    interval_coverage(observed, values, levels, nominal=0.95)
-                ),
-            })
-    return pd.DataFrame(rows).set_index(["quantity", "model"])
 
 
 def wis_table(ev: Evaluation) -> pd.DataFrame:
@@ -540,10 +411,10 @@ def focus_counties() -> list[str]:
     `export_manuscript.py` all need the same three, and three copies of a loop is three
     chances to show different counties in the paper and in the notebook.
     """
-    population = covid_season.population()
-    counties = list(covid_season.scope().node_ids)
+    population = geography.population()
+    counties = list(geography.scope().node_ids)
     largest = []
-    for state in covid_season.state_scope().node_ids:
+    for state in geography.state_scope().node_ids:
         best, best_population = None, -1.0
         for index, code in enumerate(counties):
             if code.startswith(state) and population[index] > best_population:
@@ -859,12 +730,12 @@ def figure_movement_structure(
     number that says whether movement can matter at all here. Pass `title=None` to drop
     it, or a string of your own; see `manuscript_analysis.demos.lib.figures.resolve_title`.
     """
-    commuters = covid_season.commuters()
-    counties = list(covid_season.scope().node_ids)
+    commuters = geography.commuters()
+    counties = list(geography.scope().node_ids)
     groups = np.array([county[:2] for county in counties])
     labels = [
-        covid_season.state_scope().labels[i]
-        for i in range(covid_season.state_scope().nodes)
+        geography.state_scope().labels[i]
+        for i in range(geography.state_scope().nodes)
     ]
 
     # Three ways in, because this panel is drawn standalone, into a composed figure,
@@ -896,62 +767,6 @@ def figure_movement_structure(
     if heading is not None:
         ax.set_title(heading, fontsize=7)
     return fig
-def figure_parameter_correlation(
-    parameter: str = "log_beta",
-    title: str | None = AUTO_TITLE,
-    subfig=None,
-):
-    """The county-by-county correlation of one parameter's daily shocks, both settings.
-
-    Drawn like `figure_movement_structure`, with counties grouped by state, so the two
-    can be read side by side: commuting is what couples the counties in `movement`, and
-    this is what couples their parameters in the correlated models.
-    """
-    settings = {
-        "fitted": covid_season.CORRELATION_FITTED,
-        "strong": covid_season.CORRELATION_STRONG,
-    }
-    counties = list(covid_season.scope().node_ids)
-    groups = np.array([county[:2] for county in counties])
-    labels = [
-        covid_season.state_scope().labels[i]
-        for i in range(covid_season.state_scope().nodes)
-    ]
-
-    if subfig is not None:
-        fig = subfig
-        axs = fig.subplots(1, 2)
-    else:
-        fig, axs = plt.subplots(1, 2, figsize=(DOUBLE_COLUMN, 3.0), layout="constrained")
-
-    pairs = np.triu_indices(len(counties), 1)
-    for ax, (name, setting) in zip(axs, settings.items()):
-        factor = covid_season.parameter_cholesky(setting)[parameter]
-        correlation = factor @ factor.T
-        image = plot_flow_matrix(
-            ax, correlation, groups, group_labels=labels, log=False,
-            xlabel="county", ylabel="county",
-        )
-        image.set_clim(0, 1)
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.set_title(
-            f"{name}: mean pair correlation {correlation[pairs].mean():.2f}", fontsize=7
-        )
-    bar = fig.colorbar(image, ax=axs, fraction=0.046, pad=0.03)
-    bar.set_label(f"correlation of daily {parameter} shocks", fontsize=6)
-    bar.ax.tick_params(labelsize=5)
-
-    heading = resolve_title(
-        title,
-        f"exp(-d / {covid_season.CORRELATION_FITTED.length_scale:g} mi), "
-        "with and without a county-local share",
-    )
-    if heading is not None:
-        fig.suptitle(heading, fontsize=8)
-    return fig
-
-
 def node_forecasts(ev: Evaluation, model: str) -> pd.DataFrame:
     """The per-node forecast rows for `model`, at its own nodes rather than the scored ones.
 
