@@ -29,15 +29,16 @@ where it lives. A run already on disk with the same settings is reused; a missin
 fitted, four at a time. At 600 realizations the movement model takes about 86 minutes,
 `county` about 35 and `state` about 9.
 
-This folder's `02-evaluation.ipynb` renders every table and figure the manuscript reports
-for Demo 2, from the runs. Restructure step 5 moves that into `demo-covid.ipynb` as well.
+It then scores the runs and makes every Demo 2 figure and table the manuscript uses:
+Figure 3, the supplement's rolling forecasts and calibration panel (b), and its three
+tables. With `output_dir` set (a build sets it) they are written to `results/demos/`.
 
 | file | what |
 |---|---|
-| `manuscript_analysis/demo-covid.ipynb` | the models, the walkthrough, the runs |
+| `manuscript_analysis/demo-covid.ipynb` | the models, the walkthrough, the runs, the scores, figures and tables |
 | `manuscript_analysis/covid_inputs.py` | data preparation that is not epymorph: the frozen observations, initial conditions |
-| `manuscript_analysis/runs.py` | writing a run to disk, and whether one is already there |
-| `manuscript_analysis/demos/covid/evaluation.py` | loading, scoring and every figure function (until step 5) |
+| `manuscript_analysis/runs.py` | writing a run to disk, whether one is there, reading it back |
+| `manuscript_analysis/scoring.py`, `plots.py`, `util.py` | scoring, drawing a panel, writing a table; shared with Demo 1 |
 | `data/demos/covid/observations.csv` | the CDC observations, fetched once and frozen |
 | `data/raw/covid-*.npz` | the ACS population and commuting, frozen with their provenance |
 | `results/demos/runs/covid/seed<N>/<model>/` | the runs: `forecasts/<reference_date>.csv`, `fit.csv`, `params.csv`, `run.json` |

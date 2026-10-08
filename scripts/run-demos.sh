@@ -55,8 +55,9 @@ done
 # Demo 2 is one notebook, which fits whichever of its runs are missing, both seeds, four
 # at a time; --seeds and --jobs do not apply to it. The executed copy is the record.
 echo "== covid, seeds 0 and 1 (R=600), demo-covid.ipynb =="
-python -m papermill analysis/src/manuscript_analysis/demo-covid.ipynb \
-  results/demos/notebook/demo-covid.ipynb --cwd analysis/src/manuscript_analysis
+PYTHONHASHSEED=0 python -m papermill analysis/src/manuscript_analysis/demo-covid.ipynb \
+  results/demos/notebook/demo-covid.ipynb --cwd analysis/src/manuscript_analysis \
+  -p output_dir "$PWD/results/demos"
 
 echo
-echo "done. Next: scripts/build-figures.sh"
+echo "done. Demo 2's figures and tables are written; for Demo 1's: scripts/build-figures.sh"

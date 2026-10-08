@@ -1,7 +1,7 @@
 # results/demos
 
 Everything the two demonstration vignettes produce. Generated: safe to delete, rebuilt by
-`scripts/build-figures.sh` (seconds) on top of `scripts/run-demos.sh` (hours).
+`scripts/build-figures.sh` (about 2 minutes) on top of `scripts/run-demos.sh` (hours).
 
 | | what | in git? |
 |---|---|---|

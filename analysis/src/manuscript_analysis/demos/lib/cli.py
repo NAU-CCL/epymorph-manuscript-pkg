@@ -20,7 +20,7 @@ from manuscript_analysis.demos.lib.forecasting import (
     run_rolling_origin,
     write_outputs,
 )
-from manuscript_analysis.demos.lib.scoring import HUB_QUANTILE_LEVELS
+from manuscript_analysis.scoring import HUB_QUANTILE_LEVELS
 
 __all__ = ["load_model", "run_season_cli"]
 

@@ -14,6 +14,7 @@ FluSight uses. `run.json` is written last, so a folder that has one is complete.
 import json
 from collections.abc import Mapping, Sequence
 from pathlib import Path
+from typing import NamedTuple
 
 import numpy as np
 import pandas as pd
@@ -144,3 +145,96 @@ def write_run(
     params.to_csv(folder / "params.csv", index=False)
     (folder / "run.json").write_text(json.dumps(dict(info), indent=2, default=str))
     return folder
+
+
+# --- reading runs back ----------------------------------------------------------------
+
+
+class Run(NamedTuple):
+    """One run as read back from disk."""
+
+    name: str
+    info: dict
+    forecasts: pd.DataFrame
+    fit: pd.DataFrame
+    params: pd.DataFrame
+
+
+def load_run(folder: Path) -> Run:
+    folder = Path(folder)
+    info = json.loads((folder / "run.json").read_text())
+    files = sorted((folder / "forecasts").glob("*.csv"))
+    if not files:
+        raise FileNotFoundError(f"no forecast files in {folder / 'forecasts'}")
+    forecasts = pd.concat(
+        [pd.read_csv(f, dtype={"location": str},
+                     parse_dates=["reference_date", "target_end_date"])
+         for f in files],
+        ignore_index=True,
+    )
+    fit = pd.read_csv(folder / "fit.csv", dtype={"location": str},
+                      parse_dates=["target_end_date"])
+    params = pd.read_csv(folder / "params.csv", dtype={"location": str},
+                         parse_dates=["date"])
+    return Run(info["model"], info, forecasts, fit, params)
+
+
+def load_runs(root: Path, names: Sequence[str]) -> dict[str, Run]:
+    """The runs of the models in `names` under `root`, in that order."""
+    root = Path(root)
+    missing = [name for name in names if not (root / name / "run.json").exists()]
+    if missing:
+        raise FileNotFoundError(f"no run of {', '.join(missing)} under {root}")
+    return {name: load_run(root / name) for name in names}
+
+
+def quantile_array(frame: pd.DataFrame, dims: Sequence[str], *, levels) -> tuple[np.ndarray, dict]:
+    """Pivot tidy quantile rows into an array, `dims` then the quantile levels.
+
+    Returns the array and the sorted labels along each of `dims`. Fails if the rows do
+    not make a complete grid, which is how a missing or duplicated row is caught.
+    """
+    levels = np.asarray(levels, dtype=float)
+    frame = frame[np.isin(frame["quantile"].round(10), levels.round(10))]
+    if frame.empty:
+        raise ValueError(f"no rows to pivot by {list(dims)} at levels {list(levels)}")
+
+    coords = {dim: np.sort(frame[dim].unique()) for dim in dims}
+    expected = int(np.prod([len(v) for v in coords.values()]) * len(levels))
+    if len(frame) != expected:
+        raise ValueError(
+            f"expected {expected} rows for a complete {list(dims)} x quantile grid, "
+            f"got {len(frame)}"
+        )
+    ordered = frame.sort_values([*dims, "quantile"])
+    shape = (*(len(coords[dim]) for dim in dims), len(levels))
+    return ordered["value"].to_numpy().reshape(shape), coords
+
+
+def align_observations(
+    frame: pd.DataFrame,
+    dims: Sequence[str],
+    observations: pd.DataFrame,
+    *,
+    quantity: str,
+    date_col: str = "target_end_date",
+) -> np.ndarray:
+    """The observed value for each cell of `quantile_array(frame, dims)`, same shape.
+
+    Joined on each cell's own date and location, never by position, so a forecast can
+    only be scored against the week it predicted.
+    """
+    columns = list(dict.fromkeys([*dims, date_col, "location"]))
+    cells = frame.drop_duplicates(subset=list(dims))[columns].sort_values(list(dims))
+
+    lookup = observations[observations["quantity"] == quantity]
+    lookup = lookup.set_index(["date", "location"])["value"]
+    keys = pd.MultiIndex.from_arrays([pd.to_datetime(cells[date_col]), cells["location"]])
+    values = lookup.reindex(keys).to_numpy(dtype=float)
+    if np.isnan(values).any():
+        raise ValueError(
+            f"{int(np.isnan(values).sum())} of {values.size} cells have no observed "
+            f"{quantity}; check the season window"
+        )
+    shape = tuple(frame[dim].nunique() for dim in dims)
+    return values.reshape(shape)

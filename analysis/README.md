@@ -31,14 +31,15 @@ input, or for the `01` notebooks, which fetch live to show how.
 the three places it belongs in. Read it before changing `export.py`.
 
 `src/manuscript_analysis/demo-covid.ipynb` -- Demo 2, top to bottom: the data, the
-models in epymorph, one fit and forecast explained, and the rolling forecasts of every
-model at both seeds. Its data preparation is in `covid_inputs.py` and its run writer in
-`runs.py`. Demo 1 follows the same shape in restructure step 6.
+models in epymorph, one fit and forecast explained, the rolling forecasts of every model
+at both seeds, and the scores, figures and tables. Its data preparation is in
+`covid_inputs.py`; `runs.py`, `scoring.py`, `plots.py` and `util.py` (writing tables)
+serve both demos. Demo 1 follows the same shape in restructure step 6.
 
 `notebooks/demo-flu/`, `notebooks/demo-covid/` -- the rest of the readable surface.
 Demo 1's `01-model-and-forecast.ipynb` builds its models in epymorph and runs one fit and
-one forecast, with every epymorph call in view; each demo's `02-evaluation.ipynb` renders
-the manuscript's tables and figures from the runs. These are hand-maintained; edit them
+one forecast, with every epymorph call in view; its `02-evaluation.ipynb` renders the
+manuscript's Demo 1 tables and figures from the runs. These are hand-maintained; edit them
 directly.
 
 ## Conventions
@@ -62,7 +63,7 @@ directly.
 
     python -m manuscript_analysis.lit_search --check     # the search pipeline
     ../scripts/run-demos.sh                              # the ensembles, ~8-10 h
-    ../scripts/build-figures.sh                          # figures + tables, seconds
+    ../scripts/build-figures.sh                          # figures + tables, ~2 min
     ../scripts/check.sh                                  # everything checkable
 
 One model on its own, for a quick look:

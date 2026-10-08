@@ -18,35 +18,33 @@ from matplotlib.colors import Normalize
 
 from manuscript_analysis.demos import paths
 from manuscript_analysis.demos.lib.contacts import contact_matrix
-from manuscript_analysis.demos.lib.figures import (
+from manuscript_analysis.plots import (
     AUTO_TITLE,
     DOUBLE_COLUMN,
     ONE_AND_HALF_COLUMN,
     SINGLE_COLUMN,
-    resolve_title,
-)
-from manuscript_analysis.demos.lib.plots import (
     panel_grid,
     plot_contact_matrix,
     plot_line_panels,
     plot_quantile_grid,
     plot_ratio_swarm,
     plot_rolling_forecast_grid,
+    resolve_title,
 )
-from manuscript_analysis.demos.lib.results import (
+from manuscript_analysis.runs import (
     align_observations,
-    load_observations,
     load_runs,
     quantile_array,
 )
-from manuscript_analysis.demos.lib.scoring import (
-    DEMO_QUANTILE_LEVELS,
+from manuscript_analysis.scoring import (
     HEADLINE_SCALE,
     SCORE_LABELS,
-    check_scale,
     interval_coverage,
     relative_wis,
     weighted_interval_score,
+)
+from manuscript_analysis.scoring import (
+    SCORE_LEVELS as DEMO_QUANTILE_LEVELS,
 )
 
 from .models import flu_season
@@ -167,7 +165,6 @@ def load(
     tree has none of its own: every run is scored against the one frozen file, which is
     the whole point of freezing it.
     """
-    transform = check_scale(scale)
     output_root = Path(output_root or paths.runs("flu", seed=0))
     folders = dict(folders or {name: name for name in models})
     runs = load_runs(output_root, [folders[name] for name in models])
@@ -179,8 +176,9 @@ def load(
                 f"{output_root / folders[name]} holds model {declared!r}, "
                 f"but it was loaded as {name!r}"
             )
-    observations = _with_total(load_observations(
-        observations_csv or paths.observations("flu")
+    observations = _with_total(pd.read_csv(
+        observations_csv or paths.observations("flu"),
+        dtype={"location": str}, parse_dates=["date"],
     ))
 
     scored = flu_season.scored_locations()
@@ -201,7 +199,7 @@ def load(
             raise ValueError(f"{name} was scored against different observations")
 
     scores = {
-        name: weighted_interval_score(reference, forecasts[name], levels, transform)
+        name: weighted_interval_score(reference, forecasts[name], levels, scale)
         for name in models
     }
     coverage = {
@@ -255,16 +253,16 @@ def wis_table(ev: Evaluation) -> pd.DataFrame:
     simply one mean divided by another.
     """
     label = SCORE_LABELS[ev.scale]
-    baseline = ev.scores[BASELINE].total
+    baseline = ev.scores[BASELINE]
     return pd.DataFrame(
         {
-            label: [ev.scores[m].total.mean() for m in ev.scores],
+            label: [ev.scores[m].mean() for m in ev.scores],
             **{
-                f"h{h}": [ev.scores[m].total[:, i].mean() for m in ev.scores]
+                f"h{h}": [ev.scores[m][:, i].mean() for m in ev.scores]
                 for i, h in enumerate(ev.horizons)
             },
             f"rel {label}": [
-                float(relative_wis(ev.scores[m].total, baseline))
+                float(relative_wis(ev.scores[m], baseline))
                 for m in ev.scores
             ],
             "cov95": [ev.coverage[0.95][m].mean() for m in ev.scores],
@@ -298,7 +296,7 @@ def wis_by_jurisdiction(
          "fips": list(ev.locations)}
     )
     for model in models:
-        frame[model] = ev.scores[model].total.mean(axis=(0, 1))
+        frame[model] = ev.scores[model].mean(axis=(0, 1))
     for model in models:
         if model != BASELINE:
             frame[f"{model} / {BASELINE}"] = relative_by_unit(ev, model)
@@ -322,7 +320,7 @@ def relative_by_unit(ev: Evaluation, model: str) -> np.ndarray:
     name for one idea; Demo 2's units are counties.
     """
     return relative_wis(
-        ev.scores[model].total, ev.scores[BASELINE].total, axis=(0, 1)
+        ev.scores[model], ev.scores[BASELINE], axis=(0, 1)
     )
 
 
@@ -365,7 +363,7 @@ def figure_contact_structures(
     demography. The projection is mild and the choice is not load-bearing; see
     `old/contact-matrix-methods.md` section 9.
 
-    `title` takes a string, or None to draw none; see `manuscript_analysis.demos.lib.figures.resolve_title`.
+    `title` takes a string, or None to draw none; see `manuscript_analysis.plots.resolve_title`.
 
     This replaces the generator in `old/contact-matrices.ipynb`, which no longer runs
     since `demolib/contacts.py` was trimmed. Before this, `figures/figS1_contact_structures`
@@ -424,7 +422,7 @@ def figure_fit_by_age(
     good and is evidence of very little. Pass `series="posterior"` to see how hard the
     filter had to work; the gap between the two is the interesting quantity.
 
-    Six bands over `ncols` columns, drawn by `manuscript_analysis.demos.lib.plots.plot_quantile_grid`, which is
+    Six bands over `ncols` columns, drawn by `manuscript_analysis.plots.plot_quantile_grid`, which is
     the same function Demo 2's `figure_fit` uses; only what a row means differs. At the
     default three columns the six bands fill two rows, and the dates are printed once,
     under the bottom row.
@@ -481,7 +479,7 @@ def figure_rolling_forecasts(
 ):
     """Figure 2(b): every origin's forecast fan against the observed series.
 
-    One panel per state, drawn by `manuscript_analysis.demos.lib.plots.plot_rolling_forecast_grid`, which also
+    One panel per state, drawn by `manuscript_analysis.plots.plot_rolling_forecast_grid`, which also
     draws `figure_rolling_forecasts_by_age` and Demo 2's `figure_rolling_forecasts`.
     """
     fips_of = {abbr: code for code, abbr in ev.labels.items()}
@@ -590,10 +588,10 @@ def figure_wis_by_horizon(
     """Figure 2(c): forecast skill against horizon, one line per model.
 
     One panel, where Demo 2 has one per quantity, but both are drawn by
-    `manuscript_analysis.demos.lib.plots.plot_line_panels` so the two demos' skill curves match.
+    `manuscript_analysis.plots.plot_line_panels` so the two demos' skill curves match.
     """
     series = {
-        LABELS[model]: ev.scores[model].total.mean(axis=(0, 2))[np.newaxis, :]
+        LABELS[model]: ev.scores[model].mean(axis=(0, 2))[np.newaxis, :]
         for model in ev.scores
     }
     fig, _ = plot_line_panels(
@@ -666,7 +664,7 @@ def figure_relative_wis_swarm(
     comes from the contact data, not from stratifying. The empirical row sits left of 1;
     the homogeneous row straddles it.
 
-    The drawing is `manuscript_analysis.demos.lib.plots.plot_ratio_swarm`, shared with Demo 2's county-level
+    The drawing is `manuscript_analysis.plots.plot_ratio_swarm`, shared with Demo 2's county-level
     version, so the two demos' headline distributions cannot drift apart stylistically.
     Each jurisdiction is a pair of dots joined by a line, one per seed; pass
     `replicate=None` for seed 0 alone.

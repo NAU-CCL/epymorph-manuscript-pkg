@@ -209,3 +209,33 @@ def initial_values(
     if not (S_0 > 0).all():
         raise ValueError("the initial conditions over-allocated some node's population")
     return np.stack([S_0, E_0, I_0, R_0, H_0, D_0], axis=2)
+
+
+# --- the observations as tables, for scoring ---------------------------------------
+
+
+def observation_tables(path: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """The frozen observations as tidy tables, by county and summed to states.
+
+    The two quantities label the same MMWR week at opposite ends: the census by its
+    starting Sunday, deaths by its ending Saturday. The forecast files label every week
+    the census's way, so the deaths are relabelled to match, week by week in order;
+    otherwise they would join nothing. Both quantities sum across counties to a state.
+    """
+    table = pd.read_csv(path, dtype={"location": str}, parse_dates=["date"])
+
+    weeks = {
+        quantity: np.sort(part["date"].unique())
+        for quantity, part in table.groupby("quantity")
+    }
+    if len({len(dates) for dates in weeks.values()}) != 1:
+        raise ValueError("the two quantities cover different numbers of weeks")
+    relabel = dict(zip(weeks["deaths"], weeks["census"]))
+    by_county = table.copy()
+    deaths = by_county["quantity"] == "deaths"
+    by_county.loc[deaths, "date"] = by_county.loc[deaths, "date"].map(relabel)
+
+    by_state = by_county.copy()
+    by_state["location"] = by_state["location"].str[:2]
+    by_state = by_state.groupby(["date", "location", "quantity"], as_index=False)["value"].sum()
+    return by_county, by_state

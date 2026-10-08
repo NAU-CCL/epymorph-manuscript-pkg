@@ -1,4 +1,7 @@
-"""Generate the demos' score tables, as CSV to read and as LaTeX for the supplement.
+"""Generate Demo 1's score tables, as CSV to read and as LaTeX for the supplement.
+
+Demo 2's three tables are made in `demo-covid.ipynb` (restructure step 5); Demo 1's move
+into its own notebook in step 6, and this file goes in step 7.
 
 The counterpart to `export_manuscript.py`: that file composes the figures, this one emits
 the numbers beside them. Both are driven by the same `load()` the notebooks call, so the
@@ -9,7 +12,7 @@ repo: the `.tex` is a **projection** of the pipeline's own output, carries a hea
 so, and is **never hand-edited**. `--check` regenerates every table and fails if what is on
 disk differs, which is what makes "never hand-edit" enforceable rather than a request.
 
-Six tables, in the order the supplement wants them:
+Demo 1's three tables (Demo 2's are listed for reference):
 
 | file | what it is |
 |---|---|
@@ -40,10 +43,9 @@ import pandas as pd
 from scipy.stats import binomtest
 
 from manuscript_analysis.demos import paths
-from manuscript_analysis.demos.covid import evaluation as covid
 from manuscript_analysis.demos.flu import evaluation as flu
-from manuscript_analysis.demos.lib.figures import use_manuscript_style
-from manuscript_analysis.demos.lib.scoring import SCORE_LABELS
+from manuscript_analysis.plots import use_manuscript_style
+from manuscript_analysis.util import to_latex
 
 OUTPUT_DIR = paths.TABLES
 """Where the tables land. The one thing to repoint when the demos move into
@@ -52,182 +54,17 @@ OUTPUT_DIR = paths.TABLES
 GENERATED_BY = "manuscript_analysis.demos.tables"
 
 
-# --- LaTeX ------------------------------------------------------------------------
-
-
-_ESCAPES = {
-    "\\": "\\textbackslash{}", "&": "\\&", "%": "\\%", "$": "\\$", "#": "\\#",
-    "_": "\\_", "{": "\\{", "}": "\\}", "~": "\\textasciitilde{}",
-    "^": "\\textasciicircum{}",
-}
-
-
-DECIMALS = 3
-"""Decimal places for every number in a table.
-
-Fixed rather than per-column: `round()` alone prints 1.0 beside 0.335, which reads as
-different precision when it is the same number of digits."""
-
-
-def _format(value) -> str:
-    """One cell as text. Floats get a fixed number of decimals, everything else str()."""
-    if value is None:
-        return ""
-    if isinstance(value, float):
-        return "" if np.isnan(value) else f"{value:.{DECIMALS}f}"
-    if isinstance(value, np.floating):
-        return f"{float(value):.{DECIMALS}f}"
-    return str(value)
-
-
-def _escape(value) -> str:
-    """LaTeX-escape a cell. Written out rather than imported: the whole dependency on
-    `DataFrame.to_latex` is jinja2, and a booktabs tabular is fifteen lines."""
-    return "".join(_ESCAPES.get(character, character) for character in _format(value))
-
-
-# A value-column header longer than this breaks onto two lines, so that a table of short
-# numbers is not as wide as its longest header. Every main-text header is shorter.
-HEADER_WRAP = 12
-
-
-def _header_cell(text: str) -> str:
-    """A bold value-column header, on two right-aligned lines if it is long."""
-    words = text.split(" ")
-    if len(text) <= HEADER_WRAP or len(words) == 1:
-        return f"\\textbf{{{_escape(text)}}}"
-
-    # Break at the space that leaves the two lines most nearly equal in length.
-    best_split = 1
-    best_width = len(text)
-    for split in range(1, len(words)):
-        first = " ".join(words[:split])
-        second = " ".join(words[split:])
-        width = max(len(first), len(second))
-        if width < best_width:
-            best_split, best_width = split, width
-    first = _escape(" ".join(words[:best_split]))
-    second = _escape(" ".join(words[best_split:]))
-    return (
-        f"\\begin{{tabular}}[b]{{@{{}}r@{{}}}}"
-        f"\\textbf{{{first}}} \\\\ \\textbf{{{second}}}"
-        f"\\end{{tabular}}"
-    )
-
-
-def _parts(frame: pd.DataFrame) -> tuple[str, str, list[str]]:
-    """The pieces of a booktabs table: column alignment, header row, and body rows.
-
-    Index columns are left-aligned and value columns right-aligned.
-    """
-    index_names = list(frame.index.names)
-    if isinstance(frame.index, pd.MultiIndex):
-        index_rows = [list(key) for key in frame.index]
-    else:
-        index_rows = [[key] for key in frame.index]
-    index_names = [name or "" for name in index_names]
-
-    alignment = "@{}" + "l" * len(index_names) + "r" * len(frame.columns) + "@{}"
-    header = [_escape(name) for name in index_names]
-    header += [_header_cell(column) for column in frame.columns]
-    header_row = " & ".join(header) + " \\\\"
-
-    rows = []
-    for keys, (_, row) in zip(index_rows, frame.iterrows()):
-        cells = [_escape(key) for key in keys]
-        cells += [_escape(value) for value in row]
-        rows.append(" & ".join(cells) + " \\\\")
-    return alignment, header_row, rows
-
-
-def _tabular(frame: pd.DataFrame) -> str:
-    """A booktabs tabular, for a table that fits on one page."""
-    alignment, header_row, rows = _parts(frame)
-    lines = [
-        f"\\begin{{tabular}}{{{alignment}}}",
-        "\\toprule",
-        header_row,
-        "\\midrule",
-        *rows,
-        "\\bottomrule",
-        "\\end{tabular}",
-    ]
-    return "\n".join(lines)
-
-
-# Tables too tall for one page. They are written as a `longtable`, which breaks across
-# pages and repeats its header, instead of a float that LaTeX would push to the end of
-# the document. Only the supplement includes them, and it loads the longtable package.
+# Tables too tall for one page, set as a `longtable`. See `util.to_latex`.
 LONG_TABLES = {"tab:flu-by-jurisdiction"}
 
-# Tables whose eight columns are still wider than the supplement's text at \footnotesize,
-# even with wrapped headers. They are set one size smaller instead.
-COMPACT_TABLES = {"tab:covid-by-state"}
 
-
-def _longtable(frame: pd.DataFrame, caption: str, label: str, note: str | None) -> str:
-    """A booktabs longtable, with the note set after it rather than inside a float."""
-    alignment, header_row, rows = _parts(frame)
-    lines = [
-        "\\begingroup",
-        "\\footnotesize",
-        "\\setlength{\\tabcolsep}{5pt}",
-        "\\setlength{\\LTcapwidth}{\\linewidth}",
-        f"\\begin{{longtable}}{{{alignment}}}",
-        f"\\caption{{{caption}}}\\label{{{label}}} \\\\",
-        "\\toprule",
-        header_row,
-        "\\midrule",
-        "\\endfirsthead",
-        "\\toprule",
-        header_row,
-        "\\midrule",
-        "\\endhead",
-        "\\bottomrule",
-        "\\endfoot",
-        *rows,
-        "\\end{longtable}",
-    ]
-    if note is not None:
-        lines.append(f"{{\\raggedright\\scriptsize {note}\\par}}")
-    lines.append("\\endgroup")
-    return "\n".join(lines)
-
-
-def _to_latex(
-    frame: pd.DataFrame,
-    caption: str,
-    label: str,
-    note: str | None = None,
-) -> str:
-    """One table, as a complete LaTeX environment ready to `\\input`.
-
-    A full environment rather than a bare `tabular`, matching
-    `results/lit-search/table-1-maintext.tex`: the caption is part of what is generated,
-    so a number quoted in the caption cannot drift from the table beneath it.
-    """
-    header = [
-        f"% GENERATED by {GENERATED_BY} -- do not hand-edit.",
-        "% Regenerate:  python -m manuscript_analysis.demos.tables",
-    ]
-    if label in LONG_TABLES:
-        return "\n".join(header) + "\n" + _longtable(frame, caption, label, note) + "\n"
-
-    body = _tabular(frame)
-    lines = [
-        *header,
-        "\\begin{table}[tb]",
-        "\\centering",
-        f"\\caption{{{caption}}}",
-        f"\\label{{{label}}}",
-        "\\scriptsize" if label in COMPACT_TABLES else "\\footnotesize",
-        "\\setlength{\\tabcolsep}{5pt}",
-        body.rstrip(),
-    ]
-    if note is not None:
-        lines.append(f"\\par\\medskip\\raggedright\\scriptsize {note}")
-    lines.append("\\end{table}")
-    return "\n".join(lines) + "\n"
+def _to_latex(frame, caption, label, note=None) -> str:
+    return to_latex(
+        frame, caption, label, note,
+        generated_by=GENERATED_BY,
+        regenerate="python -m manuscript_analysis.demos.tables",
+        long=label in LONG_TABLES,
+    )
 
 
 # --- Demo 1 -----------------------------------------------------------------------
@@ -302,11 +139,6 @@ FLU_RATIO_LABELS = {
     f"multi-strata-empirical / {flu.BASELINE}": "empirical / unstratified",
     f"multi-strata-homogeneous / {flu.BASELINE}": "homogeneous / unstratified",
 }
-COVID_RATIO_LABELS = {
-    "movement / state": "commuting / state",
-    "county / state": "no movement / state",
-    "movement / county": "commuting / no movement",
-}
 
 
 def flu_by_jurisdiction(ev) -> pd.DataFrame:
@@ -325,70 +157,11 @@ def flu_by_jurisdiction(ev) -> pd.DataFrame:
     return frame.round(3)
 
 
-# --- Demo 2 -----------------------------------------------------------------------
-
-
-def covid_skill(ev, natural_ev) -> pd.DataFrame:
-    """WIS and log WIS per model per quantity, with relative forms and coverage."""
-    frame = _both_scales(covid.wis_table(natural_ev), covid.wis_table(ev))
-    frame.index = pd.MultiIndex.from_tuples(
-        [(covid.LABELS[model], covid.AXIS_LABELS[quantity])
-         for model, quantity in frame.index],
-        names=["model", "quantity"],
-    )
-    return frame.round(3)
-
-
-def covid_reproducibility(ev, replicate) -> pd.DataFrame:
-    """Relative WIS at both seeds and their geometric mean, per model per quantity.
-
-    The geometric mean rather than the arithmetic one because these are ratios: the
-    average of 0.5 and 2.0 should be 1.0, not 1.25.
-    """
-    label = f"rel {SCORE_LABELS[ev.scale]}"
-    rows = []
-    for quantity in covid.QUANTITIES:
-        for model in covid.MODELS:
-            if model == covid.BASELINE:
-                continue
-            first = covid.relative_pooled(ev, model, quantity)
-            row = {
-                "model": covid.LABELS[model],
-                "quantity": covid.AXIS_LABELS[quantity],
-                f"{label}, seed 0": round(first, 3),
-            }
-            if replicate is not None:
-                second = covid.relative_pooled(replicate, model, quantity)
-                row[f"{label}, seed 1"] = round(second, 3)
-                row["geometric mean"] = round(float(np.sqrt(first * second)), 3)
-            rows.append(row)
-    return pd.DataFrame(rows).set_index(["model", "quantity"])
-
-
-def covid_by_state(ev) -> pd.DataFrame:
-    """Mean WIS per state per quantity under each model, with ratios."""
-    frame = covid.wis_by_location(ev)
-    frame = frame.rename(
-        columns={model: covid.LABELS[model] for model in covid.MODELS}
-    )
-    frame = frame.rename(columns=COVID_RATIO_LABELS)
-    frame.index = pd.MultiIndex.from_tuples(
-        [(place, covid.AXIS_LABELS[quantity]) for place, quantity in frame.index],
-        names=["state", "quantity"],
-    )
-    return frame.round(3)
-
-
 # --- Driver -----------------------------------------------------------------------
 
 FLU_REPRODUCIBILITY_NOTE = (
     "Both seeds are reported because the aggregate result is reproducible but which "
     "jurisdictions favour each model is not (Table~\\ref{tab:flu-by-jurisdiction})."
-)
-
-COVID_REPRODUCIBILITY_NOTE = (
-    "Both seeds are reported because the aggregate result is reproducible but which "
-    "counties favour each model is not (main-text Fig.~3d)."
 )
 
 SCALE_NOTE = (
@@ -430,45 +203,20 @@ CAPTIONS = {
         r"jurisdiction, sorted by the ratio of the empirical-mixing model to the unstratified "
         r"model."
     ),
-    "covid-skill": (
-        r"\textbf{COVID-19 case study: forecast skill by model and quantity.} Weighted "
-        r"interval score pooled over forecast origins and the three scored states, on the "
-        r"natural and the log scale, with coverage as in Table~\ref{tab:flu-skill}. There is "
-        r"no pooled "
-        r"score across quantities: a hospital census is a stock and deaths are a flow, so "
-        r"adding their scores would mean nothing."
-    ),
-    "covid-reproducibility": (
-        r"\textbf{COVID-19 case study: the comparison at two ensemble seeds.} Relative log WIS "
-        r"against the "
-        r"model with no spatial structure, at each seed and as their geometric mean."
-    ),
-    "covid-by-state": (
-        r"\textbf{COVID-19 case study: mean log WIS by state and quantity.} Ratio columns are "
-        r"relative "
-        r"log WIS. The final column is the "
-        r"informative contrast for the movement question: the same 32 counties with "
-        r"commuting on against commuting off, at identical spatial resolution."
-    ),
 }
 
 NOTES = {
     "flu-skill": SCALE_NOTE,
-    "covid-skill": SCALE_NOTE,
     "flu-reproducibility": FLU_REPRODUCIBILITY_NOTE,
-    "covid-reproducibility": COVID_REPRODUCIBILITY_NOTE,
     "flu-by-jurisdiction": JURISDICTION_NOTE,
 }
 
 
-def build(
-    flu_ev, flu_replicate, covid_ev, covid_replicate, flu_natural, covid_natural
-) -> dict:
+def build(flu_ev, flu_replicate, flu_natural) -> dict:
     """Every table, as `name -> (frame, caption, label, note)`.
 
-    The first four evaluations are on the headline (log) scale; `flu_natural` and
-    `covid_natural` are the same seed-0 runs scored on the natural scale, for the two
-    skill tables.
+    The first two evaluations are on the headline (log) scale; `flu_natural` is the same
+    seed-0 runs scored on the natural scale, for the skill table.
 
     Captions live in `CAPTIONS` rather than inline so that this function reads as the
     list of tables it is, and so a caption can be reworded without touching the code
@@ -478,9 +226,6 @@ def build(
         "flu-skill": flu_skill(flu_ev, flu_natural),
         "flu-reproducibility": flu_reproducibility(flu_ev, flu_replicate),
         "flu-by-jurisdiction": flu_by_jurisdiction(flu_ev),
-        "covid-skill": covid_skill(covid_ev, covid_natural),
-        "covid-reproducibility": covid_reproducibility(covid_ev, covid_replicate),
-        "covid-by-state": covid_by_state(covid_ev),
     }
     missing = set(frames) ^ set(CAPTIONS)
     if missing:
@@ -508,15 +253,9 @@ def main(argv=None) -> None:
     flu_ev = flu.load()
     flu_replicate = flu.load_replicate()
 
-    covid_ev = covid.load()
-    covid_replicate = covid.load_replicate()
-
     flu_natural = flu.load(scale="natural")
-    covid_natural = covid.load(scale="natural")
 
-    tables = build(
-        flu_ev, flu_replicate, covid_ev, covid_replicate, flu_natural, covid_natural
-    )
+    tables = build(flu_ev, flu_replicate, flu_natural)
 
     if args.check:
         drifted = []

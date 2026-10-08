@@ -1,5 +1,11 @@
 # Adding a figure
 
+> **Mid-restructure (step 5, 2026-10-08).** Demo 2's figures are now laid out in
+> `manuscript_analysis/demo-covid.ipynb` (section 9) from panels in
+> `manuscript_analysis/plots.py`, and `covid/evaluation.py` is gone. What follows still
+> describes Demo 1, which moves the same way in step 6; step 9 rewrites this file for
+> "helpers draw a panel, the notebook lays out the figure".
+
 Three places a figure can live, and which one is right depends on **who needs it**, not on
 how much work it is.
 
@@ -103,7 +109,7 @@ You can rely on all of these, and a new panel function should provide them:
   what makes composition possible.
 - **`title=`** — `"auto"` for the built-in title, `None` for none, or a string. A panel
   inside a composed figure always passes `None`: the caption carries what the title would
-  have said. See `lib/figures.resolve_title`.
+  have said. See `plots.resolve_title`.
 - **`color=`** — on the fit and forecast panels, to override the model's colour. Used by
   the supplementary forecast figures to draw the model's own resolution in
   `lib.figures.FINE_SCALE`, a darker shade, so two resolutions of one model do not read as

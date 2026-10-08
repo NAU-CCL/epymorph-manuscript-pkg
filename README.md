@@ -72,7 +72,7 @@ starting over.
 ### 3. Build everything the manuscript uses
 
 ```bash
-scripts/build-figures.sh      # seconds
+scripts/build-figures.sh      # about 2 minutes
 ```
 
 Writes `results/demos/figures/` (five composed figures) and `results/demos/tables/`
@@ -119,10 +119,10 @@ Each demo has two notebooks, in `notebooks/demo-flu/` and `notebooks/demo-covid/
   demo, from the ensembles. `scripts/build-figures.sh` is the same work without the
   commentary.
 
-Demo 2 is being restructured into one notebook,
-`analysis/src/manuscript_analysis/demo-covid.ipynb`, which replaces its
-`01-model-and-forecast.ipynb` and also makes the runs; its `02-evaluation.ipynb` follows
-in a later step.
+Demo 2 has been restructured into one notebook,
+`analysis/src/manuscript_analysis/demo-covid.ipynb`, which replaces both of its notebooks:
+it builds the models, makes the runs, and scores them into the figures and tables. Demo 1
+follows in a later step.
 
 ---
 

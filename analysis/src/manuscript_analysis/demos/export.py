@@ -1,8 +1,8 @@
-"""Compose the manuscript's multi-panel figures from the two demos' panel functions.
+"""Compose Demo 1's manuscript figures from its panel functions.
 
-Phase 6 of the demo plan. Every panel here is drawn by a `figure_*` in
-`demo-flu/evaluation.py` or `demo-covid/evaluation.py`, the same functions the notebooks
-call, so a figure in the paper and the same figure in a notebook cannot disagree. This
+Demo 2's figures are made in `demo-covid.ipynb` (restructure step 5); Demo 1's move into
+its own notebook in step 6, and this file goes in step 7. Every panel here is drawn by a
+`figure_*` in `demo-flu/evaluation.py`, the same functions the notebook calls, so a figure in the paper and the same figure in a notebook cannot disagree. This
 file contributes **layout only**: which panels, in what grid, with what letters. If a
 panel needs different content, change it in that demo's `evaluation.py`, not here.
 
@@ -31,7 +31,8 @@ the designer's system diagram and is not produced here.
 
 The supplementary figures this file also builds:
 
-- **calibration**, both demos side by side.
+- **calibration**, one file per demo, which the supplement sets side by side as (a) and
+  (b); this is (a).
 - **rolling forecasts**, one figure per demo, each showing the same forecasts at the
   model's own resolution and at the scale they are scored. One per demo rather than one
   combined, because four rows of six panels runs past a page.
@@ -44,7 +45,7 @@ to find it.
 
 **Every score in these figures is log WIS**, and every ratio is relative log WIS, the
 ratio of geometric means, as in CDC's FluSight evaluations. That is set in one place,
-`lib.scoring.HEADLINE_SCALE`, which `load()` defaults to; nothing here names a scale.
+`manuscript_analysis.scoring.HEADLINE_SCALE`, which `load()` defaults to; nothing here names a scale.
 
 Usage:
 
@@ -63,9 +64,8 @@ import numpy as np
 from PIL import Image
 
 from manuscript_analysis.demos import paths
-from manuscript_analysis.demos.covid import evaluation as covid
 from manuscript_analysis.demos.flu import evaluation as flu
-from manuscript_analysis.demos.lib.figures import (
+from manuscript_analysis.plots import (
     DOUBLE_COLUMN,
     FINE_SCALE,
     label_panels,
@@ -140,63 +140,19 @@ def figure_2_flu(ev, replicate):
     return fig
 
 
-# --- Figure 3: Demo 2, does spatial structure and movement buy forecast skill? -----
-
-COVID_FIT_MODEL = "movement"
-"""Panel (c) draws the movement model at its own counties, not at the scored states.
-
-This is the parallel to Figure 2(c): the model fitting many channels rather than one.
-It has to be a county model, because the three scored states are exactly where the county
-structure has been summed away; and it can only be shown at the model's own nodes, because
-the fit is stored as quantiles and quantiles do not add. See
-`demo-covid/evaluation.figure_fit`.
-"""
+# --- Supplementary: calibration ------------------------------------------------------
 
 
-def figure_3_covid(ev, replicate):
-    """Figure 3: the same four panels as Figure 2, lettered to mean the same things.
+def figure_s_calibration(flu_ev, nominal: float = 0.95):
+    """Interval coverage against nominal: panel (a) of the supplement's calibration figure.
 
-    (a) and (b) share a row because the commuting matrix is square and would otherwise
-    waste half a row. Reading order is still (a) (b) (c) (d).
+    One file per demo since restructure step 5: the supplement places this beside Demo 2's
+    (`figS-calibration-covid`, from `demo-covid.ipynb`) at the widths the two used to share
+    one figure, a third and two thirds of the page, with the legend inside the panel.
     """
-    fig = plt.figure(figsize=(DOUBLE_COLUMN, 8.3), layout="constrained")
-    top, channels, benefit = fig.subfigures(3, 1, height_ratios=[2.9, 3.4, 2.0])
-    structure, skill = top.subfigures(1, 2, width_ratios=[1.0, 1.3])
-
-    covid.figure_movement_structure(title=None, subfig=structure)
-    covid.figure_wis_by_horizon(ev, subfig=skill, legend="axes")
-    covid.figure_fit(
-        ev, COVID_FIT_MODEL, locations=covid.focus_counties(),
-        title=None, subfig=channels,
-    )
-    covid.figure_county_relative_wis(ev, replicate, title=None, subfig=benefit)
-
-    label_panels([structure, skill, channels, benefit])
-    return fig
-
-
-# --- Supplementary: calibration across both demos ---------------------------------
-
-
-def figure_s_calibration(flu_ev, covid_ev, nominal: float = 0.95):
-    """Interval coverage against nominal, both demos side by side.
-
-    Supplementary by JM's call, 2026-09-21. It still carries a real methodological
-    point: Demo 2's two spatial scales miss in *opposite* directions, because
-    aggregating partly-independent nodes cancels noise that a single node retains, which
-    makes WIS an awkward adjudicator between forecasts at different spatial scales.
-
-    Two legends rather than one: the demos' models have the same colour roles but
-    different names, so a shared legend would be wrong rather than merely crowded. They
-    go *inside* the panels (`legend="axes"`): matplotlib places an "outside" legend
-    against the parent figure, so two side-by-side subfigures would stack theirs on top
-    of each other.
-    """
-    fig = plt.figure(figsize=(DOUBLE_COLUMN, 2.9), layout="constrained")
-    left, right = fig.subfigures(1, 2, width_ratios=[1.0, 2.0])
-    flu.figure_calibration(flu_ev, nominal=nominal, subfig=left, legend="axes")
-    covid.figure_calibration(covid_ev, nominal=nominal, subfig=right, legend="axes")
-    label_panels([left, right])
+    fig = plt.figure(figsize=(DOUBLE_COLUMN / 3, 2.9), layout="constrained")
+    flu.figure_calibration(flu_ev, nominal=nominal, subfig=fig, legend="axes")
+    label_panels([fig], labels=["a"])
     return fig
 
 
@@ -210,7 +166,7 @@ def figure_s_flu_forecasts(ev):
 
     `evaluation.FOCUS_STATE` leads `REFERENCE_STATES`, so it appears in both rows and one
     state can be traced from its bands to its total. The upper row is drawn in
-    `manuscript_analysis.demos.lib.figures.FINE_SCALE`, a darker shade of the same blue, so two resolutions of
+    `manuscript_analysis.plots.FINE_SCALE`, a darker shade of the same blue, so two resolutions of
     one model do not read as two models.
 
     The fans over-predict during the growth phase, in both demos and at both resolutions.
@@ -222,7 +178,7 @@ def figure_s_flu_forecasts(ev):
     channels, aggregate = fig.subfigures(2, 1, height_ratios=[3.4, 2.2])
 
     # The darker shade marks the model's own resolution, so the two rows cannot be read
-    # as two models. See `manuscript_analysis.demos.lib.figures.FINE_SCALE`.
+    # as two models. See `manuscript_analysis.plots.FINE_SCALE`.
     flu.figure_rolling_forecasts_by_age(
         ev, flu.FOCUS_STATE, FLU_MODEL, title=None, subfig=channels, color=FINE_SCALE,
     )
@@ -233,38 +189,12 @@ def figure_s_flu_forecasts(ev):
     return fig
 
 
-def figure_s_covid_forecasts(ev):
-    """Supplementary: Demo 2's rolling forecasts at both resolutions.
-
-    (a) the counties the model forecasts, (b) the states those counties are summed into
-    and scored at. The **columns correspond**: each county in (a) is the largest county
-    of the state directly below it, so a column is one place at two resolutions.
-
-    This is the figure behind the methodological point in `figure_calibration`: summing
-    partly-independent nodes cancels noise that a single node retains, so the county rows
-    are both wider and more biased than the state rows beneath them. The county rows are
-    drawn in `manuscript_analysis.demos.lib.figures.FINE_SCALE` for the same reason as Demo 1's.
-    """
-    fig = plt.figure(figsize=(DOUBLE_COLUMN, 7.6), layout="constrained")
-    counties, states = fig.subfigures(2, 1, height_ratios=[1.0, 1.0])
-
-    covid.figure_rolling_forecasts(
-        ev, COVID_FIT_MODEL, locations=covid.focus_counties(),
-        title=None, subfig=counties, color=FINE_SCALE,
-    )
-    covid.figure_rolling_forecasts(ev, COVID_FIT_MODEL, title=None, subfig=states)
-    label_panels([counties, states])
-    return fig
-
-
 # --- Driver -----------------------------------------------------------------------
 
 FIGURES = (
     "figure-2",
-    "figure-3",
     "figure-s-calibration",
     "figure-s-flu-forecasts",
-    "figure-s-covid-forecasts",
 )
 
 
@@ -302,20 +232,9 @@ def main(argv=None) -> None:
         written += save_figure(fig, "figS-flu-rolling-forecasts", args.figures_dir)
         plt.close(fig)
 
-    covid_ev = covid.load()
-    covid_replicate = covid.load_replicate()
-    if "figure-3" in wanted:
-        fig = figure_3_covid(covid_ev, covid_replicate)
-        written += save_figure(fig, "fig3-covid-spatial-structure", args.figures_dir)
-        plt.close(fig)
-    if "figure-s-covid-forecasts" in wanted:
-        fig = figure_s_covid_forecasts(covid_ev)
-        written += save_figure(fig, "figS-covid-rolling-forecasts", args.figures_dir)
-        plt.close(fig)
-
     if "figure-s-calibration" in wanted:
-        fig = figure_s_calibration(flu_ev, covid_ev)
-        written += save_figure(fig, "figS-calibration-both-demos", args.figures_dir)
+        fig = figure_s_calibration(flu_ev)
+        written += save_figure(fig, "figS-calibration-flu", args.figures_dir)
         plt.close(fig)
 
     if args.check:

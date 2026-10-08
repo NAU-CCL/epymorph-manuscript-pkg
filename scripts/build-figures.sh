@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Build every figure and table the manuscript uses, from the run outputs.
 #
-# Seconds, not hours: everything expensive already happened in scripts/run-demos.sh.
+# Minutes, not hours: everything expensive already happened in scripts/run-demos.sh. Demo
+# 2's come from running demo-covid.ipynb, which also refits its one walkthrough model;
+# fit_missing_runs False makes it stop rather than fit for hours if a run is missing.
 # Writes results/demos/{figures,tables}/, both of which are safe to delete.
 set -euo pipefail
 
@@ -21,3 +23,6 @@ fi
 
 python -m manuscript_analysis.demos.export
 python -m manuscript_analysis.demos.tables
+python -m papermill analysis/src/manuscript_analysis/demo-covid.ipynb \
+  results/demos/notebook/demo-covid.ipynb --cwd analysis/src/manuscript_analysis \
+  -p output_dir "$PWD/results/demos" -p fit_missing_runs False
