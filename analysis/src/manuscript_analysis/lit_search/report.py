@@ -181,6 +181,13 @@ def main():
             ok = False
         if check_lexicon_listing():
             ok = False
+        # Every advanced record carries a hand-entered decision. (That each decision has a
+        # reason, and the reverse, is `validate_decisions.py --strict`'s check.)
+        blank = counts["total_advanced"] - counts["advanced_dispositioned"]
+        if blank:
+            print(f"  INCOMPLETE: {blank} of {counts['total_advanced']} advanced records "
+                  f"have no decision in {paths.SCREEN_DECISIONS.name}")
+            ok = False
         if not ok:
             sys.exit(1)
 

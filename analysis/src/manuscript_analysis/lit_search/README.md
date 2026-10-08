@@ -114,7 +114,8 @@ Eight assertions, all of which pass today:
    beside it matches.
 6. **Table 1 is a projection of the worksheet**, cell for cell, under documented rules for
    how a `*` resolves.
-7. **The register rebuilds** from the decisions with no change to any existing value.
+7. **The register rebuilds** from the decisions byte for byte. A difference fails and leaves
+   the workbook alone; rerun without `--check` to write a deliberate change.
 8. **The archived exports have not changed**, by checksum against the previous run. They
    cannot be re-fetched, so this is the one that protects everything above it.
 

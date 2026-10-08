@@ -7,7 +7,7 @@ has the detail; the top-level `README.md` has the workflow they fit into.
 |---|---|---|
 | `run-demos.sh` | fits and forecasts every demo model at both ensemble seeds, into `results/demos/runs/`; an interrupted run resumes | ~8-10 h |
 | `build-figures.sh` | builds every figure and table the manuscript uses, into `results/demos/{figures,tables}/` | seconds |
-| `check.sh` | the regression suite: the lit-search pipeline's eight checks, the demo tables against a fresh generation, and the ensembles against `MANIFEST.sha256` | ~1-2 min |
+| `check.sh` | the regression suite: the `% GENERATED` headers, the lit-search pipeline's eight checks, the demo tables and figures against a fresh build, and the run outputs against `MANIFEST.sha256` | ~2-3 min |
 | `sync-manuscript.sh` | mirrors the prose from the Overleaf clone into `manuscript/`; reports by default, copies with `--apply` | seconds |
 | `publish-results.sh` | copies generated figures, tables and numbers into the Overleaf clone; reports by default, copies with `--apply` | seconds |
 | `build-docx.sh` | Word copies of the manuscript and supplement for collaborators to comment on, into `results/manuscript-docx/` (not in git); needs pandoc | seconds |

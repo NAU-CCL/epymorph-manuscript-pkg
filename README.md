@@ -80,10 +80,13 @@ Writes `results/demos/figures/` (five composed figures) and `results/demos/table
 scripts/check.sh
 ```
 
-Three self-contained checks, each regenerating something and comparing it against what is
-committed: the literature-search pipeline's own eight assertions, the demo tables against
-a fresh generation, and the ensembles against `MANIFEST.sha256`. The demo checks are
-skipped, with a message, when the ensembles are absent.
+Self-contained checks, each regenerating something and comparing it against what is
+committed: every generated `.tex` still carries its `% GENERATED` header; the
+literature-search pipeline's own eight assertions; the demo tables against a fresh
+generation, byte for byte; the demo figures against a fresh build, pixel for pixel (within
+1-2/255 of antialiasing noise, which matplotlib's drawing carries from one process to the
+next); and the run outputs against `MANIFEST.sha256`. The demo checks are skipped, with a
+message, when the run outputs are absent.
 
 ### 5. Publish the generated files to Overleaf
 

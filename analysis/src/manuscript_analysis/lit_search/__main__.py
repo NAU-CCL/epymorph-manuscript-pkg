@@ -31,7 +31,7 @@ def run(script, *args):
 
 # report.py runs the screen and the recall audit itself, then writes counts.json.
 run("report.py", *(["--check"] if CHECK else []))
-run("register.py")
+run("register.py", *(["--check"] if CHECK else []))
 run("validate_decisions.py", *(["--strict"] if CHECK else []))
 run("tables.py")
 run("table1_tex.py")

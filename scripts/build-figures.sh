@@ -7,6 +7,11 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 export PYTHONPATH="analysis/src${PYTHONPATH:+:$PYTHONPATH}"
+# The PDFs embed a subset of each font, and matplotlib orders its glyphs by Python's string
+# hashing, which is randomised per process unless pinned. Pinning it keeps a rebuilt PDF
+# from changing in git when its drawing has not. (Last-bit floating-point noise in the
+# drawing can still move a coordinate's tenth decimal; check.sh compares pixels, not bytes.)
+export PYTHONHASHSEED=0
 
 if [ ! -d results/demos/runs ]; then
   echo "results/demos/runs/ is missing: run scripts/run-demos.sh first," >&2

@@ -6,9 +6,10 @@ what Appendix S1's numbers were computed from. If a byte in one of them changes,
 in the appendix changes with it and nothing else would say so.
 
 So the manifest is written on every run, and **the `data/` half is compared against the
-previous manifest first**. A regenerated checksum that nobody compares is ceremony; the
-comparison is the part that does the work. `results/` is regenerable, so its entries are
-recorded rather than policed.
+previous manifest first**; if it differs, the run fails and the manifest is left as it was,
+so the failure repeats until someone looks. A regenerated checksum that nobody compares is
+ceremony; the comparison is the part that does the work. `results/` is regenerable, so its
+entries are recorded rather than policed.
 
 Verify independently at any time, from the `software-lit-search` directory:
 
@@ -64,27 +65,32 @@ def previous():
 def main():
     before = previous()
     rows = entries()
+    now = {name: sha for name, sha in rows if name.startswith("data/")}
+
+    # Compare BEFORE writing. Writing first would record the changed data/ as the new
+    # baseline, so the run that noticed a change would fail and every run after it pass.
+    if before:
+        changed = sorted(n for n in now if n in before and now[n] != before[n])
+        gone = sorted(set(before) - set(now))
+        if changed or gone:
+            print("  data/ HAS CHANGED SINCE THE LAST RUN. The archived exports are the "
+                  "evidence for every number in Appendix S1; they should never change.")
+            for name in changed:
+                print(f"    modified: {name}")
+            for name in gone:
+                print(f"    missing:  {name}")
+            print(f"  {MANIFEST.relative_to(paths.ROOT)} was left as it was.")
+            sys.exit(1)
+
     paths.RESULTS.mkdir(parents=True, exist_ok=True)
     MANIFEST.write_text("".join(f"{sha}  {name}\n" for name, sha in rows), encoding="utf-8")
-
-    now = {name: sha for name, sha in rows if name.startswith("data/")}
     print(f"wrote {MANIFEST.relative_to(paths.ROOT)}: {len(rows)} files "
           f"({len(now)} in data/, {len(rows) - len(now)} in results/)")
 
     if not before:
         print("  data/: no previous manifest to compare against; this run establishes it")
         return
-    changed = sorted(n for n in now if n in before and now[n] != before[n])
     added = sorted(set(now) - set(before))
-    gone = sorted(set(before) - set(now))
-    if changed or gone:
-        print("  data/ HAS CHANGED SINCE THE LAST RUN. The archived exports are the evidence "
-              "for every number in Appendix S1; they should never change.")
-        for name in changed:
-            print(f"    modified: {name}")
-        for name in gone:
-            print(f"    missing:  {name}")
-        sys.exit(1)
     if added:
         for name in added:
             print(f"  data/: new file recorded: {name}")

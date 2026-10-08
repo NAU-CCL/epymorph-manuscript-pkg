@@ -54,9 +54,13 @@ Usage:
 """
 
 import argparse
+import shutil
+import tempfile
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import numpy as np
+from PIL import Image
 
 from manuscript_analysis.demos import paths
 from manuscript_analysis.demos.covid import evaluation as covid
@@ -71,6 +75,33 @@ from manuscript_analysis.demos.lib.figures import (
 
 OUTPUT_DIR = paths.FIGURES
 """Where the composed figures land. See `manuscript_analysis.demos.paths`."""
+
+PIXEL_TOLERANCE = 2
+"""Out of 255, for `--check`. Matplotlib's drawing carries last-bit floating-point noise
+from one process to the next, though every number computed here is bitwise stable; it
+moves antialiased edges by at most 1/255 (measured 2026-10-07: 907 of 7.4 million pixels
+in the calibration figure) and the tenth decimal of a PDF coordinate. Any real change to a
+figure moves pixels by far more, so the check compares the PNGs' pixels within this
+tolerance rather than bytes. The PDFs are the same drawing in vector form."""
+
+
+def drifted_figures(fresh_dir: Path, committed_dir: Path) -> list[str]:
+    """Each PNG in `fresh_dir` against the one on disk, pixel by pixel."""
+    problems = []
+    for fresh in sorted(fresh_dir.glob("*.png")):
+        committed = committed_dir / fresh.name
+        if not committed.exists() or not committed.with_suffix(".pdf").exists():
+            problems.append(f"{fresh.stem}: missing")
+            continue
+        new = np.asarray(Image.open(fresh).convert("RGB"), dtype=np.int16)
+        old = np.asarray(Image.open(committed).convert("RGB"), dtype=np.int16)
+        if new.shape != old.shape:
+            problems.append(f"{fresh.name}: {old.shape[:2]} on disk, {new.shape[:2]} fresh")
+            continue
+        largest = int(np.abs(new - old).max())
+        if largest > PIXEL_TOLERANCE:
+            problems.append(f"{fresh.name}: pixels differ by up to {largest}/255")
+    return problems
 
 
 # --- Figure 2: Demo 1, does demographic structure buy forecast skill? --------------
@@ -247,8 +278,15 @@ def main(argv=None) -> None:
         "--only", choices=FIGURES, action="append",
         help="build one figure; repeatable. Default: all of them.",
     )
+    parser.add_argument(
+        "--check", action="store_true",
+        help="build into a temporary folder and compare with what is on disk; write nothing",
+    )
     args = parser.parse_args(argv)
     wanted = set(args.only or FIGURES)
+    committed_dir = args.figures_dir
+    if args.check:
+        args.figures_dir = Path(tempfile.mkdtemp(prefix="figures-check-"))
 
     use_manuscript_style()
     written = []
@@ -279,6 +317,19 @@ def main(argv=None) -> None:
         fig = figure_s_calibration(flu_ev, covid_ev)
         written += save_figure(fig, "figS-calibration-both-demos", args.figures_dir)
         plt.close(fig)
+
+    if args.check:
+        problems = drifted_figures(args.figures_dir, committed_dir)
+        shutil.rmtree(args.figures_dir)
+        if problems:
+            raise SystemExit(
+                f"{len(problems)} figure(s) have drifted:\n"
+                + "".join(f"  {problem}\n" for problem in problems)
+                + "Rebuild with scripts/build-figures.sh; never hand-edit them."
+            )
+        print(f"all {len(written) // 2} figures agree with a fresh build, "
+              f"pixel for pixel within {PIXEL_TOLERANCE}/255")
+        return
 
     for path in written:
         print(f"wrote {path}")

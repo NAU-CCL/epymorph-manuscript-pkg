@@ -145,9 +145,18 @@ def save_figure(
     paths = []
     for extension in formats:
         path = directory / f"{name}.{extension}"
-        fig.savefig(path)
+        fig.savefig(path, metadata=_REPRODUCIBLE_METADATA.get(extension))
         paths.append(path)
     return paths
+
+
+_REPRODUCIBLE_METADATA = {
+    "pdf": {"CreationDate": None, "Creator": None, "Producer": None},
+    "png": {"Software": None},
+}
+"""No timestamps or version strings, so a figure's bytes change only when its drawing does
+and the files can be checksummed. By default a PDF records when it was made, and both
+formats record the matplotlib version."""
 
 
 # --- Colormaps -----------------------------------------------------------------

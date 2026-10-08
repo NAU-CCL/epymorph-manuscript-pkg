@@ -141,7 +141,7 @@ should be reproducible for the same reason the ensembles are.
 
 ```bash
 scripts/build-figures.sh     # writes results/demos/figures/
-scripts/check.sh             # tables and the run manifest still agree
+scripts/check.sh             # tables, figures and the run manifest still agree
 ```
 
 If the figure is meant to *replace* something, delete the old file from

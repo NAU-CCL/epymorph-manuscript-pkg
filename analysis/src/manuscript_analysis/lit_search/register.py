@@ -9,7 +9,10 @@ in `decisions/`, which nothing generates, and this script only formats.
     python3 src/register.py
 """
 import csv
+import io
+import re
 import sys
+import zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -140,7 +143,33 @@ for lbl in ["A7","A12","A18","A24","A29"]:
 ws3.column_dimensions["A"].width = 26
 ws3.column_dimensions["B"].width = 82
 
+# openpyxl stamps the save time into the workbook's properties and into every entry of the
+# zip it writes, so two builds of identical content would differ byte for byte. Rebuild the
+# zip with one fixed time, so the file changes only when its content does.
+FIXED_ZIP_TIME = (1980, 1, 1, 0, 0, 0)  # the zip format's epoch: a conventional "no date"
+FIXED_STAMP = b"1980-01-01T00:00:00Z"
+
+built = io.BytesIO()
+wb.save(built)
+pinned = io.BytesIO()
+with zipfile.ZipFile(built) as source, zipfile.ZipFile(pinned, "w") as target:
+    for entry in source.infolist():
+        data = source.read(entry.filename)
+        if entry.filename == "docProps/core.xml":
+            data = re.sub(rb'(W3CDTF">)[^<]*(<)', rb"\g<1>" + FIXED_STAMP + rb"\g<2>", data)
+        fixed = zipfile.ZipInfo(entry.filename, date_time=FIXED_ZIP_TIME)
+        fixed.compress_type = entry.compress_type
+        fixed.external_attr = entry.external_attr
+        target.writestr(fixed, data)
+
 out = paths.REGISTER_XLSX
-wb.save(out)
+# Check 7: with --check, the register must rebuild from the decisions unchanged. A
+# difference fails and leaves the file alone, so the failure repeats until someone looks;
+# a run without --check is how a deliberate change to the decisions is written.
+if "--check" in sys.argv and out.exists() and out.read_bytes() != pinned.getvalue():
+    sys.exit(f"{out.name} does not match a rebuild from {paths.PACKAGES.name} and "
+             f"{paths.CRAN_TASKVIEW.name}: hand-edited, or the decisions changed since it "
+             "was last built. Rerun without --check to rebuild it.")
+out.write_bytes(pinned.getvalue())
 print("saved", out)
 print("register rows:", len(R), "| cran enum rows:", len(C))
