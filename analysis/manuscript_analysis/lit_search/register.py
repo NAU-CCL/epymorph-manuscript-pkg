@@ -4,25 +4,19 @@ Build the candidate register workbook from the hand-maintained CSVs.
 The 55 package rows and 34 CRAN task-view rows used to be Python list literals in
 this file, which meant changing one package's disposition required editing source,
 and meant a hand-edit to the .xlsx was destroyed the next time this ran. They now live
-in `decisions/`, which nothing generates, and this script only formats.
-
-    python3 src/register.py
+in `decisions/`, which nothing generates, and this module only formats.
 """
 import csv
 import io
 import re
 import sys
 import zipfile
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import paths
 
 from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
-wb = Workbook()
+from . import paths
 
 # ---------- styles ----------
 HDR = Font(name="Arial", bold=True, color="FFFFFF", size=11)
@@ -60,7 +54,7 @@ def style_sheet(ws, headers, rows, widths, decision_col=None, decision_map=None)
         ws.column_dimensions[get_column_letter(i)].width = w
     ws.freeze_panes = "A2"
 
-# ================= Sheet 1: Register =================
+
 def read_csv(path):
     """Header row and data rows from one of the hand-maintained decision files."""
     with path.open(encoding="utf-8-sig", newline="") as f:
@@ -69,10 +63,6 @@ def read_csv(path):
         sys.exit(f"{path} is empty")
     return rows[0], rows[1:]
 
-
-ws1 = wb.active
-ws1.title = "Register"
-headers1, R = read_csv(paths.PACKAGES)
 
 # Row shading by disposition. Recovered from the baseline workbook's own fills rather
 # than guessed: "Reference (cite)" is deliberately unshaded, every "Include - ..." other
@@ -91,18 +81,8 @@ def dmap(value):
 
 
 WIDTHS1 = [20, 13, 20, 26, 34, 10, 16, 20, 30, 40, 26, 30, 34, 30]
-style_sheet(ws1, headers1, R, WIDTHS1[:len(headers1)],
-            decision_col=1 + headers1.index("Decision"), decision_map=dmap)
 
-# ================= Sheet 2: CRAN Task View enumeration =================
-ws2 = wb.create_sheet("CRAN_Epi_enum")
-headers2, C = read_csv(paths.CRAN_TASKVIEW)
-
-style_sheet(ws2, headers2, C, [22,30,22,52])
-
-# ================= Sheet 3: README =================
-ws3 = wb.create_sheet("README")
-readme = [
+README = [
 ["Software candidate register - epymorph mini-review (Appendix S1)"],
 [""],
 ["Purpose","Living screening register for the structured software search. One row per package."],
@@ -131,17 +111,36 @@ readme = [
 ["b","Verify MEmilio built-in inference/filtering before any tabulation."],
 ["c","Finalize retrieval counts via Scholar/Scopus/WoS for the screening log."],
 ]
-for row in readme:
-    ws3.append(row)
-ws3["A1"].font = Font(name="Arial", bold=True, size=13)
-for r in range(2, len(readme)+1):
-    ws3.cell(row=r, column=1).font = Font(name="Arial", bold=True, size=10)
-    ws3.cell(row=r, column=2).font = BASE
-    ws3.cell(row=r, column=2).alignment = wrap
-for lbl in ["A7","A12","A18","A24","A29"]:
-    ws3[lbl].font = Font(name="Arial", bold=True, size=11, color="1F4E78")
-ws3.column_dimensions["A"].width = 26
-ws3.column_dimensions["B"].width = 82
+
+
+def build():
+    """The workbook's three sheets: Register, CRAN_Epi_enum, README."""
+    wb = Workbook()
+
+    ws1 = wb.active
+    ws1.title = "Register"
+    headers1, R = read_csv(paths.PACKAGES)
+    style_sheet(ws1, headers1, R, WIDTHS1[:len(headers1)],
+                decision_col=1 + headers1.index("Decision"), decision_map=dmap)
+
+    ws2 = wb.create_sheet("CRAN_Epi_enum")
+    headers2, C = read_csv(paths.CRAN_TASKVIEW)
+    style_sheet(ws2, headers2, C, [22,30,22,52])
+
+    ws3 = wb.create_sheet("README")
+    for row in README:
+        ws3.append(row)
+    ws3["A1"].font = Font(name="Arial", bold=True, size=13)
+    for r in range(2, len(README)+1):
+        ws3.cell(row=r, column=1).font = Font(name="Arial", bold=True, size=10)
+        ws3.cell(row=r, column=2).font = BASE
+        ws3.cell(row=r, column=2).alignment = wrap
+    for lbl in ["A7","A12","A18","A24","A29"]:
+        ws3[lbl].font = Font(name="Arial", bold=True, size=11, color="1F4E78")
+    ws3.column_dimensions["A"].width = 26
+    ws3.column_dimensions["B"].width = 82
+    return wb, len(R), len(C)
+
 
 # openpyxl stamps the save time into the workbook's properties and into every entry of the
 # zip it writes, so two builds of identical content would differ byte for byte. Rebuild the
@@ -149,27 +148,36 @@ ws3.column_dimensions["B"].width = 82
 FIXED_ZIP_TIME = (1980, 1, 1, 0, 0, 0)  # the zip format's epoch: a conventional "no date"
 FIXED_STAMP = b"1980-01-01T00:00:00Z"
 
-built = io.BytesIO()
-wb.save(built)
-pinned = io.BytesIO()
-with zipfile.ZipFile(built) as source, zipfile.ZipFile(pinned, "w") as target:
-    for entry in source.infolist():
-        data = source.read(entry.filename)
-        if entry.filename == "docProps/core.xml":
-            data = re.sub(rb'(W3CDTF">)[^<]*(<)', rb"\g<1>" + FIXED_STAMP + rb"\g<2>", data)
-        fixed = zipfile.ZipInfo(entry.filename, date_time=FIXED_ZIP_TIME)
-        fixed.compress_type = entry.compress_type
-        fixed.external_attr = entry.external_attr
-        target.writestr(fixed, data)
 
-out = paths.REGISTER_XLSX
-# Check 7: with --check, the register must rebuild from the decisions unchanged. A
-# difference fails and leaves the file alone, so the failure repeats until someone looks;
-# a run without --check is how a deliberate change to the decisions is written.
-if "--check" in sys.argv and out.exists() and out.read_bytes() != pinned.getvalue():
-    sys.exit(f"{out.name} does not match a rebuild from {paths.PACKAGES.name} and "
-             f"{paths.CRAN_TASKVIEW.name}: hand-edited, or the decisions changed since it "
-             "was last built. Rerun without --check to rebuild it.")
-out.write_bytes(pinned.getvalue())
-print("saved", out)
-print("register rows:", len(R), "| cran enum rows:", len(C))
+def pinned_bytes(wb):
+    """The saved workbook, with every timestamp in it fixed."""
+    built = io.BytesIO()
+    wb.save(built)
+    pinned = io.BytesIO()
+    with zipfile.ZipFile(built) as source, zipfile.ZipFile(pinned, "w") as target:
+        for entry in source.infolist():
+            data = source.read(entry.filename)
+            if entry.filename == "docProps/core.xml":
+                data = re.sub(rb'(W3CDTF">)[^<]*(<)', rb"\g<1>" + FIXED_STAMP + rb"\g<2>", data)
+            fixed = zipfile.ZipInfo(entry.filename, date_time=FIXED_ZIP_TIME)
+            fixed.compress_type = entry.compress_type
+            fixed.external_attr = entry.external_attr
+            target.writestr(fixed, data)
+    return pinned.getvalue()
+
+
+def main(check=False):
+    wb, packages, cran = build()
+    rebuilt = pinned_bytes(wb)
+    out = paths.REGISTER_XLSX
+    # Check 7: with `check`, the register must rebuild from the decisions unchanged. A
+    # difference fails and leaves the file alone, so the failure repeats until someone looks;
+    # a run without `check` (`just build`) is how a deliberate change to the decisions is
+    # written.
+    if check and out.exists() and out.read_bytes() != rebuilt:
+        sys.exit(f"{out.name} does not match a rebuild from {paths.PACKAGES.name} and "
+                 f"{paths.CRAN_TASKVIEW.name}: hand-edited, or the decisions changed since "
+                 "it was last built. Run `just build` to rebuild it.")
+    out.write_bytes(rebuilt)
+    print("saved", out)
+    print("register rows:", packages, "| cran enum rows:", cran)

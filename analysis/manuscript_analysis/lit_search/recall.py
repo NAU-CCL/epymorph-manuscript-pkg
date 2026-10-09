@@ -12,22 +12,16 @@ Three checks, matching the procedure reported in Appendix S1 §S1.9:
   3. Random-sample audit — a seeded random sample of the remaining set-aside records that
                            carry no package-title cue, bounding the miss rate there.
 
-    python3 src/recall.py
+Run by `report.py`, after `screen.py` has written the set-aside records.
 """
-import csv
 import random
 import re
-import sys
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import paths
-from lexicon import DOM
+from . import paths
+from .lexicon import DOM, hits
 
 SEED = 20260724
 SAMPLE_N = 100
-
-hits = lambda text, patterns: [p for p in patterns if re.search(p, text)]
 
 # A title-level cue that the record announces a named piece of software.
 PKG_TITLE = [
@@ -44,20 +38,8 @@ def title_cue(title):
     return any(re.search(pattern, title) for pattern in PKG_TITLE)
 
 
-def load(path):
-    with path.open(encoding="utf-8") as f:
-        return list(csv.DictReader(f))
-
-
-def dump(path, rows, fields):
-    with path.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fields)
-        writer.writeheader()
-        writer.writerows(rows)
-
-
 def main():
-    rows = load(paths.DROPPED_PUBMED) + load(paths.DROPPED_LENS)
+    rows = paths.read_rows(paths.DROPPED_PUBMED) + paths.read_rows(paths.DROPPED_LENS)
     fields = list(rows[0].keys())
     print(f"dropped records (both sources): {len(rows)}")
 
@@ -74,9 +56,9 @@ def main():
     print(f"3. NO-CUE STRATUM: {len(nocue)}; seeded random sample: {len(sample)} "
           f"(seed={SEED})")
 
-    dump(paths.RECALL_NEARMISS, sorted(near, key=lambda r: r["title"]), fields)
-    dump(paths.RECALL_TITLESWEEP, sorted(sweep, key=lambda r: r["title"]), fields)
-    dump(paths.RECALL_SAMPLE, sample, fields)
+    paths.write_rows(paths.RECALL_NEARMISS, sorted(near, key=lambda r: r["title"]), fields)
+    paths.write_rows(paths.RECALL_TITLESWEEP, sorted(sweep, key=lambda r: r["title"]), fields)
+    paths.write_rows(paths.RECALL_SAMPLE, sample, fields)
     print(f"\nwrote {paths.RECALL_NEARMISS.name}, {paths.RECALL_TITLESWEEP.name}, "
           f"{paths.RECALL_SAMPLE.name}")
 
@@ -84,6 +66,3 @@ def main():
             "nocue_stratum": len(nocue), "random_sample": len(sample),
             "random_sample_seed": SEED}
 
-
-if __name__ == "__main__":
-    main()

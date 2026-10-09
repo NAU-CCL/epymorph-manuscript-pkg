@@ -9,20 +9,16 @@ Writes `results/figS-software-search-flow.png`, the figure the supplement includ
 with matplotlib, so no browser or Node toolchain is needed), plus `results/prisma-flow.mermaid`
 and `results/prisma-flow.html`, the same diagram as text and as a browser viewer.
 """
-import csv
 import json
-import os
-import sys
 from collections import Counter
-
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import paths
 
 import matplotlib
 
 matplotlib.use("Agg")  # draw to a file; no display needed
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch
+
+from . import paths
 
 PNG = paths.RESULTS / "figS-software-search-flow.png"
 MERMAID = paths.RESULTS / "prisma-flow.mermaid"
@@ -32,8 +28,8 @@ HTML = paths.RESULTS / "prisma-flow.html"
 def figures():
     """Every number the diagram shows, derived rather than remembered."""
     counts = json.loads(paths.COUNTS.read_text(encoding="utf-8"))
-    register = list(csv.DictReader(paths.PACKAGES.open(encoding="utf-8-sig")))
-    marks = list(csv.DictReader(paths.TABLE_MARKS.open(encoding="utf-8-sig")))
+    register = paths.read_rows(paths.PACKAGES)
+    marks = paths.read_rows(paths.TABLE_MARKS)
     decided = Counter(row["Decision"].strip() for row in register)
 
     figs = dict(counts)
@@ -215,7 +211,3 @@ def main():
           f"and {HTML.relative_to(paths.ROOT)}")
     print(f"  included: {f['retained']} retained ({f['tabulated']} tabulated), "
           f"{f['context']} context, {f['references']} references")
-
-
-if __name__ == "__main__":
-    main()

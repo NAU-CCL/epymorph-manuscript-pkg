@@ -1,31 +1,15 @@
 """Verify the comparison worksheet's citations against the bibliography.
 
-This used to do more. It parsed the feature tables out of the two markdown drafts, asserted
-that Table 1 and Table S1 agreed on every shared cell, and seeded
-`decisions/table-marks.csv` from them. All three jobs went away on 2026-09-21:
-
-  - the drafts are frozen, and the manuscript is LaTeX in the sibling Overleaf repo;
-  - Table S1 was removed, so there is no second table for Table 1 to agree with;
-  - Table 1 is now *generated* from the worksheet by `table1_tex.py`, which asserts the
-    projection holds, so the worksheet cannot drift from the table it produces.
-
-`--seed` went with them: the worksheet exists, it is hand-maintained, and there is no
-markdown table left to rebuild it from.
-
-What remains is the job nothing else does. The worksheet names a `bib_key` and a `doi` for
-each package, and those are what the manuscript cites. This checks that every key resolves in
-the bibliography and that the DOI beside it is the one the bibliography holds, so a citation
-cannot quietly point at the wrong work.
-
-    python3 src/tables.py        verify; exit non-zero on a mismatch
+The worksheet (`decisions/table-marks.csv`) names a `bib_key` and a `doi` for each package,
+and those are what the manuscript cites. This checks that every key resolves in the
+bibliography and that the DOI beside it is the one the bibliography holds, so a citation
+cannot quietly point at the wrong work. Exits non-zero on a mismatch. (That Table 1 agrees
+with the same worksheet is `table1_tex.py`'s check.)
 """
-import csv
-import os
 import re
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import paths
+from . import paths
 
 
 def parse_bib(path):
@@ -48,7 +32,7 @@ def parse_bib(path):
 
 
 def main():
-    rows = list(csv.DictReader(paths.TABLE_MARKS.open(encoding="utf-8-sig")))
+    rows = paths.read_rows(paths.TABLE_MARKS)
     by_key = {e["key"]: e for e in parse_bib(paths.BIB)}
 
     problems, checked, no_key = [], 0, []
@@ -81,7 +65,3 @@ def main():
         for item in problems:
             print(f"    {item}")
         sys.exit(1)
-
-
-if __name__ == "__main__":
-    main()

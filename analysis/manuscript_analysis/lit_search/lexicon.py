@@ -2,14 +2,21 @@
 Canonical pre-filter lexicon for the epymorph software-landscape screen.
 
 ONE lexicon is applied to every source (PubMed, Lens.org). This module is the single
-point of truth: the term sets printed in Appendix S1 §S1.1 are generated from here by
-`print_lexicon.py`, so the manuscript and the executed screen cannot drift apart.
+point of truth: `report.py` writes the term sets out as `lexicon-prose.txt`, and its
+`--check` asserts that Appendix S1 §S1.1 lists every one, so the manuscript and the
+executed screen cannot drift apart.
 
 History: the first pass (July 2026) inadvertently ran three different lexicons across
-its three legs (scripts/screen.py, lens_screen.py, lensb_screen.py). These sets are the
-union of those three, i.e. the most recall-oriented of the variants actually used. The
-v1 scripts and their outputs are retained in this directory for provenance.
+its three legs. These sets are the union of those three, i.e. the most recall-oriented of
+the variants actually used. The first pass is kept in the maintainer's working folder.
 """
+import re
+
+
+def hits(text, patterns):
+    """The patterns that match somewhere in `text`."""
+    return [pattern for pattern in patterns if re.search(pattern, text)]
+
 
 # --- A: software / artifact signal -------------------------------------------------
 SOFT = [
@@ -47,7 +54,7 @@ FILT = [
 # --- packages already in the candidate register --------------------------------------
 # Used only to label records, never to decide them. Terms that collide with ordinary
 # English (surveillance, dust, odin) are matched in a word-boundary-and-context form so
-# the label means what it says; see `known_hits()`.
+# the label means what it says; see `screen.known_names()`.
 KNOWN = [
     # (display name, pattern). The name is what lands in the `known` column and in the R1
     # reason, so it must read as a package name: the column used to carry raw patterns, which

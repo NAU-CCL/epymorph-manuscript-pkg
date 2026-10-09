@@ -1,28 +1,21 @@
 """
 Write every number Appendix S1 quotes to one machine-readable file, and check the prose.
 
-The appendix states about twenty counts across §S1.9 and §S1.10. Each one was, until now,
-a number somebody read off a terminal and typed into a draft. `counts.json` makes them an
-output of the pipeline, and `--check` reads them back out of the appendix and asserts they
-still match, which is the guarantee actually wanted. The Methods summary of the search
-quotes the headline counts too, and is checked the same way.
+The appendix states about twenty counts across §S1.9 and §S1.10. `counts.json` makes them
+an output of the pipeline rather than numbers read off a terminal, and `check=True` reads
+them back out of the appendix and asserts they still match, which is the guarantee actually
+wanted. The Methods summary of the search quotes the headline counts too, and is checked the
+same way.
 
-Same idea as the `\\newcommand` macro file planned for the demo figures: the paper and the
-analysis cannot disagree, because one generates the other's numbers.
-
-    python3 src/report.py            write results/counts.json and lexicon-prose.txt
-    python3 src/report.py --check    additionally check them against the appendix
+Runs the screen and the recall audit itself, then writes `counts.json` and
+`lexicon-prose.txt`.
 """
 import json
 import re
 import sys
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import paths
-import recall
-import screen
-from lexicon import BLOCKS
+from . import paths, recall, screen
+from .lexicon import BLOCKS
 
 
 # Terms whose pattern is a stem or whose prose form is capitalised. Everything not listed
@@ -164,7 +157,7 @@ def check_claims(path, claims, counts):
     return not bad and not unfound
 
 
-def main():
+def main(check=False):
     counts = screen.main()
     print()
     counts.update(recall.main())
@@ -175,14 +168,14 @@ def main():
     print(f"\nwrote {paths.COUNTS.name} ({len(counts)} values) "
           f"and {paths.LEXICON_PROSE.name} ({blocks} blocks)")
 
-    if "--check" in sys.argv:
+    if check:
         ok = check_claims(paths.APPENDIX, APPENDIX_CLAIMS, counts)
         if not check_claims(paths.METHODS_SURVEY, METHODS_CLAIMS, counts):
             ok = False
         if check_lexicon_listing():
             ok = False
         # Every advanced record carries a hand-entered decision. (That each decision has a
-        # reason, and the reverse, is `validate_decisions.py --strict`'s check.)
+        # reason, and the reverse, is `validate_decisions.main(strict=True)`'s check.)
         blank = counts["total_advanced"] - counts["advanced_dispositioned"]
         if blank:
             print(f"  INCOMPLETE: {blank} of {counts['total_advanced']} advanced records "
@@ -190,7 +183,3 @@ def main():
             ok = False
         if not ok:
             sys.exit(1)
-
-
-if __name__ == "__main__":
-    main()

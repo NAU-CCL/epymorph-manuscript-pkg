@@ -1,36 +1,34 @@
 # Software literature search
 
-Moved into this repository on 2026-09-21 (MIGRATION_PLAN step 4b). The three layers now
-live at `data/lit-search/raw/`, `data/lit-search/decisions/` and `results/lit-search/`;
-`paths.py` is where that is written down, and the only file the move needed.
-
 The structured, reproducible search behind Appendix S1
 (`manuscript/supplementary/S1-software-landscape.tex`), the comparison in Table 1, and the
 candidate register (`results/lit-search/software-candidate-register.xlsx`).
 
+It is the first step of `just build`, and `just check` runs it with its eight checks. To
+run it alone, from the repository root:
+
 ```bash
-python3 -m manuscript_analysis.lit_search           # screen, audit, register, counts
-python3 -m manuscript_analysis.lit_search --check   # also verify the manuscript
+uv run --project analysis python -m manuscript_analysis.lit_search           # screen, audit, register, counts
+uv run --project analysis python -m manuscript_analysis.lit_search --check   # also verify the manuscript
 ```
 
-Runs from any directory. Python 3, standard library only, plus `openpyxl` for the register
-and matplotlib (which arrives with epymorph) for the flow figure.
+Standard library, plus `openpyxl` for the register and matplotlib for the flow figure.
 
 ## Three kinds of file, one rule each
 
-This is the whole organising idea. The previous layout mixed all three in one directory,
-so "which of these can I safely delete?" had no answer.
+This is the whole organising idea; `paths.py` is where it is written down.
 
 | directory | written by | safe to delete |
 |---|---|---|
-| `data/` | **nobody.** It is the evidence. | no |
-| `decisions/` | **a human, by hand.** No script ever writes here. | no |
-| `results/` | **the scripts, only.** | **yes, always** — a re-run rebuilds it |
+| `data/lit-search/raw/` | **nobody.** It is the evidence. | no |
+| `data/lit-search/decisions/` | **a human, by hand.** No code ever writes here. | no |
+| `results/lit-search/` | **the pipeline, only.** | **yes, always** — a re-run rebuilds it |
 
 ## Layout
 
 ```
-__main__.py              the one entry point
+__init__.py              run(): the whole pipeline, in order
+__main__.py              python -m manuscript_analysis.lit_search
 paths.py                 where everything lives; the three-layer rule, in code
 lexicon.py               THE canonical term sets. One lexicon, every source.
 screen.py                the pre-filter; joins decisions/ onto the shortlists
@@ -41,15 +39,15 @@ tables.py                verifies the worksheet's bib keys and DOIs against the 
 table1_tex.py            projects Table 1 from the worksheet into results/, with a drift check
 validate_decisions.py    checks screen-decisions.csv and the register against the codebook
 prisma.py                draws the PRISMA flow (PNG, plus mermaid) from counts.json + the register
-manifest.py              checksums data/ and results/; alarms if data/ ever changes
+manifest.py              checksums the archived exports; alarms if they ever change
 
-../../../../data/lit-search/raw/        the archived search exports, 2026-07-15
+data/lit-search/raw/        the archived search exports, 2026-07-15
   pubmed-metadata.csv      2,403 records: PMID, title, journal, year, DOI
   pubmed-abstracts.txt     2,364 records with abstracts (MEDLINE text)
   lens-export.csv          1,009 records: journal, conference and preprint
   queries-as-executed.md   the verbatim queries, filters, dates and result counts
 
-../../../../data/lit-search/decisions/  hand-maintained. See its own README.
+data/lit-search/decisions/  hand-maintained. See its own README.
   screen-decisions.csv     645 advanced records; decision + reason
   screen-decisions-codebook.md  what every column means and what may go in it
   table-marks.csv          14 packages x 11 capabilities; THE source of truth for marks
@@ -57,7 +55,7 @@ manifest.py              checksums data/ and results/; alarms if data/ ever chan
   packages.csv             the register's 56 package rows
   cran-taskview.csv        the register's 34 CRAN task-view rows
 
-../../../../results/lit-search/         generated
+results/lit-search/         generated
   shortlist-pubmed.csv  shortlist-lens.csv     advanced by the pre-filter
   dropped-pubmed.csv    dropped-lens.csv       set aside
   recall-nearmiss.csv  recall-titlesweep.csv  recall-sample.csv
@@ -65,7 +63,7 @@ manifest.py              checksums data/ and results/; alarms if data/ ever chan
   software-candidate-register.xlsx  the register, rebuilt from decisions/
   figS-software-search-flow.png  Figure S1, generated; published to Overleaf's figures/
   prisma-flow.mermaid  prisma-flow.html   the same flow as text and as a browser viewer
-  MANIFEST.sha256          sha256 of every file in data/ and results/
+  MANIFEST.sha256          sha256 of the archived exports (results/checksums.sha256 covers the rest)
   table-1-maintext.tex     Table 1 as LaTeX, generated from decisions/table-marks.csv
   table-s1.tex             Table S1 as LaTeX
   lexicon-prose.txt        S1's term listing, generated from lexicon.py
@@ -115,7 +113,7 @@ Eight assertions, all of which pass today:
 6. **Table 1 is a projection of the worksheet**, cell for cell, under documented rules for
    how a `*` resolves.
 7. **The register rebuilds** from the decisions byte for byte. A difference fails and leaves
-   the workbook alone; rerun without `--check` to write a deliberate change.
+   the workbook alone; `just build` writes a deliberate change.
 8. **The archived exports have not changed**, by checksum against the previous run. They
    cannot be re-fetched, so this is the one that protects everything above it.
 
@@ -125,9 +123,7 @@ Eight assertions, all of which pass today:
 `decisions/packages.csv` and `decisions/cran-taskview.csv`. Edit those.
 
 **Re-running never destroys a decision.** `screen.py` joins `decisions/screen-decisions.csv`
-on and cannot write to it, and nothing in the pipeline writes to `decisions/`. It was not
-always so: before 2026-09-19 the shortlists carried `decision` columns that a re-run
-would have silently blanked.
+on and cannot write to it, and nothing in the pipeline writes to `decisions/`.
 
 ## Provenance
 
@@ -139,5 +135,3 @@ citation-chaining sources are discovery rather than counted retrieval and are re
 The July 2026 first pass, which inadvertently ran three different lexicons, is archived in
 `old/` in the maintainer's working folder, with a README explaining what changed. Nothing
 there feeds the current results.
-
-_Restructured 2026-09-19. Every output verified identical to the pre-restructure pipeline._

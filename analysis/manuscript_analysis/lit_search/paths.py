@@ -1,18 +1,17 @@
 """
-Where everything lives, resolved relative to this file rather than the shell's cwd, so a
-script works from any directory.
+Where everything lives, resolved relative to this file rather than the shell's cwd, and
+the two helpers every step uses to read and write its CSVs.
 
 The three-layer rule the pipeline is built on is stated once, here, and the repository layout
-now mirrors it:
+mirrors it:
 
     data/lit-search/raw/        the archived search exports. NEVER written.
     data/lit-search/decisions/  hand-maintained. Never written by a script.
-    results/lit-search/         generated. Always safe to delete; the driver rebuilds it.
+    results/lit-search/         generated. Always safe to delete; the pipeline rebuilds it.
 
-Moved here from the standalone `software-lit-search/` directory on 2026-09-21
-(MIGRATION_PLAN step 4b). This file is the only one the move required: everything else
-imports its locations from here.
+Every other module imports its locations from here.
 """
+import csv
 from pathlib import Path
 
 # .../analysis/manuscript_analysis/lit_search/paths.py -> the repository root.
@@ -60,5 +59,18 @@ INTRO = MANUSCRIPT / "sections" / "01-introduction.tex"
 # The Methods summary of the search; it quotes the headline counts, so --check reads it too.
 METHODS_SURVEY = MANUSCRIPT / "sections" / "04b-methods-software-survey.tex"
 
-BOM = "﻿"
-"""Written at the head of every CSV so Excel and Numbers read the UTF-8 correctly."""
+
+def read_rows(path):
+    """Every row of a CSV, as dicts. `utf-8-sig` because the hand-maintained files are
+    saved from Excel with a byte-order mark; it reads a file without one unchanged."""
+    with path.open(encoding="utf-8-sig", newline="") as f:
+        return list(csv.DictReader(f))
+
+
+def write_rows(path, rows, fields):
+    """Write dict rows as a CSV, header first."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(rows)

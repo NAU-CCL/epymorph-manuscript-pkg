@@ -142,7 +142,7 @@ Each subdirectory has its own README with the detail.
 
 **The software landscape** (`lit_search`) surveys comparable packages. It arrived
 2026-09-21 and was the first piece here that ran end to end; it is the working model for
-everything else. `python -m manuscript_analysis.lit_search --check` regenerates
+everything else. Its step of `just check` regenerates
 `results/lit-search/` and then checks eight things, including that Appendix S1's fourteen
 quoted counts match the pipeline, that §S1.3 lists every term the screen runs on, that
 Table 1 is a faithful projection of the decisions behind it, and that the archived exports

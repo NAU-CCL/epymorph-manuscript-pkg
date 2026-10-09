@@ -10,23 +10,22 @@ written back. That file is the only place a `decision` or `reason` lives; this s
 cannot modify it, which is the point. Before the decisions layer existed, the shortlists
 carried empty `decision` columns that a re-run would silently have overwritten.
 
-Outputs, all to `results/`:
+Outputs, all to `results/lit-search/`:
     shortlist-pubmed.csv  shortlist-lens.csv     advanced by the pre-filter
     dropped-pubmed.csv    dropped-lens.csv       set aside, input to the recall audit
 
-    python3 src/screen.py
+Run by `report.py`, which needs its counts.
 """
 import csv
 import re
-import sys
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import paths
-from lexicon import DOM, FILT, KNOWN, METH, SOFT
+from . import paths
+from .lexicon import DOM, FILT, KNOWN, METH, SOFT, hits
 
-norm = lambda s: re.sub(r"[^a-z0-9]+", " ", (s or "").lower()).strip()
-hits = lambda text, patterns: [p for p in patterns if re.search(p, text)]
+
+def norm(text):
+    """A title reduced to lowercase words, for matching duplicates across sources."""
+    return re.sub(r"[^a-z0-9]+", " ", (text or "").lower()).strip()
 
 
 def known_names(text):
@@ -50,10 +49,9 @@ def load_decisions():
     """Hand-entered dispositions, keyed by source and id. Absent file is not an error."""
     if not paths.SCREEN_DECISIONS.exists():
         return {}
-    with paths.SCREEN_DECISIONS.open(encoding="utf-8-sig") as f:
-        return {(row["source"], row["id"]): (row.get("decision", "").strip(),
-                                             row.get("reason", "").strip())
-                for row in csv.DictReader(f)}
+    return {(row["source"], row["id"]): (row.get("decision", "").strip(),
+                                         row.get("reason", "").strip())
+            for row in paths.read_rows(paths.SCREEN_DECISIONS)}
 
 
 def score(source, identifier, title, venue, year, doi, kind, blob, decisions):
@@ -133,11 +131,7 @@ def read_lens(decisions, meta):
 
 def dump(path, rows):
     rows = sorted(rows, key=lambda r: (-r["filt"], -r["soft"], r["title"]))
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=FIELDS)
-        writer.writeheader()
-        writer.writerows(rows)
+    paths.write_rows(path, rows, FIELDS)
     return len(rows)
 
 
@@ -190,6 +184,3 @@ def main():
               f"{paths.SCREEN_DECISIONS.name}")
     return counts
 
-
-if __name__ == "__main__":
-    main()

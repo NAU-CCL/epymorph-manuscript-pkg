@@ -19,23 +19,16 @@ contributes `value`. Nothing else in the document is read.
 
 Read-only. It never writes to `decisions/`.
 
-    python3 src/validate_decisions.py            report problems, exit 0
-    python3 src/validate_decisions.py --strict   exit non-zero if any problem is found
-    python3 src/validate_decisions.py --quiet    print only problems
-
-It warns rather than fails by default, and `run_all.py` calls it that way, because this is
-the file a human is in the middle of editing: filling in a `decision` before its `reason` is
-a normal intermediate state, not a broken repository, and `run_all.py` promises to be safe to
-re-run at any time. `run_all.py --check` runs it `--strict`, which is where a problem should
-stop the build.
+It warns rather than fails by default, and the build calls it that way, because this is the
+file a human is in the middle of editing: filling in a `decision` before its `reason` is a
+normal intermediate state, not a broken repository, and the build promises to be safe to
+re-run at any time. The check runs it with `strict=True`, which is where a problem should
+stop.
 """
-import csv
-import os
 import re
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import paths
+from . import paths
 
 CODEBOOK = paths.DECISIONS / "screen-decisions-codebook.md"
 
@@ -82,10 +75,9 @@ def read_vocab():
     return vocab, scope
 
 
-def main():
-    quiet = "--quiet" in sys.argv
+def main(strict=False, quiet=False):
     vocab, scope = read_vocab()
-    rows = list(csv.DictReader(paths.SCREEN_DECISIONS.open(encoding="utf-8-sig")))
+    rows = paths.read_rows(paths.SCREEN_DECISIONS)
 
     problems = []
 
@@ -146,7 +138,7 @@ def main():
                             f"but no {missing}")
 
     # The register shares the decision vocabulary, so hold it to the same list.
-    register = list(csv.DictReader(paths.PACKAGES.open(encoding="utf-8-sig")))
+    register = paths.read_rows(paths.PACKAGES)
     seen = {}
     for i, row in enumerate(register, start=2):
         value = row.get("Decision", "").strip()
@@ -173,11 +165,7 @@ def main():
             print(f"    {p}")
         # Deprecated-but-documented values are listed in the codebook, so anything that
         # reaches here is genuinely unlisted.
-        if "--strict" in sys.argv:
+        if strict:
             sys.exit(1)
     elif not quiet:
         print("  vocabulary: clean")
-
-
-if __name__ == "__main__":
-    main()

@@ -15,15 +15,8 @@ import sys
 import tempfile
 from pathlib import Path
 
-from manuscript_analysis import util
-from manuscript_analysis.__main__ import (
-    DEMOS,
-    ROOT,
-    ProjectPaths,
-    results_checksums,
-    run_demo,
-    run_lit_search,
-)
+from manuscript_analysis import lit_search, util
+from manuscript_analysis.__main__ import DEMOS, ROOT, ProjectPaths, results_checksums, run_demo
 
 os.environ["PYTHONHASHSEED"] = "0"  # as in the build; see run_demo
 sys.stdout.reconfigure(line_buffering=True)  # keep each line in order with the rebuilds' own
@@ -46,9 +39,10 @@ if unmarked:
     fail("no % GENERATED header (hand-written, or hand-edited?)", unmarked)
 print("Every .tex under results/ carries its % GENERATED header")
 
-# 2. The software-landscape search, rebuilt in place, with its own eight checks. Its
-#    outputs are byte-stable, so this leaves git clean unless something really changed.
-run_lit_search(check=True)
+# 2. The software-landscape search, rebuilt in place, with its own eight checks: its
+#    numbers against the manuscript among them. Its outputs are byte-stable, so this leaves
+#    git clean unless something really changed.
+lit_search.run(check=True)
 
 # 3. results/ against checksums.sha256: the search's outputs just rebuilt, and the demos'
 #    figures and tables as committed.

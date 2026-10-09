@@ -1,6 +1,6 @@
 """Build Word copies of the manuscript and supplement for collaborators to comment on.
 
-    python -m manuscript_analysis.build_docx          (or scripts/build-docx.sh)
+    just docx          (or scripts/build-docx.sh)
 
 Writes `results/manuscript-docx/epymorph-ms_main_<date>.docx` and
 `..._supplement_<date>.docx`, ready to drop into a Team or OneDrive folder.
@@ -34,7 +34,7 @@ from pathlib import Path
 
 from PIL import Image
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 OVERLEAF = Path(os.environ.get(
     "OVERLEAF", Path.home() / "Documents" / "Claude" / "Projects" / "epymorph_ms_overleaf"
 ))

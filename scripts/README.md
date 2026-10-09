@@ -11,7 +11,7 @@ has the workflow they fit into.
 | `fetch_covid_observations.py`, `fetch_flu_observations.py` | how each demo's frozen observations were fetched; no build runs them | a minute |
 | `sync-manuscript.sh` (`just sync-manuscript`) | mirrors the prose from the Overleaf clone into `manuscript/`; reports by default, copies with `--apply` | seconds |
 | `publish-results.sh` (`just publish`) | copies generated figures, tables and numbers into the Overleaf clone; reports by default, copies with `--apply` | seconds |
-| `build-docx.sh` (`just docx`) | Word copies of the manuscript and supplement for collaborators to comment on, into `results/manuscript-docx/` (not in git); needs pandoc | seconds |
+| `build-docx.sh` (`just docx`), with `build_docx.py` | Word copies of the manuscript and supplement for collaborators to comment on, into `results/manuscript-docx/` (not in git); needs pandoc | seconds |
 
 `sync-manuscript.sh` and `publish-results.sh` are two one-way mirrors over disjoint sets of
 files, not a bidirectional sync; see "Keeping the manuscript in step" in the top-level

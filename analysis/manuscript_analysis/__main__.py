@@ -6,14 +6,12 @@ Minutes with the runs on disk; about five hours on a fresh clone, which fits the
 
 import argparse
 import os
-import subprocess
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 
 import papermill
 
-from manuscript_analysis import util
+from manuscript_analysis import lit_search, util
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -56,7 +54,7 @@ def main() -> None:
     paths = ProjectPaths.from_root(ROOT, runs=args.runs_dir)
 
     # 1. The software-landscape search: Table 1, Appendix S1 and its flow figure.
-    run_lit_search()
+    lit_search.run()
 
     # 2. The two case studies. Each is one notebook, read top to bottom. A run already on
     #    disk is reused; a missing one is fitted, which takes hours.
@@ -66,14 +64,6 @@ def main() -> None:
     # 3. Checksums: of what the build wrote, and separately of the runs.
     write_checksums(paths)
     compare_runs(paths)
-
-
-def run_lit_search(check: bool = False) -> None:
-    print("Running the software-landscape search", flush=True)
-    command = [sys.executable, "-m", "manuscript_analysis.lit_search"]
-    if check:
-        command.append("--check")  # also checks its numbers against the manuscript
-    subprocess.run(command, check=True)
 
 
 def run_demo(
