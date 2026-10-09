@@ -16,7 +16,7 @@ GitHub. Never hand-edit files in this directory.
 **How they got here.** Each is fetched the first time the code needs it and frozen with a
 `.provenance.json` beside it (what it is, when it was frozen, and a SHA-256 of its values or
 bytes); every later read, on any machine, loads the file and checks it against that record.
-The Census inputs go through `ProvenanceCachedADRIO` (`analysis/src/manuscript_analysis/data.py`,
+The Census inputs go through `ProvenanceCachedADRIO` (`analysis/manuscript_analysis/data.py`,
 from Tyler Coles's reproducible-manuscript skeleton). File names carry the season's ACS
 vintage and states, so a changed season fetches its own files rather than reading stale
 ones. The Mistry files were frozen by the pre-restructure code; `flu_inputs.py` only reads
@@ -25,8 +25,8 @@ it from again.
 
 **To refresh one deliberately**, delete the file and its provenance record and run the
 notebook that needs it with a Census API key in the environment, for example
-`set -a; . ./.env; set +a` from the repository root first (nothing loads `.env` by
-itself). Expect numbers to move if the source has changed.
+`set -a; . ./.env; set +a` from the repository root first. The `just` recipes load
+`.env` themselves (`just notebooks`, `just build`); nothing in Python does. Expect numbers to move if the source has changed.
 
 **What still needs the network, once per machine:** the geographic scopes. epymorph builds
 a `StateScope` or `CountyScope` from Census TIGER summary files, which it downloads (no key

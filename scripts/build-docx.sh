@@ -14,13 +14,13 @@
 # was built from in its document properties (File > Properties in Word). The Word copy is
 # one-way: comments come back to Overleaf by
 # hand, never by importing the .docx. The repairs, and why each is needed, are in
-# analysis/src/manuscript_analysis/build_docx.py.
+# analysis/manuscript_analysis/build_docx.py.
 #
 # Needs pandoc (3.x). Pull the Overleaf clone first, so the copy is current.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
-export PYTHONPATH="analysis/src${PYTHONPATH:+:$PYTHONPATH}"
+export PYTHONPATH="analysis${PYTHONPATH:+:$PYTHONPATH}"
 
 command -v pandoc >/dev/null || { echo "pandoc not found; install it first" >&2; exit 1; }
 

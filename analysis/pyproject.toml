@@ -16,7 +16,6 @@ dependencies = [
     "nbformat>=5.10.4",
     "openpyxl>=3.1.0",
     "papermill>=2.7.0",
-    "python-dotenv>=1.0.0",
     "ruff>=0.15.17",
     "scipy>=1.14",
 ]
@@ -25,7 +24,4 @@ dependencies = [
 # and the package declaration is what lets a notebook `import manuscript_analysis`
 # without a `sys.path` insert. matplotlib, numpy and pandas arrive with epymorph.
 [tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.setuptools.package-dir]
-"" = "src"
+include = ["manuscript_analysis*"]

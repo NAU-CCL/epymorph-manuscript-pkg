@@ -1,7 +1,9 @@
-"""Small things both demos' notebooks need that are neither epymorph nor plotting:
-writing a table as LaTeX, and checking regenerated outputs against the committed ones.
+"""Small things the build and both demos' notebooks need that are neither epymorph nor
+plotting: writing a table as LaTeX, and checking regenerated outputs against the committed
+ones.
 """
 
+import hashlib
 from pathlib import Path
 
 import numpy as np
@@ -159,7 +161,7 @@ def to_latex(
 
     A full environment rather than a bare `tabular`: the caption is part of what is
     generated, so a number quoted in it cannot drift from the table beneath it. The first
-    line says what generated the file, which `scripts/check.sh` requires of every `.tex`.
+    line says what generated the file, which `scripts/check.py` requires of every `.tex`.
 
     `long` sets a table too tall for one page as a `longtable`, which breaks across pages
     and repeats its header (the supplement loads the package). `compact` sets a table one
@@ -236,3 +238,56 @@ def drifted(fresh_dir: Path, committed_dir: Path) -> list[str]:
                 problems.append(f"{relative}: pixels differ by up to {int(np.abs(new - old).max())}/255")
     return problems
 
+
+# --- checksums --------------------------------------------------------------------
+#
+# Two files, both written by the build and compared by scripts/check.py:
+# results/checksums.sha256 for what the build writes, and results/demos/runs.sha256 for
+# the runs, which git does not carry. One `<sha256>  <path>` line per file, as `shasum`
+# writes them.
+
+
+def sha256(path: Path) -> str:
+    """SHA-256 of one file, read in chunks so a 114 MB `params.csv` is not held in RAM."""
+    hasher = hashlib.sha256()
+    with Path(path).open("rb") as handle:
+        while chunk := handle.read(1 << 20):
+            hasher.update(chunk)
+    return hasher.hexdigest()
+
+
+def checksums(folder: Path, exclude: set[str] = frozenset()) -> dict[str, str]:
+    """Every file under `folder` (path relative to it -> SHA-256), sorted. Hidden files
+    (`.DS_Store`) and any whose name is in `exclude` are left out."""
+    folder = Path(folder)
+    found = {}
+    for path in sorted(folder.rglob("*")):
+        if path.is_file() and not path.name.startswith(".") and path.name not in exclude:
+            found[path.relative_to(folder).as_posix()] = sha256(path)
+    return found
+
+
+def write_checksums(path: Path, found: dict[str, str]) -> None:
+    Path(path).write_text("".join(f"{digest}  {name}\n" for name, digest in found.items()))
+
+
+def read_checksums(path: Path) -> dict[str, str]:
+    recorded = {}
+    for line in Path(path).read_text().splitlines():
+        digest, _, name = line.partition("  ")
+        recorded[name] = digest
+    return recorded
+
+
+def compare_checksums(recorded: dict[str, str], found: dict[str, str]) -> list[str]:
+    """What differs between two sets of checksums, at most ten lines of each kind."""
+    problems = []
+    for label, names in (
+        ("missing", sorted(set(recorded) - set(found))),
+        ("not recorded", sorted(set(found) - set(recorded))),
+        ("changed", sorted(n for n in set(recorded) & set(found) if recorded[n] != found[n])),
+    ):
+        problems += [f"{label}: {name}" for name in names[:10]]
+        if len(names) > 10:
+            problems.append(f"... and {len(names) - 10} more {label}")
+    return problems

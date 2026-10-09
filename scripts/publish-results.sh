@@ -53,7 +53,7 @@ add_pair "results/lit-search/figS-software-search-flow.png" "figures/figS-softwa
 add_pair "results/manuscript-numbers.tex" "manuscript-numbers.tex"
 
 if [[ ${#PAIRS[@]} -eq 0 ]]; then
-  echo "nothing generated yet. Run scripts/build-figures.sh first." >&2
+  echo "nothing generated yet. Run \`just build\` first." >&2
   exit 1
 fi
 

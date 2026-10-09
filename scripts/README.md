@@ -1,17 +1,17 @@
 # scripts
 
-Automation for the pipeline, run from the repository root. Each script's header comment
-has the detail; the top-level `README.md` has the workflow they fit into.
+Automation for the pipeline, run from the repository root, mostly through the `justfile`
+(`just check`, `just publish`, ...). The build itself is `python -m manuscript_analysis`
+(`just build`). Each script's header comment has the detail; the top-level `README.md`
+has the workflow they fit into.
 
 | script | what it does | cost |
 |---|---|---|
-| `run-demos.sh` | fits and forecasts every demo model at both ensemble seeds, into `results/demos/runs/`; an interrupted run resumes. Demo 2 runs as `demo-covid.ipynb`, through papermill | ~8-10 h |
-| `fetch_covid_observations.py` | how Demo 2's frozen observations were fetched and imputed; no build runs it | a minute |
-| `build-figures.sh` | builds every figure and table the manuscript uses, into `results/demos/{figures,tables}/`; Demo 2's by running `demo-covid.ipynb` | ~2 min |
-| `check.sh` | the regression suite: the `% GENERATED` headers, the lit-search pipeline's eight checks, the demo tables and figures against a fresh build (rerunning `demo-covid.ipynb`), and the run outputs against `MANIFEST.sha256` | ~2-3 min |
-| `sync-manuscript.sh` | mirrors the prose from the Overleaf clone into `manuscript/`; reports by default, copies with `--apply` | seconds |
-| `publish-results.sh` | copies generated figures, tables and numbers into the Overleaf clone; reports by default, copies with `--apply` | seconds |
-| `build-docx.sh` | Word copies of the manuscript and supplement for collaborators to comment on, into `results/manuscript-docx/` (not in git); needs pandoc | seconds |
+| `check.py` (`just check`) | the regression suite: the `% GENERATED` headers, the lit-search pipeline's eight checks, `results/` against `checksums.sha256`, the runs against `results/demos/runs.sha256`, and both demo notebooks rerun into a scratch folder (tables byte for byte, figures pixel for pixel) | ~3-5 min |
+| `fetch_covid_observations.py`, `fetch_flu_observations.py` | how each demo's frozen observations were fetched; no build runs them | a minute |
+| `sync-manuscript.sh` (`just sync-manuscript`) | mirrors the prose from the Overleaf clone into `manuscript/`; reports by default, copies with `--apply` | seconds |
+| `publish-results.sh` (`just publish`) | copies generated figures, tables and numbers into the Overleaf clone; reports by default, copies with `--apply` | seconds |
+| `build-docx.sh` (`just docx`) | Word copies of the manuscript and supplement for collaborators to comment on, into `results/manuscript-docx/` (not in git); needs pandoc | seconds |
 
 `sync-manuscript.sh` and `publish-results.sh` are two one-way mirrors over disjoint sets of
 files, not a bidirectional sync; see "Keeping the manuscript in step" in the top-level

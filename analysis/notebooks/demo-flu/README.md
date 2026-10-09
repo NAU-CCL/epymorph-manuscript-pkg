@@ -11,11 +11,11 @@ Three influenza models, identical in every respect but one, fitted and forecast 
 
 ## Where it is
 
-**`analysis/src/manuscript_analysis/demo-flu.ipynb`** is the whole analysis, read top to
+**`analysis/manuscript_analysis/demo-flu.ipynb`** is the whole analysis, read top to
 bottom: the data, the age-mixing model, one fit and forecast of the `single-strata` model
 explained, the two stratified models as one change each, the rolling forecasts of all
 three at both seeds, and the scores, figures and tables the manuscript reports for Demo 1.
-It is run by papermill (`scripts/run-demos.sh`, `scripts/build-figures.sh`) and can be
+It is run by papermill (`just build`) and can be
 opened in Jupyter where it lives. A run already on disk with the same settings is reused;
 a missing one is fitted, four at a time. At 300 realizations a stratified model takes
 about 3 to 4 hours and the single-strata model about 25 minutes.

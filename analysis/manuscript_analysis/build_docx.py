@@ -34,7 +34,7 @@ from pathlib import Path
 
 from PIL import Image
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = Path(__file__).resolve().parents[2]
 OVERLEAF = Path(os.environ.get(
     "OVERLEAF", Path.home() / "Documents" / "Claude" / "Projects" / "epymorph_ms_overleaf"
 ))

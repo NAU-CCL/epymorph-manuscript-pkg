@@ -4,7 +4,7 @@ Reproducibility package for the epymorph manuscript: data, analysis code and man
 source in one repository with one git history, following FAIR4RS principles.
 
 The goal it is built to: **nothing in the manuscript asserts a number the code cannot
-reproduce.** Every figure, table and quoted count is generated, and `scripts/check.sh`
+reproduce.** Every figure, table and quoted count is generated, and `just check`
 fails if any of them stops agreeing with the code that produces it.
 
 The layout is meant to be generic. Any future project of "a Python analysis plus a
@@ -45,10 +45,11 @@ the frozen observations they were computed from.
 ### 1. Set up, once
 
 ```bash
-cd analysis && uv sync
+just setup                    # uv sync, in analysis/
 ```
 
-No API key is needed to build or check anything. Every external input is frozen in the
+The recipes are in the `justfile` ([just](https://just.systems): `brew install just`); each
+is one or two commands, readable there if you would rather not install it. No API key is needed to build or check anything. Every external input is frozen in the
 repository: the CDC surveillance series in `data/demos/` (they are revised weekly, so
 re-fetching would move the target the models are scored against), and the Census
 demography, commuting and contact-matrix inputs in `data/raw/`, each with a provenance
@@ -57,31 +58,25 @@ record. epymorph downloads Census TIGER geography once per machine, which needs 
 A free Census API key, in a `.env` copied from `.env.example`, is needed only to refresh a
 frozen input deliberately, or to run the `01` notebooks, which fetch live to show how.
 
-### 2. Get the ensembles
-
-Either regenerate them, which is the slow half of the analysis:
+### 2. Build everything the manuscript uses
 
 ```bash
-scripts/run-demos.sh          # ~8-10 h, three single-threaded fits at a time
+just build                    # minutes with the runs on disk; about 5 h without them
 ```
 
-or fetch the archived outputs (see `results/demos/README.md`). A run folder produced
-under the same configuration is skipped, so an interrupted run resumes rather than
-starting over.
+Runs the literature search, then each demo's notebook through papermill. A run already on
+disk is reused and a missing one is fitted, so on a fresh clone this is the slow half of
+the analysis; an interrupted build resumes rather than starting over. To skip it, fetch the
+archived runs first (see `results/demos/README.md`).
 
-### 3. Build everything the manuscript uses
+Writes `results/lit-search/`, `results/demos/figures/` (six figures),
+`results/demos/tables/` (six tables, each as a `.csv` to read and a `.tex` to `\input`),
+the executed notebooks `results/demos/demo-*.ipynb`, and `results/checksums.sha256`.
 
-```bash
-scripts/build-figures.sh      # about 2 minutes
-```
-
-Writes `results/demos/figures/` (five composed figures) and `results/demos/tables/`
-(six tables, each as a `.csv` to read and a `.tex` to `\input`).
-
-### 4. Check it
+### 3. Check it
 
 ```bash
-scripts/check.sh
+just check                    # about 3 minutes
 ```
 
 Self-contained checks, each regenerating something and comparing it against what is
@@ -89,40 +84,30 @@ committed: every generated `.tex` still carries its `% GENERATED` header; the
 literature-search pipeline's own eight assertions; the demo tables against a fresh
 generation, byte for byte; the demo figures against a fresh build, pixel for pixel (within
 1-2/255 of antialiasing noise, which matplotlib's drawing carries from one process to the
-next); and the run outputs against `MANIFEST.sha256`. The demo checks are skipped, with a
+next); every generated file against `results/checksums.sha256`, and the run outputs against
+`results/demos/runs.sha256`. The demo checks are skipped, with a
 message, when the run outputs are absent.
 
-### 5. Publish the generated files to Overleaf
+### 4. Publish the generated files to Overleaf
 
 ```bash
-scripts/publish-results.sh            # report
-scripts/publish-results.sh --apply    # copy, then verify
+just publish                  # report
+just publish --apply          # copy, then verify
 ```
 
 Then, in the Overleaf clone: `git add -A && git commit && git push`, and click **Pull**
 in Overleaf's GitHub panel.
 
-### 6. Explore, if you want to
+### 5. Explore, if you want to
 
 ```bash
-cd analysis && uv run jupyter lab notebooks/
+just notebooks
 ```
 
-Each demo has two notebooks, in `notebooks/demo-flu/` and `notebooks/demo-covid/`:
-
-- `01-model-and-forecast.ipynb` builds the demo's models in epymorph, piece by piece, fits
-  each with the ensemble Kalman filter up to one date before the season's peak, and issues
-  one four-week forecast. It is the readable account of the models and of the workflow,
-  and it checks that its models are identical to the ones that produced the paper's
-  numbers. It fits live, so it takes minutes (Demo 2) to about an hour (Demo 1).
-- `02-evaluation.ipynb` renders every table and figure the manuscript reports for the
-  demo, from the ensembles. `scripts/build-figures.sh` is the same work without the
-  commentary.
-
-Demo 2 has been restructured into one notebook,
-`analysis/src/manuscript_analysis/demo-covid.ipynb`, which replaces both of its notebooks:
-it builds the models, makes the runs, and scores them into the figures and tables. Demo 1
-follows in a later step.
+Each demo is one notebook, `analysis/manuscript_analysis/demo-flu.ipynb` and
+`demo-covid.ipynb`, read top to bottom: it builds the models, explains one fit and
+forecast, makes the runs, and scores them into the figures and tables. Opened
+interactively it shows its figures and tables without writing them.
 
 ---
 
@@ -135,19 +120,20 @@ data/
   lit-search/decisions/                hand-entered screening calls
 analysis/
   pyproject.toml                       one uv environment
-  src/manuscript_analysis/
+  manuscript_analysis/
+    __main__.py                        the build: the search, then each demo notebook
     demo-flu.ipynb, demo-covid.ipynb   the two vignettes, top to bottom
     *_inputs.py, runs.py, scoring.py, plots.py, util.py   what they use that is not epymorph
     lit_search/     the software-landscape search pipeline
-  notebooks/        the driver notebooks
 manuscript/         LaTeX, one file per section; round-trips with Overleaf
 results/            organised by producer, mirroring data/
   demos/figures/    the manuscript's figures
   demos/tables/     the manuscript's tables, .csv and .tex
-  demos/runs/       the ensembles. NOT in git.
+  demos/runs/       the runs. NOT in git; runs.sha256 beside it is
+  checksums.sha256  everything else the build writes
   lit-search/       shortlists, register, PRISMA flow, Table 1
-scripts/            run-demos.sh, build-figures.sh, check.sh,
-                    sync-manuscript.sh, publish-results.sh, build-docx.sh
+scripts/            check.py, sync-manuscript.sh, publish-results.sh, build-docx.sh
+justfile            setup, build, check, notebooks, publish, ...
 ```
 
 Each subdirectory has its own README with the detail.
@@ -192,7 +178,7 @@ No file is ever written by both sides, so neither script can lose an edit the ot
 `publish-results.sh` additionally warns when a generated `.tex` in Overleaf has lost its
 `% GENERATED` header, which is what a hand-edit looks like from the outside.
 
-**Never hand-edit a generated table**, in either repository; `scripts/check.sh` catches it
+**Never hand-edit a generated table**, in either repository; `just check` catches it
 here, and the publish script's warning catches it there.
 
 The manuscript includes them the usual way:

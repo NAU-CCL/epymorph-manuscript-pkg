@@ -15,8 +15,8 @@ imports its locations from here.
 """
 from pathlib import Path
 
-# .../analysis/src/manuscript_analysis/lit_search/paths.py -> the repository root.
-ROOT = Path(__file__).resolve().parents[4]
+# .../analysis/manuscript_analysis/lit_search/paths.py -> the repository root.
+ROOT = Path(__file__).resolve().parents[3]
 
 DATA = ROOT / "data" / "lit-search" / "raw"
 DECISIONS = ROOT / "data" / "lit-search" / "decisions"

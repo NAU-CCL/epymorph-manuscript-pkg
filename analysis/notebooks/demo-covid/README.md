@@ -21,10 +21,10 @@ only scale with enough units for a distribution.
 
 ## Where it is
 
-**`analysis/src/manuscript_analysis/demo-covid.ipynb`** is the whole analysis, read top to
+**`analysis/manuscript_analysis/demo-covid.ipynb`** is the whole analysis, read top to
 bottom: the data, the SEIRHD model, one fit and forecast of the `state` model explained,
 the other two models as one change each, and the rolling forecasts of all three at both
-seeds. It is run by papermill (`scripts/run-demos.sh` for now) and can be opened in Jupyter
+seeds. It is run by papermill (`just build`) and can be opened in Jupyter
 where it lives. A run already on disk with the same settings is reused; a missing one is
 fitted, four at a time. At 600 realizations the movement model takes about 86 minutes,
 `county` about 35 and `state` about 9.

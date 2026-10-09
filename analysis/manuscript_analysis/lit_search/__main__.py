@@ -4,7 +4,7 @@ Run the whole software-landscape screen, end to end.
     python3 -m manuscript_analysis.lit_search            screen, audit, register, counts
     python3 -m manuscript_analysis.lit_search --check    additionally check the manuscript
 
-(or run this file directly: `python3 analysis/src/manuscript_analysis/lit_search/__main__.py`,
+(or run this file directly: `python3 analysis/manuscript_analysis/lit_search/__main__.py`,
 which needs no install because each module resolves its own imports.)
 
 Reads `data/` and `decisions/`, writes `results/` (including Table 1 as LaTeX) and the
