@@ -235,7 +235,8 @@ def drifted(fresh_dir: Path, committed_dir: Path) -> list[str]:
             if new.shape != old.shape:
                 problems.append(f"{relative}: {old.shape[:2]} committed, {new.shape[:2]} fresh")
             elif int(np.abs(new - old).max()) > PIXEL_TOLERANCE:
-                problems.append(f"{relative}: pixels differ by up to {int(np.abs(new - old).max())}/255")
+                largest = int(np.abs(new - old).max())
+                problems.append(f"{relative}: pixels differ by up to {largest}/255")
     return problems
 
 

@@ -218,7 +218,7 @@ The manuscript includes them the usual way:
 
 Two licenses, matching two kinds of content:
 
-- **Code** (`analysis/`): GPL-3.0-only, see `LICENSE`. Matches epymorph itself
+- **Code** (`analysis/`, `scripts/`, `justfile`): GPL-3.0-only, see `LICENSE`. Matches epymorph itself
   (NAU-CCL/Epymorph, GPL-3.0), which the analysis depends on.
 - **Manuscript text and figures** (`manuscript/`, `results/demos/figures/`): CC BY 4.0, see
   `LICENSE-MANUSCRIPT.md`.
