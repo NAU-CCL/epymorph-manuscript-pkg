@@ -1,7 +1,7 @@
 """
 Recall audit of the records the pre-filter set aside.
 
-Three checks, matching the procedure reported in Appendix S1 §S1.9:
+Three checks, matching the procedure reported in Appendix S1 §S1.1:
 
   1. Near-miss audit     — set-aside records carrying software + domain signal but no
                            inference term, the stratum most likely to hide a package that

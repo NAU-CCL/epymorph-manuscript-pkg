@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "manuscript-analysis"
 version = "0.1.0"
-description = "Executable analysis for the epymorph 2.0 manuscript: the two demonstration vignettes and the software-landscape search."
+description = "Executable analysis for the epymorph 2.0 manuscript: the two case studies and the software-landscape search."
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "epymorph==2.0.0b1",

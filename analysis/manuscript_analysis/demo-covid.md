@@ -21,12 +21,11 @@ only scale with enough units for a distribution.
 
 ## Where it is
 
-**`analysis/manuscript_analysis/demo-covid.ipynb`** is the whole analysis, read top to
-bottom: the data, the SEIRHD model, one fit and forecast of the `state` model explained,
-the other two models as one change each, and the rolling forecasts of all three at both
-seeds. It is run by papermill (`just build`) and can be opened in Jupyter
-where it lives. A run already on disk with the same settings is reused; a missing one is
-fitted, four at a time. At 600 realizations the movement model takes about 86 minutes,
+**`demo-covid.ipynb`, beside this file,** is the whole analysis, read top to bottom: the
+data, the SEIRHD model, one fit and forecast of the `state` model explained, the other two
+models as one change each, and the rolling forecasts of all three at both seeds. `just
+build` runs it through papermill; `just notebooks` opens it in JupyterLab. A run already on
+disk with the same settings is reused; a missing one is fitted, four at a time. At 600 realizations the movement model takes about 86 minutes,
 `county` about 35 and `state` about 9.
 
 It then scores the runs and makes every Demo 2 figure and table the manuscript uses:
@@ -35,10 +34,10 @@ tables. With `output_dir` set (a build sets it) they are written to `results/dem
 
 | file | what |
 |---|---|
-| `manuscript_analysis/demo-covid.ipynb` | the models, the walkthrough, the runs, the scores, figures and tables |
-| `manuscript_analysis/covid_inputs.py` | data preparation that is not epymorph: the frozen observations, initial conditions |
-| `manuscript_analysis/runs.py` | writing a run to disk, whether one is there, reading it back |
-| `manuscript_analysis/scoring.py`, `plots.py`, `util.py` | scoring, drawing a panel, writing a table; shared with Demo 1 |
+| `analysis/manuscript_analysis/demo-covid.ipynb` | the models, the walkthrough, the runs, the scores, figures and tables |
+| `analysis/manuscript_analysis/covid_inputs.py` | data preparation that is not epymorph: the frozen observations, initial conditions |
+| `analysis/manuscript_analysis/runs.py` | writing a run to disk, whether one is there, reading it back |
+| `analysis/manuscript_analysis/scoring.py`, `plots.py`, `util.py` | scoring, drawing a panel, writing a table; shared with Demo 1 |
 | `data/demos/covid/observations.csv` | the CDC observations, fetched once and frozen |
 | `data/raw/covid-*.npz` | the ACS population and commuting, frozen with their provenance |
 | `results/demos/runs/covid/seed<N>/<model>/` | the runs: `forecasts/<reference_date>.csv`, `fit.csv`, `params.csv`, `run.json` |
@@ -91,9 +90,9 @@ state-level values at a given seed.
 The ACS population and commuting inputs are frozen in `data/raw/` with their provenance,
 so nothing here needs a Census API key.
 
-The correlated-OU sensitivity analysis that used to live here (four more models with
-spatially correlated parameter shocks) was removed in restructure step 4; it is not in the
-manuscript. Its code and runs are in the maintainer's working folder.
+A correlated-OU sensitivity analysis (four more models with spatially correlated
+parameter shocks) is not in the manuscript and not in this repository; its code and runs
+are in the maintainer's working folder.
 
 ## Where the reasoning lives
 

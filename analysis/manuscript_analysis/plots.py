@@ -7,8 +7,7 @@ functions, so they differ in what a panel means, never in how it is drawn.
 
 Sizes are Nature Methods' column widths, in inches. Figures are saved as PDF and PNG with
 no timestamps or version strings, so their bytes change only when their drawing does.
-
-Collected here from `demos/lib/figures.py` and `demos/lib/plots/` in restructure step 5.
+`ADDING-FIGURES.md`, beside this file, says how a new figure fits in.
 """
 
 from collections.abc import Mapping, Sequence
@@ -88,8 +87,8 @@ def use_manuscript_style() -> None:
 def resolve_title(title: str | None, default: str) -> str | None:
     """Work out what a figure's title should be, given what the caller asked for.
 
-    Every `figure_*` function in both demos takes `title`, so a title can be reworded or
-    dropped at the call site rather than edited in the function that draws the figure.
+    The grid functions here that draw their own titles take `title`, so a title can be
+    reworded or dropped at the call site rather than edited in the function that draws it.
     The convention, one place so it is the same everywhere:
 
     - `"auto"`, the default, gives the figure's own title, which is usually built from
@@ -206,8 +205,8 @@ SEQUENTIAL = LinearSegmentedColormap.from_list("epy_sequential", _SEQUENTIAL_BLU
 def panel_grid(nrows: int, ncols: int, *, subfig=None, figsize=None, **kwargs):
     """Axes for one panel function, either standalone or inside a composed figure.
 
-    Every `figure_*` in both demos takes an optional `subfig`. Passing none makes a
-    standalone figure, which is what you want while choosing which states or counties to
+    Every grid function here takes an optional `subfig`, and the axes-level ones draw
+    into an axes from this. Passing no `subfig` makes a standalone figure, which is what you want while choosing which states or counties to
     show. Passing a `SubFigure` draws into it instead, which is how a multi-panel
     manuscript figure gets assembled in code rather than in a slide editor.
 

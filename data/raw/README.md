@@ -26,7 +26,8 @@ it from again.
 **To refresh one deliberately**, delete the file and its provenance record and run the
 notebook that needs it with a Census API key in the environment, for example
 `set -a; . ./.env; set +a` from the repository root first. The `just` recipes load
-`.env` themselves (`just notebooks`, `just build`); nothing in Python does. Expect numbers to move if the source has changed.
+`.env` themselves (`just notebooks`, `just build`); nothing in Python does. Expect numbers
+to move if the source has changed.
 
 **What still needs the network, once per machine:** the geographic scopes. epymorph builds
 a `StateScope` or `CountyScope` from Census TIGER summary files, which it downloads (no key

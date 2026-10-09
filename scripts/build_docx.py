@@ -17,7 +17,7 @@ or in `manuscript/` is touched.
     (S-prefixed in the supplement), writes "Figure 2." into each caption, and replaces every
     \\ref with its number.
   - Figures. Word cannot display a PDF, so each PDF figure is swapped for the PNG copy that
-    the figure exporter writes beside it in `results/`.
+    the build writes beside it in `results/`.
   - Tables. Table 1's circles become the characters they draw, and the generated tables'
     two-line headers (a nested tabular pandoc cannot parse) become one line.
 
@@ -40,7 +40,7 @@ OVERLEAF = Path(os.environ.get(
 ))
 OUTPUT_DIR = ROOT / "results" / "manuscript-docx"
 
-# Where the PNG twin of each PDF figure lives. The figure exporters write both formats.
+# Where the PNG twin of each PDF figure lives. The build writes both formats.
 PNG_SOURCES = [
     ROOT / "results" / "demos" / "figures",
     ROOT / "results" / "lit-search",

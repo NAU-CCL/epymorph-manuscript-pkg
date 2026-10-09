@@ -130,7 +130,7 @@ on and cannot write to it, and nothing in the pipeline writes to `decisions/`.
 `data/lit-search/raw/queries-as-executed.md` has the verbatim Lens query and filters, and the PubMed query, which was
 reconstructed and then **verified to return 100% of the 2,403 archived PMIDs**. Registry and
 citation-chaining sources are discovery rather than counted retrieval and are reported in
-§S1.8 by the packages they surfaced.
+§S1.1 by the packages they surfaced.
 
 The July 2026 first pass, which inadvertently ran three different lexicons, is archived in
 `old/` in the maintainer's working folder, with a README explaining what changed. Nothing

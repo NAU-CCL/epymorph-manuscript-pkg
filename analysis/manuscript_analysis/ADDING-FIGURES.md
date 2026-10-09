@@ -1,168 +1,122 @@
 # Adding a figure
 
-> **Out of date (restructure steps 5-6, 2026-10-08).** Both demos' figures are now laid
-> out in their notebooks (`demo-flu.ipynb`, `demo-covid.ipynb`, section 9) from panels in
-> `manuscript_analysis/plots.py`; `export.py` and the `evaluation.py` modules are gone.
-> What follows describes the old layout; step 9 rewrites this file for "helpers draw a
-> panel, the notebook lays out the figure".
+**`plots.py` draws a panel; the notebook lays out the figure.** Every figure in the paper
+is assembled in section 9 of its demo's notebook (`demo-flu.ipynb` or `demo-covid.ipynb`)
+from panels that `plots.py` draws, and saved by the build.
 
-Three places a figure can live, and which one is right depends on **who needs it**, not on
-how much work it is.
+Where something belongs depends on **who needs it**, not on how much work it is:
 
-| you want to... | put it | tracked by git |
+| you want to... | put it | in git |
 |---|---|---|
-| look at something, or drop it in a talk | a notebook cell, `figure_dir=NOTEBOOK_FIGURES` | no |
-| draw a new *kind* of panel | a `figure_*` in `flu/evaluation.py` or `covid/evaluation.py` | n/a, it is code |
-| put it in the paper | a composer in `export.py` | **yes** |
+| look at something | a notebook cell that ends in `plt.show()` | no; the executed notebook in `results/demos/` keeps it |
+| draw a new *kind* of panel | a function in `plots.py` | it is code |
+| put it in the paper | a cell in section 9 of the notebook that ends in `save(fig, name)` | **yes**, `results/demos/figures/` |
 
-The rule behind the table: **a figure in the paper must be something `build-figures.sh`
-produces.** If it exists only because someone ran a notebook cell by hand, nothing
-regenerates it, `check.sh` cannot see it, and in six months nobody can tell whether it
-still matches the runs. That is the failure this repository is built to prevent, so
-changing `figure_dir` in a notebook is the wrong way to get a figure into the supplement
-even though it works mechanically.
+The rule behind the table: **a figure in the paper must be something `just build`
+produces.** If it exists only because someone saved it by hand, nothing regenerates it,
+`just check` cannot see it, and in six months nobody can tell whether it still matches the
+runs. That is the failure this repository is built to prevent.
 
 ---
 
 ## The division of labour
 
-**`flu/evaluation.py` and `covid/evaluation.py` own the drawing.** Every `figure_*` there
-draws one panel or one row of panels from the run outputs, and knows about epymorph, the
-scores and the models.
+**`plots.py` owns the drawing.** Its functions take plain numpy arrays and pandas tables
+and know nothing about epymorph, the scores or either demo, so both demos draw the same
+kind of panel with the same function. There are two kinds:
 
-**`export.py` owns the layout, and nothing else.** It decides which panels sit in which
-grid with which letters. It contains no drawing code and no knowledge of the data. That
-split is what lets a panel be tuned once and have both the notebook and the paper follow.
-
-### Naming
-
-Because the two layers do different jobs, they are named differently, and a name should
-say which layer it belongs to:
-
-| layer | pattern | examples |
+| kind | takes | examples |
 |---|---|---|
-| panels, in `*/evaluation.py` | `figure_<what it draws>` | `figure_fit_by_age`, `figure_rolling_forecasts` |
-| composers, in `export.py` | `figure_<n>_<demo>` or `figure_s_<what>` | `figure_2_flu`, `figure_s_calibration` |
+| axes-level | an `ax` to draw into | `plot_contact_matrix`, `plot_flow_matrix`, `plot_ratio_swarm`, `plot_rolling_forecasts` |
+| grid | `subfig=`, and lays out its own axes inside it | `plot_quantile_grid`, `plot_rolling_forecast_grid`, `plot_single_forecast_grid`, `plot_line_panels` |
 
-A main-text composer is named for its **number**; a supplementary one takes `figure_s_`,
-matching the `figS-` file prefix and the `figure-s-` keys in `FIGURES`. A composer is never
-named after the panel function it calls: `figure_s_flu_fit` and `flu.figure_fit_by_age` are
-different things, and the names should not have to be read carefully to tell them apart.
+**The notebook owns everything else**: which data goes in each panel, which panels make a
+figure, their sizes and letters. Each panel is a small `draw_<what>(subfig, ...)` function
+in the notebook that selects the data and calls `plots.py`, and the figure itself is a few
+lines of layout. Figure 2, from `demo-flu.ipynb`:
+
+```python
+fig = plt.figure(figsize=(plots.DOUBLE_COLUMN, 8.3), layout="constrained")
+top, channels, benefit = fig.subfigures(3, 1, height_ratios=[2.5, 3.4, 2.4])
+structure, skill = top.subfigures(1, 2, width_ratios=[1.9, 1.0])
+draw_contacts(structure, FOCUS_STATE)
+draw_skill_by_horizon(skill)
+draw_fit_by_age(channels, FOCUS_STATE, "multi-strata-empirical")
+draw_benefit(benefit)
+plots.label_panels([structure, skill, channels, benefit])
+save(fig, "fig2-flu-demographic-structure")
+```
+
+That split is what lets a reader see exactly what each panel shows, in the notebook,
+without reading any drawing code.
 
 ---
 
 ## Adding a manuscript figure
 
-Three edits in `export.py`, all near each other.
+1. **In section 9 of the demo's notebook**, add a markdown cell saying what the figure
+   shows, then a code cell: one `draw_<what>(subfig, ...)` per panel, the layout, and
+   `save(fig, name)` last.
+2. **Name it** as the others are: `fig<n>-<demo>-<what>` for the main text
+   (`fig3-covid-spatial-structure`), `figS-<what>` for the supplement
+   (`figS-calibration-flu`).
+3. **Build it.** `save` writes a PDF and a PNG to `output_dir/figures/` only when the
+   notebook has an `output_dir`, which `just build` gives it; run interactively, the
+   notebook shows the figure and writes nothing, so it cannot dirty the committed files.
+   Build rather than saving by hand: the build pins `PYTHONHASHSEED`, without which a
+   PDF's font subset is ordered differently and its bytes change.
 
-### 1. Write the composer
+   ```bash
+   just build      # writes results/demos/figures/<name>.{pdf,png} and updates checksums.sha256
+   just check      # the new figure is compared with a fresh rebuild, pixel for pixel
+   ```
 
-```python
-def figure_s_flu_fit(ev, model=FLU_MODEL):
-    """Supplementary: the filter's weekly fit at the six age bands.
+4. **Commit** the PDF, the PNG and `results/checksums.sha256` together.
+5. **Use it in the manuscript.** `just publish --apply` copies every PDF in
+   `results/demos/figures/` into the Overleaf clone; then, in Overleaf,
+   `\includegraphics{figures/<name>.pdf}`.
 
-    (a) the prior, a genuine one-week-ahead prediction; (b) the posterior, which is
-    pulled onto the observation by construction. The gap between them is how hard the
-    filter had to work.
-    """
-    fig = plt.figure(figsize=(DOUBLE_COLUMN, 7.4), layout="constrained")
-    prior, posterior = fig.subfigures(2, 1)
-    flu.figure_fit_by_age(ev, flu.FOCUS_STATE, model, series="prior",
-                          title=None, subfig=prior)
-    flu.figure_fit_by_age(ev, flu.FOCUS_STATE, model, series="posterior",
-                          title=None, subfig=posterior)
-    label_panels([prior, posterior])
-    return fig
-```
-
-### 2. Register it
-
-```python
-FIGURES = (
-    "figure-2",
-    ...
-    "figure-s-flu-fit",          # <- add
-)
-```
-
-### 3. Build it in `main()`
-
-Put it beside the demo whose evaluation it needs, so `flu_ev` is already loaded:
-
-```python
-    if "figure-s-flu-fit" in wanted:
-        fig = figure_s_flu_fit(flu_ev)
-        written += save_figure(fig, "figS-flu-fit-by-age", args.figures_dir)
-        plt.close(fig)
-```
-
-That is all. `publish-results.sh` needs no change: it globs
-`results/demos/figures/*.pdf`, so the new figure reaches Overleaf on the next run.
+If the figure **replaces** another, delete the old PDF and PNG from
+`results/demos/figures/` too: nothing prunes them, so a stale file would stay in
+`checksums.sha256` and keep being published. Remove it from the Overleaf project by hand.
 
 ---
 
-## The contract every panel function satisfies
+## Adding a new kind of panel
 
-You can rely on all of these, and a new panel function should provide them:
-
-- **`subfig=`** — draw into a `SubFigure` instead of making a standalone figure. This is
-  what makes composition possible.
-- **`title=`** — `"auto"` for the built-in title, `None` for none, or a string. A panel
-  inside a composed figure always passes `None`: the caption carries what the title would
-  have said. See `plots.resolve_title`.
-- **`color=`** — on the fit and forecast panels, to override the model's colour. Used by
-  the supplementary forecast figures to draw the model's own resolution in
-  `lib.figures.FINE_SCALE`, a darker shade, so two resolutions of one model do not read as
-  two models.
+Add a function to `plots.py` when no existing one draws what you need, and keep it
+ignorant of the demos: it takes arrays, dates, labels and colours as arguments, and never
+looks up a model, a state or a file. A grid function takes `subfig=None` and gets its axes
+from `panel_grid`, so it works standalone and inside a composed figure; if it draws its
+own title, it takes `title` and resolves it with `resolve_title` (`"auto"`, `None` or a
+string). An axes-level function takes the `ax` first.
 
 ---
 
 ## Layout notes worth knowing
 
-**Subfigures, not gridspec.** Each panel is a `SubFigure` so the panel function can lay out
-its own axes inside it. Split with `fig.subfigures(rows, cols, height_ratios=[...])` and
-nest freely: `figure_3_covid` puts `(a)` and `(b)` side by side in its top row because the
+**Subfigures, not gridspec.** Each panel is a `SubFigure`, so the function drawing it can
+lay out its own axes inside it. Split with `fig.subfigures(rows, cols, height_ratios=...)`
+and nest freely: Figure 3 puts (a) and (b) side by side in its top row because the
 commuting matrix is square and would otherwise waste half a row.
 
-**`label_panels`** takes the subfigures in reading order and stamps `(a)`, `(b)`, ... at the
-top left of each. Pass them left-to-right then top-to-bottom, which is not always the order
-you created them in.
+**`label_panels`** takes the subfigures in reading order and stamps (a), (b), ... at the top
+left of each. Pass them left to right, then top to bottom, which is not always the order you
+created them in; `labels=` continues another figure's lettering (the calibration figures
+are (a) for flu and (b) for COVID).
 
 **Legends inside side-by-side subfigures.** Matplotlib places an `"outside"` legend against
 the *parent* figure, so two side-by-side panels both putting a legend outside will stack
-them on top of each other. Pass `legend="axes"` to put it inside the panel instead;
-`figure_s_calibration` does exactly this for that reason.
+them on top of each other. `plot_line_panels(legend="axes")` puts it inside the panel
+instead, which is how the calibration figures do it.
 
 **Never leave a legend on `loc="best"`.** It asks the renderer which position overlaps the
-data least, and the answer is not stable between runs: it made the calibration figure's PNG
-flip between two byte values on alternate builds. Pass an explicit corner. Figure output
-should be reproducible for the same reason the ensembles are.
+data least, and the answer is not stable between runs: it once made a figure's PNG flip
+between two versions on alternate builds. Pass an explicit corner.
 
-**Page limits.** `DOUBLE_COLUMN` is 7.2 in wide, and a figure should stay under about
+**Page limits.** `plots.DOUBLE_COLUMN` is 7.2 in wide, and a figure should stay under about
 9.4 in tall to leave room for a caption. Both main-text figures are 8.3 in.
 
----
-
-## Then check it
-
-```bash
-scripts/build-figures.sh     # writes results/demos/figures/
-scripts/check.sh             # tables, figures and the run manifest still agree
-```
-
-If the figure is meant to *replace* something, delete the old file from
-`results/demos/figures/` as well: nothing prunes it, and a stale PDF would keep being
-published to Overleaf.
-
----
-
-## Candidates not yet promoted
-
-Panels the notebooks draw that are not yet part of any composed figure, if you are looking
-for what the supplement might still want:
-
-| panel | what it shows |
-|---|---|
-| `flu.figure_fit_by_age`, prior and posterior | the six fitted channels, before and after the update |
-| `covid.figure_fit(ev, "state")` | the state model's fit, displaced when Figure 3(b) became the county fit |
-| `covid.figure_rolling_forecasts(ev, "county", ...)` | the movement-off contrast at the same counties |
+**Candidates.** Every figure a notebook shows without saving (the data in section 2, the
+walkthrough's fit and forecast in section 5, the three-model comparison in section 6) is a
+candidate for the supplement; promoting one is the steps above.

@@ -1,7 +1,7 @@
 """
 Write every number Appendix S1 quotes to one machine-readable file, and check the prose.
 
-The appendix states about twenty counts across §S1.9 and §S1.10. `counts.json` makes them
+The appendix's search subsection (§S1.1) states fourteen counts. `counts.json` makes them
 an output of the pipeline rather than numbers read off a terminal, and `check=True` reads
 them back out of the appendix and asserts they still match, which is the guarantee actually
 wanted. The Methods summary of the search quotes the headline counts too, and is checked the

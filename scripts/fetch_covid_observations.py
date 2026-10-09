@@ -10,7 +10,7 @@ copy of. The sources are no longer revised and the imputation has a fixed seed, 
 the target every model is scored against cannot move whatever happens to the sources. Never
 point this at the frozen file: it refuses to overwrite an existing one.
 
-Moved out of `covid_season.py` in restructure step 4 (2026-10-08), unchanged in substance.
+This is the code the frozen file was made with, unchanged in substance.
 Needs network access; the CDC series need no key, the county populations are read from
 their frozen copy in `data/raw/`.
 """

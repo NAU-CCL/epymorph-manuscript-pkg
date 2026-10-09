@@ -11,20 +11,20 @@ Three influenza models, identical in every respect but one, fitted and forecast 
 
 ## Where it is
 
-**`analysis/manuscript_analysis/demo-flu.ipynb`** is the whole analysis, read top to
-bottom: the data, the age-mixing model, one fit and forecast of the `single-strata` model
-explained, the two stratified models as one change each, the rolling forecasts of all
-three at both seeds, and the scores, figures and tables the manuscript reports for Demo 1.
-It is run by papermill (`just build`) and can be
-opened in Jupyter where it lives. A run already on disk with the same settings is reused;
-a missing one is fitted, four at a time. At 300 realizations a stratified model takes
-about 3 to 4 hours and the single-strata model about 25 minutes.
+**`demo-flu.ipynb`, beside this file,** is the whole analysis, read top to bottom: the
+data, the age-mixing model, one fit and forecast of the `single-strata` model explained,
+the two stratified models as one change each, the rolling forecasts of all three at both
+seeds, and the scores, figures and tables the manuscript reports for Demo 1. `just build`
+runs it through papermill; `just notebooks` opens it in JupyterLab. A run already on disk
+with the same settings is reused; a missing one is fitted, four at a time. At 300
+realizations a stratified model takes about 3 to 4 hours and the single-strata model about
+25 minutes.
 
 | file | what |
 |---|---|
-| `manuscript_analysis/demo-flu.ipynb` | the models, the walkthrough, the runs, the scores, figures and tables |
-| `manuscript_analysis/flu_inputs.py` | data preparation that is not epymorph: the frozen observations, severity, the contact matrices, initial conditions |
-| `manuscript_analysis/runs.py`, `scoring.py`, `plots.py`, `util.py` | writing and reading runs, scoring, drawing a panel, writing a table; shared with Demo 2 |
+| `analysis/manuscript_analysis/demo-flu.ipynb` | the models, the walkthrough, the runs, the scores, figures and tables |
+| `analysis/manuscript_analysis/flu_inputs.py` | data preparation that is not epymorph: the frozen observations, severity, the contact matrices, initial conditions |
+| `analysis/manuscript_analysis/runs.py`, `scoring.py`, `plots.py`, `util.py` | writing and reading runs, scoring, drawing a panel, writing a table; shared with Demo 2 |
 | `data/demos/flu/observations.csv` | the CDC observations, fetched once and frozen |
 | `data/raw/flu-population-*.npz`, `data/raw/mistry/` | the ACS age structure and the Mistry contact matrix, frozen with their provenance |
 | `results/demos/runs/flu/seed<N>/<model>/` | the runs: `forecasts/<reference_date>.csv`, `fit.csv`, `params.csv`, `run.json` |

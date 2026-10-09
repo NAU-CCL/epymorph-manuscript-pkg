@@ -9,7 +9,7 @@ every state, DC and Puerto Rico over the 2025-26 season, and writes the tidy CSV
 week, so a fetch today will not reproduce the frozen file; that is why it is frozen.
 Never point this at the frozen file: it refuses to overwrite an existing one.
 
-Moved out of `flu_season.py` in restructure step 6 (2026-10-08), unchanged in substance.
+This is the code the frozen file was made with, unchanged in substance.
 Needs network access; the CDC series need no key.
 """
 
