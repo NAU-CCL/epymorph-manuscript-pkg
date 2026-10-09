@@ -87,9 +87,9 @@ If the figure **replaces** another, delete the old PDF and PNG from
 Add a function to `plots.py` when no existing one draws what you need, and keep it
 ignorant of the demos: it takes arrays, dates, labels and colours as arguments, and never
 looks up a model, a state or a file. A grid function takes `subfig=None` and gets its axes
-from `panel_grid`, so it works standalone and inside a composed figure; if it draws its
-own title, it takes `title` and resolves it with `resolve_title` (`"auto"`, `None` or a
-string). An axes-level function takes the `ax` first.
+from `panel_grid`, so it works standalone and inside a composed figure; an axes-level
+function takes the `ax` first. Give it only the options a figure actually uses: an option
+nothing sets is code a reader has to understand for nothing.
 
 ---
 
@@ -107,8 +107,8 @@ are (a) for flu and (b) for COVID).
 
 **Legends inside side-by-side subfigures.** Matplotlib places an `"outside"` legend against
 the *parent* figure, so two side-by-side panels both putting a legend outside will stack
-them on top of each other. `plot_line_panels(legend="axes")` puts it inside the panel
-instead, which is how the calibration figures do it.
+them on top of each other. `plot_line_panels` therefore puts its legend inside its first
+panel, at the corner `legend_loc` names.
 
 **Never leave a legend on `loc="best"`.** It asks the renderer which position overlaps the
 data least, and the answer is not stable between runs: it once made a figure's PNG flip
