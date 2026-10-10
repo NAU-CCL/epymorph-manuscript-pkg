@@ -9,7 +9,7 @@ Everything the two case studies produce. Generated: safe to delete, rebuilt by
 | `tables/` | the score tables, as `.csv` to read and `.tex` to `\input` | yes |
 | `runs/` | the runs: one folder per model, under `<demo>/seed<N>/` | **no** |
 | `runs.sha256` | checksums of `runs/` | yes |
-| `demo-flu.ipynb`, `demo-covid.ipynb` | the executed notebooks `just build` writes, outputs and all | **no**, for now |
+| `demo-flu.ipynb`, `demo-covid.ipynb` | the executed notebooks `just build` writes, outputs and all | yes, see below |
 
 A run is one model at one seed: `forecasts/<reference_date>.csv` (the quantiles of each
 week's four-week forecast), `fit.csv` (the filter's fit before and after each week's
@@ -43,9 +43,14 @@ runs match, so a run that came out differently never quietly becomes the referen
 a deliberate change, delete it and build.
 
 A fixed seed reproduces a run **byte for byte on the same platform**, whether it runs
-alone or in a parallel worker. Verified in October 2026 on the machine that made the runs:
-the full season of COVID's `state` and flu's `single-strata` model at seed 0, and the
-first three forecast dates of all six models, each file identical.
+alone or in a parallel worker. Verified on 9 October 2026 on the machine that made the
+runs: all twelve, fitted together into an empty folder by `just build --runs-dir`, matched
+every file in `runs.sha256`.
+
+The executed notebooks committed here are the record of that from-scratch build. Every
+build rewrites them, and papermill's timing metadata alone makes git see a change, so
+commit them again only when the analysis changes; otherwise `git restore
+results/demos/*.ipynb`.
 
 Across platforms, expect this check to fail and the science not to: floating-point
 simulations rarely reproduce bit-exactly on different hardware or BLAS. There, compare

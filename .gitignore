@@ -49,7 +49,3 @@ results/manuscript-docx/
 # Demo run outputs: ~1 GB, fitted by `just build` when missing (hours) or fetched from
 # the archive. See results/demos/README.md. results/demos/runs.sha256 vouches for them.
 results/demos/runs/
-
-# The executed notebooks `just build` writes, figures and all. Not committed for now:
-# papermill's timing metadata changes them on every build (an open item in the plan).
-results/demos/*.ipynb

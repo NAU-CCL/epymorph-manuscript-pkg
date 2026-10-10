@@ -200,10 +200,6 @@ The manuscript includes them the usual way:
 
 ## Still to come
 
-- **A from-scratch rebuild.** Individual runs have been reproduced byte for byte (the full
-  season of one model per case study, and the first three forecast dates of all six), but
-  the twelve have not yet been rebuilt together from an empty folder and compared with
-  `runs.sha256`.
 - **An archive for the runs**, with a `.zenodo.json`, so a clone can fetch them rather
   than spend five hours fitting.
 - **`results/manuscript-numbers.tex`**: generated `\newcommand` macros, so the prose quotes
