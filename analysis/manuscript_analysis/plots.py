@@ -13,6 +13,7 @@ no timestamps or version strings, so their bytes change only when their drawing 
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from string import ascii_lowercase
+from typing import Any
 
 import matplotlib as mpl
 import matplotlib.patheffects as pe
@@ -22,6 +23,7 @@ import pandas as pd
 from matplotlib.axes import Axes
 from matplotlib.colors import LinearSegmentedColormap, Normalize
 from matplotlib.ticker import FixedLocator, NullLocator
+from matplotlib.typing import RcKeyType
 
 # --- style, panel letters and saving ----------------------------------------------
 
@@ -35,7 +37,7 @@ FINE_SCALE = "#104281"
 (age groups, counties) beside one drawn at the scored states: a shade, not a new hue, so
 two resolutions of one model do not read as two models."""
 
-MANUSCRIPT_STYLE = {
+MANUSCRIPT_STYLE: dict[RcKeyType, Any] = {
     "figure.dpi": 150,
     "savefig.dpi": 600,
     "savefig.bbox": "tight",
@@ -428,7 +430,7 @@ def plot_contact_matrix(ax: Axes, matrix, labels, title=None, norm: Normalize | 
         spine.set_visible(False)
 
     # Each value in near-black or white, whichever reads against its cell.
-    rgba = image.cmap(image.norm(matrix))
+    rgba = np.asarray(image.cmap(image.norm(matrix)))
     luminance = rgba[..., :3] @ np.array([0.2126, 0.7152, 0.0722])
     for i in range(matrix.shape[0]):
         for j in range(matrix.shape[1]):
