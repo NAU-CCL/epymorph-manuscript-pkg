@@ -1,34 +1,4 @@
-"""An ADRIO wrapper that persists values and their acquisition provenance.
-
-Copied from Tyler Coles's `reproducible-manuscript-poc` (`analysis/fair_epymorph_poc/data.py`,
-commit ef4fd7a, 2026-09-28), unchanged apart from this docstring and two changes, each
-marked CHANGED: a condition in `inspect`, so that it can cache an ADRIO whose result has an
-open-ended axis; and the wrapped ADRIO's requirements passed through, so that it can cache
-an ADRIO that takes another as input (`PopulationByAge` takes the age table).
-It is headed for epymorph itself; once it is released there, import it from epymorph and
-delete this file.
-
-The copied code is under the MIT License:
-
-    Copyright (c) 2026 Reproducible Epymorph Manuscript POC contributors
-
-    Permission is hereby granted, free of charge, to any person obtaining a copy of this
-    software and associated documentation files (the "Software"), to deal in the Software
-    without restriction, including without limitation the rights to use, copy, modify,
-    merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
-    permit persons to whom the Software is furnished to do so, subject to the following
-    conditions:
-
-    The above copyright notice and this permission notice shall be included in all copies
-    or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-    INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-    PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
-    CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
-    THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"""An ADRIO wrapper that persists values and their acquisition provenance."""
 
 from __future__ import annotations
 
@@ -40,19 +10,15 @@ from pathlib import Path
 from typing import Any, cast, override
 
 import numpy as np
-from epymorph.adrio.adrio import (
-    ADRIO,
-    ADRIOProcessingError,
-    InspectResult,
-)
+from epymorph.adrio.adrio import ADRIO, ADRIOProcessingError, InspectResult
 from epymorph.adrio.validation import ResultFormat
 from epymorph.simulation import Context
 from numpy.typing import NDArray
 
 __all__ = [
-    "ProvenanceCachedADRIO",
-    "ProvenanceCacheError",
     "CACHE_SCHEMA_VERSION",
+    "ProvenanceCacheError",
+    "ProvenanceCachedADRIO",
 ]
 
 CACHE_SCHEMA_VERSION = 1
