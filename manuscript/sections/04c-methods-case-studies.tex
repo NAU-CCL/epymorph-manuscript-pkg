@@ -13,7 +13,7 @@ Then, because all of the data are provided on a weekly cadence, we alternate two
 The filter is continued from its previous output at each step (i.e., online), using the same pipeline configuration that is passed between the fitting and forecasting methods of \texttt{epymorph} (Section~\ref{sec:results-architecture}). 
 Each forecast is summarized by 23 quantiles, and we label forecast horizons 0 to 3, matching the CDC's forecast hub submission format~\citep{cdc_flusight_2026}.
 
-We evaluate forecasts with the Weighted Interval Score (WIS), which generalizes the absolute error to a set of prediction intervals~\citep{bracher_evaluating_2021}. 
+We evaluate forecasts with the Weighted Interval Score (WIS), which combines the absolute error of the predictive median with scores for prediction intervals~\citep{bracher_evaluating_2021}. 
 Following CDC's FluSight evaluations, we compute WIS after transforming both the observations and the forecast quantiles by $\log(x+1)$ (i.e., the log WIS), which weights jurisdictions of very different sizes more evenly than the natural scale. 
 To compare a model against a reference model, we use the relative WIS, which is the ratio of the geometric mean score of the model to that of the reference over the same set of forecasts. 
 
@@ -46,7 +46,7 @@ In the stratified models, the force of infection on age class $i$ in jurisdictio
 \end{equation}
 where the sum runs over the six age classes $k$. 
 Here, $q_{j,t}$ is the time-varying transmissibility of jurisdiction $j$, and $\eta_{i,j,t}$ is a time-varying, age-specific deviation from that jurisdiction-level transmissibility, which is constrained fairly tightly to unity so that it remains separable from $q$. 
-$C^{(j)}$ is the normalized contact matrix of jurisdiction $j$, which differs between the empirical and homogeneous models.
+$C^{(j)}$ is the normalized contact matrix of jurisdiction $j$, which differs between the empirical and homogeneous models (see \textit{Methods}).
 $I_{k,j,t}$ is the number of infectious individuals in age class $k$, and $N_{k,j}$ is the population size of age class $k$. 
 Therefore, $\eta_{i,j,t}$ represents an age-specific deviation in transmission from what would be expected based on the supplied contact matrix alone. 
 The contact matrix is the only structural difference between the two stratified models. 
@@ -64,7 +64,9 @@ Specifically, for a constant $q$ shared across age classes, the reproduction num
 In the fitted models, $q$ varies over time and by age class, and the reproduction number is then the dominant eigenvalue of the resulting next-generation matrix rather than $q/\gamma$.
 
 \paragraph{Estimated parameters.} 
-The filter estimates $\log q$ in each jurisdiction, with a prior mean of $\log 0.25$ (i.e., $R_0 = 1.25$), a prior standard deviation of 0.15, and OU dynamics with a damping rate of $1/35$ days$^{-1}$ and a standard deviation of 0.15. 
+
+For each jurisdiction, the filter estimates $\log q$, whose temporal evolution is modeled by an Ornstein–Uhlenbeck (OU) process, a mean-reverting stochastic process~\citep{drennan_estimating_2026}. 
+For $\log q$ we set prior mean of $\log 0.25$ (i.e., $R_0 = 1.25$), a prior standard deviation of 0.15, and OU dynamics with a damping rate of $1/35$ days$^{-1}$ and a standard deviation of 0.15. 
 In the stratified models, the filter additionally estimates $\log \eta_i$ for each age class per jurisdiction, with a prior mean of zero, and a prior standard deviation of 0.15.
 The OU dynamics of $\log \eta_i$ are built with a faster damping rate of $1/10$ days$^{-1}$ and a smaller standard deviation of 0.05, so that $\eta$ hovers around zero and acts as a correction to the contact matrix rather than a free parameter that could become unobservable with respect to $\log q$.
 

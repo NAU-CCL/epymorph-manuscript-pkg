@@ -180,7 +180,8 @@ sets of files**, which is what makes the arrangement safe:
 | | written by | direction |
 |---|---|---|
 | `main.tex`, `supplement.tex`, `sections/`, `supplementary/`, `references.bib` | a human, in Overleaf | Overleaf -> here |
-| `figures/`, `tables/`, `manuscript-numbers.tex` | this repository's build | here -> Overleaf |
+| `figures/fig1-*` (the architecture illustration) | a human, added in Overleaf | Overleaf -> here |
+| every other file in `figures/`, `tables/`, `manuscript-numbers.tex` | this repository's build | here -> Overleaf |
 
 No file is ever written by both sides, so neither can lose an edit the other made.
 `publish-results.sh` additionally warns when a generated `.tex` in Overleaf has lost its

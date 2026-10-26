@@ -54,10 +54,10 @@ These tau steps are the same sub-daily increments over which the stochastic dise
 \texttt{epymorph} simulates dynamics with a tau-leaping scheme in which each step advances both movement and transmission (detailed in ``The simulation engine'' below). 
 Each movement clause computes the number of individuals requested to move from each node to every other node at a given step.
 
-As a simple example, the built-in centroids movement model divides the day into two tau steps of lengths 1/3 and 2/3. 
-During the first step, a user-defined proportion of each node's population is drawn to commute, and the destinations of those commuters are assigned by a multinomial draw with probabilities defined by a distance-based dispersal kernel. 
-During the second step the commuters return home.
-Movement clauses specify the tau step at which movers leave and the delay after which they return, so that models can represent movement on a range of temporal scales, from daily commuting to longer trips. 
+As a simple example, the built-in centroids movement model divides the day into two tau steps of lengths 1/3 and 2/3 of a day, corresponding to working and non-working hours. 
+During the first tau step, a user-defined proportion of each node's population is drawn to commute, and the destinations of those commuters are assigned by a multinomial draw with probabilities determined by a distance-based dispersal kernel. 
+During the second tau step the commuters return home.
+Movement clauses specify the tau step at which movers leave and the time delay after which they return, so that models can represent movement on a range of temporal scales, from daily commuting to longer trips. 
 Because movement is defined independently of disease mechanics, in multi-strata models, subpopulations within a single experiment can follow different movement models (e.g., mosquitoes can move differently than human hosts, or different age groups can move differently).
 
 \subsection{Geographic scope and automated data acquisition}

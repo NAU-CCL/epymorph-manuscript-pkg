@@ -2,13 +2,6 @@
 
 \subsection{\texttt{epymorph} turns spatial model comparisons into controlled experiments}\label{sec:results-architecture}
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\textwidth]{figures/fig1-epymorph-architecture.jpg}
-\caption{\textbf{Architecture of \texttt{epymorph}.} Left: Examples of data (census, commuting flows, climate, and disease surveillance) that are retrieved automatically for a chosen geographic scope by Abstract Data Resource Interface Objects (ADRIOs). Center: the Runnable Modeling Experiment (RUME) combines an intra-population model (IPM), a movement model (MM), and a geographical model (GEO), each of which can be exchanged independently of the others (``mix and match''). Key characteristics of the package are its modularity, the automation of data acquisition, and its support for multi-strata models. Right: the same RUME is passed, without re-specification, to parameter estimation, which returns location-specific fitted trajectories (1) and time-varying parameter estimates (2), and to the forecasting pipeline, which generates probabilistic forecasts from the calibrated ensemble.}
-\label{fig:architecture}
-\end{figure}
-
 A central design goal of \texttt{epymorph} is to let a researcher change one assumption of a spatial modeling experiment while holding everything else fixed, so that the effect of that assumption can be isolated and easily reproduced. 
 To make this possible, \texttt{epymorph} organizes a modeling study around a central object, the Runnable Modeling Experiment (RUME; Fig.~\ref{fig:architecture}, center). 
 A RUME contains everything required to execute a simulation: a compartmental model, a model of host movement, a geographic scope, a time frame, an initialization scheme, and the parameters. 
