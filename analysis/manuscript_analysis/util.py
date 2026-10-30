@@ -241,15 +241,10 @@ def drifted(fresh_dir: Path, committed_dir: Path) -> list[str]:
 
 
 # --- checksums --------------------------------------------------------------------
-#
-# Two files, both written by the build and compared by scripts/check.py:
-# results/checksums.sha256 for what the build writes, and results/demos/runs.sha256 for
-# the runs, which git does not carry. One `<sha256>  <path>` line per file, as `shasum`
-# writes them.
 
 
 def sha256(path: Path) -> str:
-    """SHA-256 of one file, read in chunks so a 114 MB `params.csv` is not held in RAM."""
+    """Compute the SHA-256 hash of a file."""
     hasher = hashlib.sha256()
     with Path(path).open("rb") as handle:
         while chunk := handle.read(1 << 20):
@@ -257,38 +252,50 @@ def sha256(path: Path) -> str:
     return hasher.hexdigest()
 
 
-def checksums(folder: Path, exclude: set[str] = frozenset()) -> dict[str, str]:
-    """Every file under `folder` (path relative to it -> SHA-256), sorted. Hidden files
-    (`.DS_Store`) and any whose name is in `exclude` are left out."""
+def checksums(folder: Path, exclude: set[str] | None = None) -> dict[str, str]:
+    """Compute SHA-256 checksums for files in `folder`.
+     
+    Excludes files named in `exclude` and hidden files (like .DS_Store).
+    """
+    exclude = exclude or set()
     folder = Path(folder)
-    found = {}
-    for path in sorted(folder.rglob("*")):
-        if path.is_file() and not path.name.startswith(".") and path.name not in exclude:
-            found[path.relative_to(folder).as_posix()] = sha256(path)
-    return found
+    return {
+        path.relative_to(folder).as_posix(): sha256(path)
+        for path in sorted(folder.rglob("*"))
+        if path.is_file()
+        if not path.name.startswith(".")
+        if path.name not in exclude
+    }
 
 
-def write_checksums(path: Path, found: dict[str, str]) -> None:
-    Path(path).write_text("".join(f"{digest}  {name}\n" for name, digest in found.items()))
+def write_checksums(path: Path, checksums: dict[str, str]) -> None:
+    """Write a checksums file at `path` for the files and values in the `checksums` dict."""
+    content = "".join(f"{digest}  {name}\n" for name, digest in checksums.items())
+    Path(path).write_text(content)
 
 
 def read_checksums(path: Path) -> dict[str, str]:
+    """Parse the checksums file at `path`."""
     recorded = {}
     for line in Path(path).read_text().splitlines():
-        digest, _, name = line.partition("  ")
+        [digest, name] = line.split("  ", maxsplit=1)
         recorded[name] = digest
     return recorded
 
 
 def compare_checksums(recorded: dict[str, str], found: dict[str, str]) -> list[str]:
-    """What differs between two sets of checksums, at most ten lines of each kind."""
-    problems = []
-    for label, names in (
-        ("missing", sorted(set(recorded) - set(found))),
-        ("not recorded", sorted(set(found) - set(recorded))),
-        ("changed", sorted(n for n in set(recorded) & set(found) if recorded[n] != found[n])),
-    ):
-        problems += [f"{label}: {name}" for name in names[:10]]
-        if len(names) > 10:
-            problems.append(f"... and {len(names) - 10} more {label}")
-    return problems
+    """Generate lines describing the differences between two sets of checksums."""
+    # previously recorded, but not in current set
+    missing = sorted(recorded.keys() - found.keys())
+    # in current set, but not previous recorded
+    not_recorded = sorted(found.keys() - recorded.keys())
+    # in both sets, but the checksum differs
+    changed = sorted(
+        n for n in (recorded.keys() & found.keys()) if recorded[n] != found[n]
+    )
+
+    return [
+        *[f"missing: {name}" for name in missing],
+        *[f"not recorded: {name}" for name in not_recorded],
+        *[f"changed: {name}" for name in changed],
+    ]

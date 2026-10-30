@@ -1,16 +1,16 @@
-"""How Demo 1's frozen observations were made. No build runs this.
+"""How Demo 1's frozen observations were made.
 
-    cd analysis
-    uv run python ../scripts/fetch_flu_observations.py <output.csv>
+This is intended as a one-time operation, where the data are cached for future use.
+It is not repeated during a normal build.
+
+    uv run --project analysis python -m manuscript_analysis.fetch_flu_observations.py <output.csv>
 
 Fetches CDC's weekly influenza admissions by age group, and CDC's own all-ages total, for
-every state, DC and Puerto Rico over the 2025-26 season, and writes the tidy CSV that
-`data/demos/flu/observations.csv` is a frozen copy of. CDC revises these series every
-week, so a fetch today will not reproduce the frozen file; that is why it is frozen.
-Never point this at the frozen file: it refuses to overwrite an existing one.
+every state, DC and Puerto Rico over the 2025-26 season, and writes the tidy CSV to
+`data/demos/flu/observations.csv` (or the given path).
 
-This is the code the frozen file was made with, unchanged in substance.
-Needs network access; the CDC series need no key.
+CDC revises these series every week, so a fetch today will not reproduce the frozen file;
+that is why it is frozen. The script requires network access; the CDC series need no key.
 """
 
 import sys
@@ -22,6 +22,9 @@ from epymorph.adrio.cdc import CurrentStateAdmissions
 from epymorph.geography.us_census import StateScope
 from epymorph.time import TimeFrame
 
+ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_OUT_PATH = ROOT / "data" / "demos" / "flu" / "observations.csv"
+
 STATES = [
     "AK", "AL", "AR", "AZ", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "IA",
     "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MS",
@@ -31,7 +34,7 @@ STATES = [
 SEASON = TimeFrame.of(start_date=date(2025, 9, 13), duration_days=7 * 38)
 
 # (the name the observations use, CDC's name for the age group)
-GROUPS = [
+GROUPS: list[tuple[str, CurrentStateAdmissions.AgeGroup]] = [
     ("age_00-04", "0 to 4"),
     ("age_05-17", "5 to 17"),
     ("age_18-49", "18 to 49"),
@@ -44,9 +47,12 @@ GROUPS = [
 ]
 
 
-def main(path: Path) -> None:
+def main(path: Path | None = None) -> None:
+    if path is None:
+        path = DEFAULT_OUT_PATH
     if path.exists():
         sys.exit(f"{path} exists; write to a new file and compare it with the frozen one")
+
     scope = StateScope.in_states(STATES, year=2024)
     frames = []
     for name, group in GROUPS:
@@ -69,6 +75,7 @@ def main(path: Path) -> None:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
+    if "--help" in sys.argv:
         sys.exit(__doc__)
-    main(Path(sys.argv[1]))
+    out = Path(sys.argv[1]) if len(sys.argv) > 1 else None
+    main(out)

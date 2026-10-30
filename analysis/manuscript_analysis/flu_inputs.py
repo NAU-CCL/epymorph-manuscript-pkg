@@ -14,7 +14,7 @@ maintainer's working folder: `demo-flu/contact-matrix-methods.md` (contact struc
 import json
 from hashlib import sha256
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, cast
 
 import numpy as np
 import pandas as pd
@@ -131,11 +131,11 @@ def hospitalization_prob(population_by_age: dict[str, np.ndarray]) -> dict[str, 
     return {name: value * SYMPTOMATIC_FRACTION for name, value in zip(STRATA, values)}
 
 
-def hospitalization_prob_total(prob: dict[str, float], population_by_age) -> float:
+def hospitalization_prob_total(prob: dict[str, float], population_by_age: dict[str, np.ndarray]) -> float:
     """The population-weighted average, so the unstratified model starts level."""
     weighted = sum(prob[name] * population_by_age[name].sum() for name in STRATA)
-    total = sum(population_by_age[name] for name in STRATA)
-    return float(weighted / total.sum())
+    total = sum(population_by_age[name].sum() for name in STRATA)
+    return weighted / total
 
 
 # --- contact matrices -----------------------------------------------------------------
@@ -252,7 +252,7 @@ def _node_generator(rng: np.random.Generator, node: str) -> np.random.Generator:
     """A random stream for one node, keyed by its FIPS code, so a node's draws depend only
     on the seed and on which node it is. `rng` must come straight from
     `np.random.default_rng(seed)`: its seed sequence is what is keyed."""
-    parent = rng.bit_generator.seed_seq
+    parent = cast(np.random.SeedSequence, rng.bit_generator.seed_seq)
     child = np.random.SeedSequence(
         entropy=parent.entropy, spawn_key=(*parent.spawn_key, int(node))
     )

@@ -12,15 +12,16 @@ FluSight uses. `run.json` is written last, so a folder that has one is complete.
 """
 
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import NamedTuple
 
 import numpy as np
 import pandas as pd
+from numpy.typing import ArrayLike
 
 
-def quantiles(ensemble: np.ndarray, levels) -> np.ndarray:
+def quantiles(ensemble: np.ndarray, levels: Iterable[float]) -> np.ndarray:
     """Quantiles across the realizations (axis 0), as a new last axis.
 
     One `np.quantile` per level: epymorph's own summaries take only levels in steps of
@@ -29,7 +30,7 @@ def quantiles(ensemble: np.ndarray, levels) -> np.ndarray:
     return np.stack([np.quantile(ensemble, level, axis=0) for level in levels], axis=-1)
 
 
-def quantile_table(values: np.ndarray, levels, axes: Mapping[str, Sequence]) -> pd.DataFrame:
+def quantile_table(values: np.ndarray, levels: Iterable[float], axes: Mapping[str, ArrayLike]) -> pd.DataFrame:
     """Melt a quantile array into tidy rows.
 
     `axes` names the leading axes of `values` in order, with each one's labels; the last
@@ -47,7 +48,7 @@ def forecast_table(
     target: str,
     scales: Mapping[str, tuple[np.ndarray, Sequence[str]]],
     quantities: Sequence[str],
-    levels,
+    levels: Iterable[float],
 ) -> pd.DataFrame:
     """One forecast date's file.
 
@@ -81,7 +82,7 @@ def forecast_table(
     return table[columns].sort_values(sort_keys)
 
 
-def with_total(ensemble: np.ndarray, levels) -> np.ndarray:
+def with_total(ensemble: np.ndarray, levels: Iterable[float]) -> np.ndarray:
     """Quantiles of each quantity, then of their sum, as one more quantity.
 
     The sum is taken within each realization before any quantile, because quantiles do
@@ -95,10 +96,10 @@ def with_total(ensemble: np.ndarray, levels) -> np.ndarray:
 def fit_table(
     posterior: np.ndarray,
     prior: np.ndarray,
-    dates,
+    dates: np.ndarray,
     locations: Sequence[str],
     quantities: Sequence[str],
-    levels,
+    levels: Iterable[float],
     add_total: bool = False,
 ) -> pd.DataFrame:
     """`fit.csv`: the filter's weekly fit at the model's own nodes.
@@ -121,12 +122,17 @@ def fit_table(
 
 
 def params_table(
-    params: np.ndarray, dates, locations: Sequence[str], names: Sequence[str], levels
+    params: np.ndarray,
+    dates: np.ndarray,
+    locations: Sequence[str],
+    names: Sequence[str],
+    levels: Iterable[float],
 ) -> pd.DataFrame:
     """`params.csv`: the estimated parameters, `(realizations, days, nodes, parameters)`,
     on the scale the filter estimates them (here, log)."""
     return quantile_table(
-        quantiles(params, levels), levels,
+        quantiles(params, levels),
+        levels,
         {"date": dates, "location": locations, "parameter": names},
     )
 
@@ -205,7 +211,7 @@ def load_runs(root: Path, names: Sequence[str]) -> dict[str, Run]:
     return {name: load_run(root / name) for name in names}
 
 
-def quantile_array(frame: pd.DataFrame, dims: Sequence[str], *, levels) -> tuple[np.ndarray, dict]:
+def quantile_array(frame: pd.DataFrame, dims: Sequence[str], *, levels: Iterable[float]) -> tuple[np.ndarray, dict]:
     """Pivot tidy quantile rows into an array, `dims` then the quantile levels.
 
     Returns the array and the sorted labels along each of `dims`. Fails if the rows do
