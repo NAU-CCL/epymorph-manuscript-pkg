@@ -1,0 +1,61 @@
+\section{Supplementary figures and tables for the case studies}\label{sec:S2}
+
+Here we provide additional figures and tables to support our case study analyses. 
+Specifically, we demonstrate the rolling forecasts and we report the coverage of each model's prediction intervals. 
+Note that across all forecast figures, we display a four-week forecast from each origin week, showing the median, the 50\%, and 95\% prediction intervals.
+
+\textbf{Influenza.} 
+Figure~\ref{fig:S2-flu} shows the rolling forecasts of the empirical-mixing model. 
+For one example state (Minnesota), we show the forecasts of each age class separately (panel a), and then three example state-level aggregate forecasts (panel b).
+Forecasts tended to over-predict admissions during the peak of the season.
+
+\textbf{COVID-19.} 
+Figure~\ref{fig:S2-covid} shows the rolling forecasts of the commuting model for the most populous counties in each state (panel a) and for the state-level aggregate data (panel b). The rows show the two fitted quantities: weekly hospital census and deaths.
+
+\textbf{Interval coverage.} 
+Figure~\ref{fig:S2-coverage} shows the coverage of each model, i.e., how often observations fell within each model's 95\% prediction interval. The influenza models were generally under-dispersed.
+For COVID-19, coverage of the county models' state totals fell across forecast horizons, whereas the state-level model had better coverage near 100\%. 
+
+\textbf{Reproducibility and results by location.}
+Every model was run at two independent ensemble seeds.
+Tables~\ref{tab:flu-reproducibility} and~\ref{tab:covid-reproducibility} give the main comparisons at each seed.
+Note that the ranking of the models was the same at both seeds.
+Tables~\ref{tab:flu-by-jurisdiction} and~\ref{tab:covid-by-state} give each model's mean log WIS in every jurisdiction.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/figS-flu-rolling-forecasts.pdf}
+\caption{Rolling four-week forecasts of weekly influenza hospital admissions from the
+empirical-mixing model, 2025--2026 season. (a) Each age class in Minnesota. (b) Total
+admissions in Minnesota, Alabama and Washington, summed from the age classes within each
+realization. Circles, observations; lines, forecast medians; shading, 50\% and 95\% prediction
+intervals.}\label{fig:S2-flu}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/figS-covid-rolling-forecasts.pdf}
+\caption{Rolling four-week forecasts of the weekly COVID-19 hospital census and weekly deaths
+from the commuting model, 2020--2021 winter wave. (a) The most populous county of each state.
+(b) State totals, summed from the 32 counties within each realization. Each county in (a) lies
+in the state directly below it. Circles, observations; lines, forecast medians; shading, 50\%
+and 95\% prediction intervals.}\label{fig:S2-covid}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.33\textwidth]{figures/figS-calibration-flu.png}\hfill
+\includegraphics[width=0.64\textwidth]{figures/figS-calibration-covid.png}
+\caption{Coverage of 95\% prediction intervals by forecast horizon, averaged over forecast
+origins and locations. (a) Influenza, total admissions per jurisdiction. (b) COVID-19, hospital
+census and weekly deaths at the state scale. Dotted lines, nominal coverage.}\label{fig:S2-coverage}
+\end{figure}
+
+
+\input{tables/flu-reproducibility}
+\input{tables/covid-reproducibility}
+% The long table is set in place, not floated: clear the pending floats first so the
+% tables print in the order they are numbered.
+\clearpage
+\input{tables/flu-by-jurisdiction}
+\input{tables/covid-by-state}

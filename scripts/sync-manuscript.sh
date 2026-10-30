@@ -14,6 +14,10 @@
 # Only content is synced. The Springer template files (sn-jnl.cls, sn-*.bst) and Overleaf's
 # own scaffolding (sn-article.tex, user-manual.pdf, sample figures) are left alone: they are
 # static, and this repository deliberately does not carry all of them.
+#
+# Hand-made figures travel with the prose: `figures/fig1-*` (the architecture illustration)
+# is drawn by a person, not by the build, so it is added in Overleaf and mirrored here.
+# Every other file in `figures/` is generated and goes the other way, via publish-results.sh.
 set -euo pipefail
 
 OVERLEAF="${OVERLEAF:-$HOME/Documents/Claude/Projects/epymorph_ms_overleaf}"
@@ -29,7 +33,8 @@ APPLY=0
 # Built with a read loop rather than `mapfile`, which is bash 4+; macOS ships bash 3.2.
 PATHS=()
 while IFS= read -r rel; do PATHS+=("$rel"); done < <(
-  cd "$OVERLEAF" && ls main.tex references.bib sections/*.tex supplementary/*.tex 2>/dev/null
+  cd "$OVERLEAF" && ls main.tex supplement.tex references.bib sections/*.tex supplementary/*.tex \
+    figures/fig1-* 2>/dev/null
 )
 
 differing=0

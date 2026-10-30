@@ -1,4 +1,4 @@
-jurisdiction,quantity,counties + commuting,"counties, no movement",no spatial structure,movement / state,county / state,movement / county
+state,quantity,counties + commuting,"counties, no movement",no spatial structure,commuting / state,no movement / state,commuting / no movement
 CT,hospital census,0.137,0.144,0.118,1.103,1.161,0.949
 CT,weekly deaths,0.141,0.14,0.119,1.086,1.057,1.027
 MA,hospital census,0.124,0.131,0.103,1.05,1.09,0.964

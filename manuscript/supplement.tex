@@ -1,0 +1,44 @@
+%% Supplementary Information: a separate document, as Nature Communications requires.
+%% It lives at the project root, beside main.tex, so every path is root-relative. Overleaf's
+%% BibTeX cannot read files in a parent folder (../references.bib), which is why a root file
+%% inside supplementary/ compiled here but lost its references in Overleaf.
+%% To compile in Overleaf: Menu > Main document > supplement.tex.
+\documentclass[12pt]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx,amsmath,amssymb,booktabs}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{wasysym}
+\usepackage{array,longtable,pdflscape}
+\usepackage[hidelinks,breaklinks]{hyperref}
+
+% macros that sn-nature.bst writes into the bibliography (defined by sn-jnl in main.tex)
+\providecommand{\bibcommenthead}{}
+\providecommand{\burl}[1]{\url{#1}}
+
+% Feature-support marks (same macros as main.tex)
+\newcommand{\mkfull}{\CIRCLE}
+% \mkpart deliberately not defined: the comparison is binary by design.
+\newcommand{\mknone}{\Circle}
+
+\emergencystretch=3em
+
+% Supplementary numbering: Section S1, S1.1; Table S1; Figure S1
+\renewcommand{\thesection}{S\arabic{section}}
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thefigure}{S\arabic{figure}}
+
+\title{Supplementary Information for\\[4pt]
+\large epymorph turns spatial epidemic model comparisons into controlled forecasting experiments}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\input{supplementary/S1-software-landscape}
+\input{supplementary/S2-case-study-figures}
+
+\bibliographystyle{sn-nature}
+\bibliography{references}
+
+\end{document}

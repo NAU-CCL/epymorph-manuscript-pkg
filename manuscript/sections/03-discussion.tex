@@ -1,0 +1,28 @@
+\section{Discussion}\label{sec:discussion}
+
+We have introduced \texttt{epymorph} as an open-source Python package that encapsulates a novel modular framework for conducting spatial epidemiological modeling experiments.
+\texttt{epymorph} offers unique and cutting-edge features in modularity, automated data retrieval, and Bayesian inference that are unmatched in the epidemiological software landscape. 
+Through two case studies we have demonstrated that \texttt{epymorph} can implement controlled experiments that test hypotheses about how alternative mechanistic model designs affect forecasting skill.
+Our supplementary code provides self-contained modeling experiments, in addition to the archived forecasting pipeline, solving many issues of reproducibility in computational disease modeling studies~\citep{henderson_reproducibility_2024,oshinubi_systematic_2026,pokutnaya_implementation_2023}.
+
+The two case studies highlight how the mix-and-match components of a spatial modeling experiment implemented in \texttt{epymorph} allow us to easily and systematically probe model design decisions, and thereby test hypotheses.  
+By testing the effect of age-stratification, we revealed that the empirical-mixing model forecast best, and that the homogeneous-mixing model forecast worse than an unstratified model.
+This result is perhaps not surprising given the importance of non-even contact mixing among age groups for the spread of influenza~\citep{mossong_social_2008, wallinga_using_2006}, with children aged 5--17 contributing most to influenza A epidemics~\citep{worby_relative_2015}.
+Using simulation experiments, Pellis et al.~\citep{pellis_systematic_2020} showed the importance of explicitly stratifying influenza models by age, and our results demonstrate this effect in an operational forecasting experiment. 
+Future work could better account for state-level heterogeneities in mixing patterns, as our model assumed a national-level average contact structure~\citep{mistry_inferring_2021,prem_projecting_2017, arregui_projecting_2018}. 
+
+In our study of SARS-CoV-2, empirical commuter data improves forecasts at the county scale, but accounting for this lower spatial scale does not improve forecasts of aggregate, state-level data. 
+We know that movement shapes spatial spread of respiratory infections~\citep{pei_differential_2020,badr_association_2020}, yet our results show that a state-level model better forecasts state aggregate data. 
+Interestingly, this contrasts with a previous study that shows that summing county-level models led to lower state-level error\citep{gopalakrishnan_globally_2021}.
+This may be explained by the fact that our model was structurally simpler (and therefore is prone to larger error due to model mis-specification), and we used different scoring metrics (WIS versus mean absolute percentage error).
+Moreover, we assumed independence among counties in our filter's update step (i.e., the filter is fully localized), which could provide biased forecasts when aggregated to a state-level sum
+\citep{taieb_hierarchical_2021,panagiotelis_probabilistic_2023}.
+Future work in \texttt{epymorph} will emphasize building tools that allow for multi-node localization techniques that should assist with estimation problems at smaller spatial scales.  
+We emphasize that the purpose of our case studies was to demonstrate \texttt{epymorph}'s capabilities to address complex problems, but not to build the best possible forecast models. 
+As mentioned, the case studies use relatively simple mechanistic models (SIRH and SEIRHD) with simple parameter dynamics. 
+
+The modular design of \texttt{epymorph} anticipates a growing library of components, from new IPMs (compartment model structures), to new movement models, to ADRIOS that support new data sources, and to emerging inference methods that allow for model calibration and probabilistic forecasting.
+Our open-source ethos emphasizes community-driven contributions, in which each component is derived from parent classes that facilitate outside contributors writing new modules without causing global breaking changes.
+Therefore, new components can be reviewed and released as minor versions.
+A key area of future component growth will be models that describe new systems (e.g., vector-borne and multi-host models through our stratification framework), as well as building tools that more easily facilitate adding non-U.S.-based sources of data and custom geographies.
+\texttt{epymorph}'s shared and growing library of components will allow research groups and hub teams to run controlled comparisons of model structure to better understand which structural decisions drive forecast performance.~\citep{shea_harnessing_2020,reich_collaborative_2022}.
