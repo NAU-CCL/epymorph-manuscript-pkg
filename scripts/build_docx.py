@@ -1,12 +1,16 @@
 """Build Word copies of the manuscript and supplement for collaborators to comment on.
 
-    just docx          (or scripts/build-docx.sh)
+    just docx
+    (or: uv run --project analysis python scripts/build_docx.py)
 
 Writes `results/manuscript-docx/epymorph-ms_main_<date>.docx` and
-`..._supplement_<date>.docx`, ready to drop into a Team or OneDrive folder.
+`..._supplement_<date>.docx`, ready to drop into a Team or OneDrive folder. Each file
+records the Overleaf commit it was built from in its document properties (File >
+Properties in Word).
 
-The source is the Overleaf clone, because that is exactly what collaborators see in
-Overleaf. The conversion is pandoc's, after a few repairs pandoc cannot make on its own.
+Needs pandoc 3.x. The source is the Overleaf clone, `../epymorph_ms_overleaf` beside this
+repository unless `OVERLEAF` says otherwise; pull it first, so the copy is current. It is
+the source because that is exactly what collaborators see in Overleaf. The conversion is pandoc's, after a few repairs pandoc cannot make on its own.
 Every repair is made to a staged copy in a temporary folder; nothing in the Overleaf clone
 or in `manuscript/` is touched.
 
@@ -35,9 +39,7 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-OVERLEAF = Path(os.environ.get(
-    "OVERLEAF", Path.home() / "Documents" / "Claude" / "Projects" / "epymorph_ms_overleaf"
-))
+OVERLEAF = Path(os.environ.get("OVERLEAF", ROOT.parent / "epymorph_ms_overleaf"))
 OUTPUT_DIR = ROOT / "results" / "manuscript-docx"
 
 # Where the PNG twin of each PDF figure lives. The build writes both formats.
@@ -387,5 +389,9 @@ def build() -> list[Path]:
 
 
 if __name__ == "__main__":
+    if shutil.which("pandoc") is None:
+        raise SystemExit("pandoc not found; install it first (https://pandoc.org)")
+    if not OVERLEAF.is_dir():
+        raise SystemExit(f"no Overleaf clone at {OVERLEAF} (set OVERLEAF)")
     print(f"source: {OVERLEAF} (commit {overleaf_commit()})")
     build()

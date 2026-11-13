@@ -8,7 +8,7 @@ executed screen cannot drift apart.
 
 History: the first pass (July 2026) inadvertently ran three different lexicons across
 its three legs. These sets are the union of those three, i.e. the most recall-oriented of
-the variants actually used. The first pass is kept in the maintainer's working folder.
+the variants actually used.
 """
 import re
 

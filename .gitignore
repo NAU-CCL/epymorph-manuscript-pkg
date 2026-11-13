@@ -35,17 +35,16 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Assistant instructions and planning documents: local to the maintainer, not part of
-# the reproducible artifact. The conventions a contributor needs are in the READMEs and
-# in analysis/manuscript_analysis/ADDING-FIGURES.md.
+# Local assistant instructions and planning notes; not part of the package. The
+# conventions a contributor needs are in README.md and analysis/README.md.
 CLAUDE.md
 MIGRATION_PLAN.md
 *-plan-v*.md
 
 # Word copies for collaborators: a dated snapshot to share, not something to version.
-# Rebuilt by scripts/build-docx.sh.
+# Rebuilt by `just docx` (scripts/build_docx.py).
 results/manuscript-docx/
 
 # Demo run outputs: ~1 GB, fitted by `just build` when missing (hours) or fetched from
-# the archive. See results/demos/README.md. results/demos/runs.sha256 vouches for them.
+# the archive. See "The runs" in README.md. results/demos/runs.sha256 vouches for them.
 results/demos/runs/

@@ -6,9 +6,8 @@ random draws into the arrays it hands to epymorph, and every function takes plai
 and node IDs.
 
 How the observations were fetched is in `scripts/fetch_flu_observations.py`, which no
-build runs: the CSV is frozen evidence. Reasoning behind the values below is in the
-maintainer's working folder: `demo-flu/contact-matrix-methods.md` (contact structure) and
-`demo-flu/ihr-revision.md` (severity).
+build runs: the CSV is frozen evidence. The contact structure and severity values are
+described in the manuscript's Methods (`manuscript/sections/04c-methods-case-studies.tex`).
 """
 
 import json
