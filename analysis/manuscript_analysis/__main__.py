@@ -1,7 +1,7 @@
 """Build every result the manuscript uses: `python -m manuscript_analysis`, or `just build`.
 
 Minutes with the runs on disk; about five hours on a fresh clone, which fits them.
-`results/demos/README.md` says how to fetch the archived runs instead.
+"The runs" in the top-level README.md says more.
 """
 
 import argparse

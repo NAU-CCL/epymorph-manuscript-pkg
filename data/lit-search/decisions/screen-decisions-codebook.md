@@ -142,7 +142,7 @@ tightened to `\bsurveillance package\b` and `\bR package surveillance\b`, and th
 did not follow, so those records cited a match the pipeline no longer finds. All 50 were
 re-read against their abstracts: 47 are out of scope on their merits and now carry the right
 class, and **three were handed back as `NEEDS YOUR CALL`** because they are genuinely
-arguable (see the handoff note). One further row cited two packages where only one still
+arguable. One further row cited two packages where only one still
 matches, and now cites only that one.
 
 `src/validate_decisions.py` gained the check that would have caught this: **a reason of the

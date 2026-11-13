@@ -4,7 +4,7 @@ A file that stopped agreeing with the code that produces it is named rather than
 shipped. Run it before and after every change. Exits non-zero on the first failure.
 
 The demos are checked only if their runs are on disk (git does not carry them; see
-`results/demos/README.md`). Their figures and tables are rebuilt into a scratch folder,
+"The runs" in README.md). Their figures and tables are rebuilt into a scratch folder,
 never over the committed ones: matplotlib's drawing carries last-bit floating-point noise
 from one process to the next, so a figure is compared by its pixels, and rebuilding it in
 place would show as a change in git when nothing changed.
@@ -56,7 +56,7 @@ print("results/ matches results/checksums.sha256")
 # 4. The demos, if their runs are here.
 if not paths.runs.exists():
     print("\nresults/demos/runs/ absent: skipping the demo checks. Run `just build` to fit "
-          "the runs (hours), or fetch the archive; see results/demos/README.md.")
+          "the runs (hours), or fetch the archive; see 'The runs' in README.md.")
     print("\nall checks passed")
     sys.exit(0)
 

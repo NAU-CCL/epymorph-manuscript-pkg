@@ -22,8 +22,8 @@
 # vector and are what LaTeX should include.
 set -euo pipefail
 
-OVERLEAF="${OVERLEAF:-$HOME/Documents/Claude/Projects/epymorph_ms_overleaf}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+OVERLEAF="${OVERLEAF:-$(dirname "$HERE")/epymorph_ms_overleaf}"  # beside this repository
 
 APPLY=0
 [[ "${1:-}" == "--apply" ]] && APPLY=1

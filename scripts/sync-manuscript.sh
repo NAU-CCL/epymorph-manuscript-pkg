@@ -20,8 +20,8 @@
 # Every other file in `figures/` is generated and goes the other way, via publish-results.sh.
 set -euo pipefail
 
-OVERLEAF="${OVERLEAF:-$HOME/Documents/Claude/Projects/epymorph_ms_overleaf}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+OVERLEAF="${OVERLEAF:-$(dirname "$HERE")/epymorph_ms_overleaf}"  # beside this repository
 DEST="$HERE/manuscript"
 
 APPLY=0

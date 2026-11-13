@@ -41,7 +41,7 @@ publish *args:
 
 # Word copies of the manuscript and supplement for collaborators; needs pandoc.
 docx:
-    uv run --project analysis scripts/build-docx.sh
+    uv run --project analysis python scripts/build_docx.py
 
 # Delete what `build` regenerates. Never the runs, and never a checksum file.
 clean:

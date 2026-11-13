@@ -3,7 +3,7 @@
 `run()` is the whole pipeline, in order; `just build` calls it, and `just check` calls it
 with `check=True`. Reads `data/lit-search/`, writes `results/lit-search/`. Nothing it writes
 is hand-maintained, and nothing it reads from `decisions/` is ever written back, so it is
-safe to re-run at any time. See README.md.
+safe to re-run at any time. See analysis/README.md.
 """
 from . import manifest, prisma, register, report, table1_tex, tables, validate_decisions
 

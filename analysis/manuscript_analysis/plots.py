@@ -7,7 +7,7 @@ functions, so they differ in what a panel means, never in how it is drawn.
 
 Sizes are Nature Methods' column widths, in inches. Figures are saved as PDF and PNG with
 no timestamps or version strings, so their bytes change only when their drawing does.
-`ADDING-FIGURES.md`, beside this file, says how a new figure fits in.
+"Adding a figure" in analysis/README.md says how a new figure fits in.
 """
 
 from collections.abc import Mapping, Sequence
