@@ -3,16 +3,10 @@
 Reproducibility package for the epymorph manuscript: data, analysis code and manuscript
 source in one repository.
 
-The goal: **nothing in the manuscript asserts a number the code cannot reproduce.** Every
-figure, table and quoted count is generated, and `just check` fails if any of them stops
-agreeing with the code that produces it.
-
-This file covers the repository as a whole. `analysis/README.md` covers the code.
+This file covers the repository as a whole. `analysis/README.md` covers the analysis code.
 
 ## Layout
 
-Each top-level directory holds one kind of file, and **what writes a file decides where it
-lives**:
 
 | directory | written by | in git | safe to delete |
 |---|---|---|---|
@@ -46,9 +40,7 @@ header, and `just check` fails if one is missing.
 
 ## Quick start
 
-The commands are recipes in the `justfile` ([just](https://just.systems):
-`brew install just`, or `uvx --from rust-just just <recipe>`). Each recipe is one or two
-lines, so you can also read the command in the `justfile` and run it directly.
+`just` commands in the `justfile` ([just](https://just.systems)) are used to execute code:
 
 ```bash
 just setup        # install the pinned environment (uv) and create .env
@@ -61,7 +53,7 @@ You don't need an API key to build or check anything, because every external inp
 frozen in `data/`. A Census API key in `.env` is needed only to refresh a frozen input on
 purpose.
 
-`just check` is the regression suite, so run it before and after a change. It checks:
+`just check` determines if all the elements pass reproducibility, so run it before and after a change. It checks:
 
 - the `% GENERATED` headers;
 - the literature search's eight checks, including that every count the manuscript quotes
@@ -77,20 +69,16 @@ The last two are skipped, with a message, when the runs are missing.
 
 Each case study compares three models, each fitted and forecast over a season at two
 random seeds. One model at one seed is a **run**, so there are twelve. They live in
-`results/demos/runs/<demo>/seed<N>/<model>/`, and git does not carry them: together they
+`results/demos/runs/<demo>/seed<N>/<model>/`, and these are git ignored: together they
 are 1 GB, and one file is larger than GitHub's 100 MB limit. Building all twelve from
-scratch takes about five hours, four at a time. The build reuses a run already on disk, so
-an interrupted build picks up where it stopped. **Do not delete this folder casually.**
+scratch takes about five hours, if you run four at a time. The build reuses a run already on disk.
 
 You don't need the runs to check the paper. The figures, the tables and the observations
 they were computed from are all in git.
 
-`results/demos/runs.sha256` records the runs the manuscript used. The build writes it only
-when it is missing; otherwise it reports whether the runs on disk match. That way a run
-that came out differently never quietly becomes the reference. To replace the reference
-deliberately, delete the file and build. A fixed seed reproduces a run byte for byte on
-the same platform. On different hardware, expect this checksum check to fail and the
-tables to agree.
+`results/demos/runs.sha256` records the runs the manuscript used. To replace the reference runs
+deliberately, delete the files and build. A fixed seed reproduces a run byte for byte on
+the same platform, but on different hardware, expect this checksum check to fail.
 
 Every build rewrites `results/demos/demo-*.ipynb`, and papermill's timing metadata alone
 makes git see a change. Commit them only when the analysis changes; otherwise run
