@@ -1,5 +1,5 @@
 model,seed,median ratio,better in,p
-empirical mixing,0,0.959,35 of 51,1.1e-02
-empirical mixing,1,0.948,38 of 51,6.2e-04
-homogeneous mixing,0,1.042,16 of 51,1.1e-02
-homogeneous mixing,1,1.017,22 of 51,4.0e-01
+empirical mixing,0,0.959,35 of 51,0.011
+empirical mixing,1,0.948,38 of 51,<0.001
+homogeneous mixing,0,1.042,16 of 51,0.011
+homogeneous mixing,1,1.017,22 of 51,0.40

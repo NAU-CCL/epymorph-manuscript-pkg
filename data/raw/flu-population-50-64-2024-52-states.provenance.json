@@ -1,0 +1,6 @@
+{
+  "description": "ACS 5-year population aged 50-64 per state; 2024 vintage; AK, AL, AR, AZ, CA, CO, CT, DC, DE, FL, GA, HI, IA, ID, IL, IN, KS, KY, LA, MA, MD, ME, MI, MN, MO, MS, MT, NC, ND, NE, NH, NJ, NM, NV, NY, OH, OK, OR, PA, PR, RI, SC, SD, TN, TX, UT, VA, VT, WA, WI, WV, WY",
+  "retrieved_at_utc": "2026-10-08T18:37:57.308858+00:00",
+  "schema_version": 1,
+  "values_sha256": "0ace9c18cb4d6beeb1c0eda68cb090a3ad1ead733bbe42c74d10045a4b5b1020"
+}

@@ -49,10 +49,11 @@ while IFS= read -r f; do
 done < <(cd "$HERE/results/demos/tables" 2>/dev/null && ls ./*.tex 2>/dev/null | sed 's|^\./||')
 
 add_pair "results/lit-search/table-1-maintext.tex" "tables/table-1-maintext.tex"
+add_pair "results/lit-search/figS-software-search-flow.png" "figures/figS-software-search-flow.png"
 add_pair "results/manuscript-numbers.tex" "manuscript-numbers.tex"
 
 if [[ ${#PAIRS[@]} -eq 0 ]]; then
-  echo "nothing generated yet. Run scripts/build-figures.sh first." >&2
+  echo "nothing generated yet. Run \`just build\` first." >&2
   exit 1
 fi
 

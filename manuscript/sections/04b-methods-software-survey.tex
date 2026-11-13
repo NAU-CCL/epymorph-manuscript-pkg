@@ -1,0 +1,18 @@
+\subsection{Survey of epidemic modeling software}\label{sec:methods-survey}
+
+We conducted a structured, reproducible search of software packages that simulate and/or fit spatial, mechanistic models of disease (Table~\ref{tab:comparison}).
+We refer to this search as ``structured'' rather than a systematic review, because the aim was to conduct a repeatable survey of software rather than a formal synthesis.
+The full methods are detailed in Supplementary Section S1.
+
+We first searched software registries (the CRAN Task View on Epidemiology, rOpenSci, Bioconductor, PyPI, and the Journal of Open Source Software), Google Scholar, and GitHub, and we also used references in key prior studies~\citep{king_statistical_2016,asfaw_tutorial_2024,lemaitre_flepimop_2024}.
+Next, we searched PubMed and Lens.org.
+The query (full query string is in the Supplementary Materials) combined the domain (e.g., epidemic, compartmental, metapopulation), inference methods (e.g., particle filter, ensemble Kalman, Bayesian, calibration), and software keywords (e.g., package, library, toolkit).
+
+A package was included if it simulated and/or fit mechanistic compartmental or state-space epidemic models, provided at least one built-in method for Bayesian inference or uncertainty quantification, and we restricted to those including documentation in the English language.
+We excluded agent-based simulators without built-in inference, tools that only estimate the pathogen's basic reproduction number ($R_0$) or time-varying reproduction number ($R_t$), and general-purpose statistical inference toolkits (e.g., Stan, PyMC) that did not provide epidemiology-focused support.
+
+The search yielded 3,033 unique records with abstracts, and we then filtered by keyword searches on the title and abstract, which led to 645 records for manual screening.
+For each package that we observed, we verified its capabilities against its primary documentation (e.g., published manuscript, package website) as of September 2026.
+In Table~\ref{tab:comparison}, a capability is marked present only if the package provides a dedicated, built-in method for it, as opposed to a capability that a user could feasibly program themselves.
+The survey retained 13 packages for comparison with \texttt{epymorph}, the 11 in Table~\ref{tab:comparison}, and two more related candidates (\texttt{LibBi} and \texttt{epidemia}) that we describe in the Supplementary materials.
+All search outputs, manual decisions, and code are provided in the archived version of the manuscript.
