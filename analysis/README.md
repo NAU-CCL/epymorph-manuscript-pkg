@@ -1,8 +1,7 @@
 # analysis
 
-All the executable code: the `manuscript_analysis` package, its two case-study
-notebooks, and the build that runs them. The top-level `README.md` covers the repository
-as a whole and the `just` recipes. Run every command below from the repository root.
+All the executable code, including the `manuscript_analysis` package and the two case-study
+notebooks. Run every command below from the repository root.
 
 ## Environment
 
@@ -20,48 +19,34 @@ anywhere.
 
 | file | what it does |
 |---|---|
-| `demo-flu.ipynb`, `demo-covid.ipynb` | the two case studies, read top to bottom (see below). Committed without outputs |
+| `demo-flu.ipynb`, `demo-covid.ipynb` | the two case studies. |
 | `__main__.py` | the build (`just build`): the literature search, each notebook through papermill, then the checksums. `--runs-dir` puts the runs somewhere else |
-| `flu_inputs.py`, `covid_inputs.py` | each case study's data preparation that does not use epymorph |
+| `flu_inputs.py`, `covid_inputs.py` | each case study's data preparation scipt that does not use epymorph |
 | `runs.py` | writes a run to disk, checks whether one is already there, reads it back |
 | `scoring.py` | the weighted interval score (WIS), interval coverage and relative WIS |
-| `plots.py` | draws one panel of a figure; knows nothing about either case study |
+| `plots.py` | custom plotting utils. draws each panel of a figure separately|
 | `util.py` | writing a table as LaTeX, and checking regenerated outputs against the committed ones |
 | `data.py` | `ProvenanceCachedADRIO`: freezes an ADRIO's result in `data/raw/` with a provenance record |
-| `fetch_flu_observations.py`, `fetch_covid_observations.py` | how the frozen CDC observations were made. `just fetch-observations <folder>` fetches fresh copies into a new folder and compares them with the frozen ones. No build runs them |
+| `fetch_flu_observations.py`, `fetch_covid_observations.py` | how the frozen CDC observations were made. `just fetch-observations <folder>` fetches fresh copies into a new folder and compares them with the frozen ones. |
 | `lit_search/` | the software literature search (see below) |
-
-## Conventions
-
-- **Readable over clever.** People learning epymorph read this code. Prefer explicit
-  loops and named intermediate variables to dense one-liners.
-- **The notebooks show epymorph; the modules hide everything else.** Code that uses the
-  epymorph API goes in a notebook, where a reader sees it. Plotting and data wrangling go
-  in a module.
-- **`plots.py` draws a panel; the notebook lays out the figure** (see "Adding a figure").
-- **Never hand-edit a generated file**, and run `just check` before and after a change.
-- **Name things for what they are.** An *ensemble* is the filter's realizations. A *run*
-  is one model at one seed. The models have names, so use them rather than "arm" or
-  "ablation".
 
 ## The case studies
 
-Each notebook asks whether one kind of added structure improves forecast skill. It builds
+Each notebook asks whether one kind of model structure improves forecast skill. It builds
 three models that differ only in their data, explains one fit and forecast step by step,
-runs every model at seeds 0 and 1, and scores the runs into the manuscript's figures and
-tables. Run interactively, a notebook shows its figures and tables but writes nothing.
-`just build` gives it an `output_dir`, and then it writes to `results/demos/`. The build
-reuses a run that is already on disk with the same settings and fits any that are missing.
+runs every model at seeds 0 and 1, scores the runs, and generates the manuscript's figures and
+tables. If run interactively, a notebook shows its figures and tables but writes nothing to disk.
+`just build`, however, gives a notebook an `output_dir`, and then it writes to `results/demos/`. The build reuses a run that is already on disk with the same settings and fits any that are missing.
 
 ### Demo 1: influenza and age structure (`demo-flu.ipynb`)
 
 | model | structure | fitting time |
 |---|---|---|
 | `multi-strata-empirical` | six age groups, mixing by the Mistry et al. contact matrix projected onto each state's age distribution | ~3-4 h |
-| `multi-strata-homogeneous` | six age groups, contact in proportion to group size | ~3-4 h |
-| `single-strata` | one population | ~25 min |
+| `multi-strata-homogeneous` | six age groups, contact in proportion to the population size of each age group | ~3-4 h |
+| `single-strata` | one homogenous population, no age stratification | ~25 min |
 
-- **Season.** The FluSight 2025-26 season across 51 jurisdictions. The simulation starts
+- **Season.** The 2025-26 influenza season across 51 jurisdictions. The simulation starts
   2025-09-13 and runs 38 weeks. After 10 burn-in weeks there are 25 forecast dates, from
   2025-11-22 to 2026-05-09, each forecasting four weeks ahead. The ensemble has 300
   realizations; at 100, the per-jurisdiction comparison did not reproduce across seeds.
@@ -72,8 +57,7 @@ reuses a run that is already on disk with the same settings and fits any that ar
 - **Age bands vs. all-ages total.** The six age bands sum to about 0.25% less than CDC's
   all-ages total. Models are fitted to the sum of the bands; the reported total is kept as
   a `total_reported` row for checking.
-- **Puerto Rico** is forecast but left out of the scores (`UNSCORED` in the notebook):
-  its flu season is tropical, and these models assume a single winter peak.
+- **Puerto Rico** is forecast but left out of the scores (`UNSCORED` in the notebook). This follows the conventions of FluSight.
 
 ### Demo 2: COVID-19 and movement (`demo-covid.ipynb`)
 
@@ -83,12 +67,6 @@ reuses a run that is already on disk with the same settings and fits any that ar
 | `county` | the same 32 counties, with no movement between them | ~35 min |
 | `state` | the 3 states, one node each | ~9 min |
 
-- **Why the middle model.** `county` keeps the spatial resolution but removes the
-  commuting data, so the comparison isolates the effect of movement data rather than of
-  resolution.
-- **All three models are scored at the 3 states.** A county model's 32 nodes are summed
-  to states within each realization before quantiles are taken, because quantiles do not
-  add.
 - **Season.** The simulation starts Sunday 2020-08-09 and runs 35 weeks. After 8 burn-in
   weeks there are 24 forecast dates, from 2020-10-04 to 2021-03-14, each forecasting four
   weeks ahead. The ensemble has 600 realizations. The start must be a Sunday, because the
@@ -102,9 +80,7 @@ reuses a run that is already on disk with the same settings and fits any that ar
   - deaths, from `CountyDeaths` (`ite7-j2w7`), summed over the week.
 - **Suppressed deaths.** 41.2% of county-week death counts are suppressed for privacy.
   They are imputed with a fixed seed, by a truncated-Poisson draw at the region's own
-  per-capita death rate that week: 1,762 deaths across the season. They are imputed
-  rather than masked because the EnKF cannot take a masked observation when it fits more
-  than one quantity. These sources are no longer revised, and on 2026-10-08 the fetch
+  per-capita death rate that week: 1,762 deaths across the season. These sources are no longer revised, and on 2026-10-08 the fetch
   script reproduced the frozen file byte for byte.
 - **Initial conditions** are drawn per node from a random stream keyed on its FIPS code.
   All three models therefore get the same state-level values at a given seed, and
@@ -118,15 +94,14 @@ season. The Census inputs (population, population by age, commuting flows) and t
 contact matrix are frozen in `data/raw/`. Each file there has a `.provenance.json` beside
 it, recording what it is, when it was frozen and a SHA-256 of its contents, and every
 read checks the file against that record. File names include the ACS vintage and the
-states, so changing the season fetches new files rather than reading stale ones.
+states.
 
 To refresh a Census input on purpose, delete the file and its `.provenance.json`, put a
-Census API key in `.env`, and run the notebook that needs it through `just notebooks` or
-`just build`. Those recipes load `.env`; nothing in Python does. Expect numbers to move.
+Census API key in `.env`, and run the notebook  through `just notebooks` or
+`just build`. Those recipes load `.env`.
 
 The one thing a build downloads is the Census TIGER geography that epymorph uses to build
-a `StateScope` or `CountyScope`. It needs no key, is cached once per machine, and is never
-revised.
+a `StateScope` or `CountyScope`.
 
 ### Quick test of a notebook
 
@@ -149,47 +124,22 @@ by hand cannot be regenerated or checked.
 | draw a new kind of panel | in a new function in `plots.py` |
 | put a figure in the paper | in a cell in section 9 of the notebook that ends in `save(fig, name)` |
 
-`plots.py` functions take plain arrays, tables, dates and labels, and never look up a
-model, a state or a file. An axes-level function takes `ax` first. A grid function takes
-`subfig=None` and lays out its own axes inside it. In the notebook, each panel is a small
+In the notebook, each panel is a small
 `draw_<what>(subfig, ...)` function that selects the data and calls `plots.py`, and the
-figure is a few lines of layout. For example, Figure 2:
-
-```python
-fig = plt.figure(figsize=(plots.DOUBLE_COLUMN, 8.3), layout="constrained")
-top, channels, benefit = fig.subfigures(3, 1, height_ratios=[2.5, 3.4, 2.4])
-structure, skill = top.subfigures(1, 2, width_ratios=[1.9, 1.0])
-draw_contacts(structure, FOCUS_STATE)
-draw_skill_by_horizon(skill)
-draw_fit_by_age(channels, FOCUS_STATE, "multi-strata-empirical")
-draw_benefit(benefit)
-plots.label_panels([structure, skill, channels, benefit])
-save(fig, "fig2-flu-demographic-structure")
-```
+figure is a few lines of layout. 
 
 To add one:
 
-1. Write the cell in section 9. Name the figure `fig<n>-<demo>-<what>` for the main text
+1. Write the cell in the notebook. Name the figure `fig<n>-<demo>-<what>` for the main text
    or `figS-<what>` for the supplement.
-2. Run `just build`, then `just check`. Build rather than saving by hand: the build pins
+2. Run `just build`, then `just check`. The build pins
    `PYTHONHASHSEED`, without which a PDF's bytes change from run to run.
 3. Commit the PDF, the PNG and `results/checksums.sha256` together.
 4. Run `just publish --apply`, then use `\includegraphics{figures/<name>.pdf}` in
    Overleaf.
 
 If a new figure replaces an old one, delete the old PDF and PNG from
-`results/demos/figures/` and from Overleaf yourself; nothing prunes them.
-
-Layout tips:
-
-- `label_panels` stamps (a), (b), ... in the order you pass the subfigures, so pass them
-  left to right, then top to bottom.
-- Never leave a legend on `loc="best"`: its position can change between runs, which
-  changes the PNG.
-- Matplotlib places an `"outside"` legend against the parent figure, so side-by-side
-  subfigures stack their legends; put the legend inside a panel instead.
-- `plots.DOUBLE_COLUMN` is 7.2 in wide. Keep a figure under about 9.4 in tall to leave
-  room for its caption.
+`results/demos/figures/` and from Overleaf manually.
 
 ## The literature search (`lit_search/`)
 
