@@ -28,7 +28,7 @@ anywhere.
 | `plots.py` | draws one panel of a figure; knows nothing about either case study |
 | `util.py` | writing a table as LaTeX, and checking regenerated outputs against the committed ones |
 | `data.py` | `ProvenanceCachedADRIO`: freezes an ADRIO's result in `data/raw/` with a provenance record |
-| `fetch_flu_observations.py`, `fetch_covid_observations.py` | how the frozen CDC observations were made (`just fetch-observations`). No build runs them |
+| `fetch_flu_observations.py`, `fetch_covid_observations.py` | how the frozen CDC observations were made. `just fetch-observations <folder>` fetches fresh copies into a new folder and compares them with the frozen ones. No build runs them |
 | `lit_search/` | the software literature search (see below) |
 
 ## Conventions

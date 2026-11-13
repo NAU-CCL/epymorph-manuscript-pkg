@@ -13,11 +13,14 @@ setup:
     cd analysis && uv sync
     [ -f .env ] || cp .env.example .env
 
-# Fetch observation data: this is a one-time operation and does not need to be run regularly.
-fetch-observations:
-    # Included in the justfile for the sake of clarity: making these code entrypoints explicit.
-    uv run --project analysis python -m manuscript_analysis.fetch_flu_observations
-    uv run --project analysis python -m manuscript_analysis.fetch_covid_observations
+# Re-fetch the CDC observations into a new folder, to compare with the frozen copies in
+# data/demos/. No build needs this: the frozen files are what every model is scored against.
+fetch-observations folder:
+    mkdir -p {{folder}}
+    uv run --project analysis python -m manuscript_analysis.fetch_flu_observations {{folder}}/flu-observations.csv
+    uv run --project analysis python -m manuscript_analysis.fetch_covid_observations {{folder}}/covid-observations.csv
+    -cmp data/demos/flu/observations.csv {{folder}}/flu-observations.csv && echo "flu: identical to the frozen file"
+    -cmp data/demos/covid/observations.csv {{folder}}/covid-observations.csv && echo "covid: identical to the frozen file"
 
 # Build every result: minutes with the runs on disk, about five hours without them.
 build *args:

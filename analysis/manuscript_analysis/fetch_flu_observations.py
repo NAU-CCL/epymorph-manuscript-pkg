@@ -3,7 +3,7 @@
 This is intended as a one-time operation, where the data are cached for future use.
 It is not repeated during a normal build.
 
-    uv run --project analysis python -m manuscript_analysis.fetch_flu_observations.py <output.csv>
+    uv run --project analysis python -m manuscript_analysis.fetch_flu_observations <output.csv>
 
 Fetches CDC's weekly influenza admissions by age group, and CDC's own all-ages total, for
 every state, DC and Puerto Rico over the 2025-26 season, and writes the tidy CSV to
