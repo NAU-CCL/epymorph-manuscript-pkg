@@ -13,6 +13,12 @@ setup:
     cd analysis && uv sync
     [ -f .env ] || cp .env.example .env
 
+# Fetch observation data: this is a one-time operation and does not need to be run regularly.
+fetch-observations:
+    # Included in the justfile for the sake of clarity: making these code entrypoints explicit.
+    uv run --project analysis python -m manuscript_analysis.fetch_flu_observations
+    uv run --project analysis python -m manuscript_analysis.fetch_covid_observations
+
 # Build every result: minutes with the runs on disk, about five hours without them.
 build *args:
     uv run --project analysis python -m manuscript_analysis {{args}}

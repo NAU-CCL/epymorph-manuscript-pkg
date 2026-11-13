@@ -1,6 +1,10 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = "==3.12.*"
+
+[options]
+exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for backwards compatibility when using relative exclude-newer values.
+exclude-newer-span = "P7D"
 
 [[package]]
 name = "affine"
@@ -955,7 +959,7 @@ wheels = [
 
 [[package]]
 name = "manuscript-analysis"
-version = "0.1.0"
+version = "1"
 source = { editable = "." }
 dependencies = [
     { name = "epymorph" },
@@ -966,23 +970,29 @@ dependencies = [
     { name = "nbformat" },
     { name = "openpyxl" },
     { name = "papermill" },
-    { name = "ruff" },
     { name = "scipy" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "ruff" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "epymorph", specifier = "==2.0.0b1" },
-    { name = "ipykernel", specifier = ">=7.1.0" },
-    { name = "joblib", specifier = ">=1.6.0" },
-    { name = "jupyterlab", specifier = ">=4.2" },
-    { name = "nbclient", specifier = ">=0.10.0" },
-    { name = "nbformat", specifier = ">=5.10.4" },
-    { name = "openpyxl", specifier = ">=3.1.0" },
-    { name = "papermill", specifier = ">=2.7.0" },
-    { name = "ruff", specifier = ">=0.15.17" },
-    { name = "scipy", specifier = ">=1.14" },
+    { name = "ipykernel", specifier = "==7.3.0" },
+    { name = "joblib", specifier = "==1.6.0" },
+    { name = "jupyterlab", specifier = "==4.6.4" },
+    { name = "nbclient", specifier = "==0.11.0" },
+    { name = "nbformat", specifier = "==5.11.1" },
+    { name = "openpyxl", specifier = "==3.1.5" },
+    { name = "papermill", specifier = "==2.7.0" },
+    { name = "scipy", specifier = "==1.17.1" },
 ]
+
+[package.metadata.requires-dev]
+dev = [{ name = "ruff", specifier = "==0.16.8" }]
 
 [[package]]
 name = "markupsafe"

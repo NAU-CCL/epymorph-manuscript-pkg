@@ -10,7 +10,7 @@ How the observations were fetched and their suppressed deaths imputed is in
 """
 
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, cast
 
 import numpy as np
 import pandas as pd
@@ -119,7 +119,7 @@ def _node_generator(rng: np.random.Generator, node: str, stream: int):
     other nodes there are or where it sits in the list. `rng` must come straight from
     `np.random.default_rng(seed)`: its seed sequence is what is keyed.
     """
-    parent = rng.bit_generator.seed_seq
+    parent = cast(np.random.SeedSequence, rng.bit_generator.seed_seq)
     child = np.random.SeedSequence(
         entropy=parent.entropy,
         spawn_key=(*parent.spawn_key, stream, int(node)),
@@ -214,7 +214,7 @@ def initial_values(
 # --- the observations as tables, for scoring ---------------------------------------
 
 
-def observation_tables(path: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
+def observation_tables(path: Path) -> tuple[pd.DataFrame, pd.Series]:
     """The frozen observations as tidy tables, by county and summed to states.
 
     The two quantities label the same MMWR week at opposite ends: the census by its

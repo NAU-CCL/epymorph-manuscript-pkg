@@ -44,7 +44,8 @@ class ProjectPaths:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    description = None if __doc__ is None else __doc__.splitlines()[0]
+    parser = argparse.ArgumentParser(description=description)
     parser.add_argument(
         "--runs-dir", type=Path, default=None,
         help="where the runs are read from, and fitted into if missing "

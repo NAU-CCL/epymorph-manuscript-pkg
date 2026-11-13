@@ -1,18 +1,16 @@
-"""How Demo 2's frozen observations were made. No build runs this.
+"""How Demo 2's frozen observations were made.
 
-    cd analysis
-    uv run python ../scripts/fetch_covid_observations.py <output.csv>
+This is intended as a one-time operation, where the data are cached for future use.
+It is not repeated during a normal build.
+
+    uv run --project analysis python -m manuscript_analysis.fetch_covid_observations <output.csv>
 
 Fetches both CDC series for the 32 counties over the 2020-21 season, imputes the suppressed
-death counts, and writes the tidy CSV that `data/demos/covid/observations.csv` is a frozen
-copy of. The sources are no longer revised and the imputation has a fixed seed, so on
-2026-10-08 a fresh fetch reproduced the frozen file byte for byte. It is frozen anyway, so
-the target every model is scored against cannot move whatever happens to the sources. Never
-point this at the frozen file: it refuses to overwrite an existing one.
+death counts, and writes the tidy CSV to `data/demos/covid/observations.csv` (or the given path).
 
-This is the code the frozen file was made with, unchanged in substance.
-Needs network access; the CDC series need no key, the county populations are read from
-their frozen copy in `data/raw/`.
+The sources are no longer revised and the imputation has a fixed seed, so on 2026-10-08
+a fresh fetch reproduced the frozen file byte for byte. The script requires network access,
+the CDC series need no key, and the county populations are read from their frozen copy in `data/raw/`.
 """
 
 import sys
@@ -29,7 +27,8 @@ from scipy.stats import poisson
 
 from manuscript_analysis.data import ProvenanceCachedADRIO
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_OUT_PATH = ROOT / "data" / "demos" / "covid" / "observations.csv"
 
 STATES = ["MA", "CT", "NH"]
 CENSUS_YEAR = 2015  # the county geography the models run on
@@ -53,7 +52,9 @@ def impute_suppressed(lam: np.ndarray, rng: np.random.Generator) -> np.ndarray:
     return out.reshape(lam.shape)
 
 
-def main(path: Path) -> None:
+def main(path: Path | None = None) -> None:
+    if path is None:
+        path = DEFAULT_OUT_PATH
     if path.exists():
         sys.exit(f"{path} exists; write to a new file and compare it with the frozen one")
 
@@ -122,6 +123,7 @@ def main(path: Path) -> None:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
+    if "--help" in sys.argv:
         sys.exit(__doc__)
-    main(Path(sys.argv[1]))
+    out = Path(sys.argv[1]) if len(sys.argv) > 1 else None
+    main(out)
