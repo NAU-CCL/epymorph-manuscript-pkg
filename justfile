@@ -8,13 +8,12 @@ set dotenv-load
 default:
     @just --list --unsorted
 
-# Install the pinned environment, and make a .env to hold a Census key.
+# Set up your development environment.
 setup:
     cd analysis && uv sync
     [ -f .env ] || cp .env.example .env
 
-# Re-fetch the CDC observations into a new folder, to compare with the frozen copies in
-# data/demos/. No build needs this: the frozen files are what every model is scored against.
+# Re-fetch the CDC observations into the specified `folder`.
 fetch-observations folder:
     mkdir -p {{folder}}
     uv run --project analysis python -m manuscript_analysis.fetch_flu_observations {{folder}}/flu-observations.csv
@@ -34,14 +33,6 @@ check:
 notebooks:
     uv run --project analysis jupyter lab analysis/manuscript_analysis
 
-# Mirror the prose from the Overleaf clone into manuscript/ (--apply to copy).
-sync-manuscript *args:
-    scripts/sync-manuscript.sh {{args}}
-
-# Copy the generated figures and tables into the Overleaf clone (--apply to copy).
-publish *args:
-    scripts/publish-results.sh {{args}}
-
 # Word copies of the manuscript and supplement for collaborators; needs pandoc.
 docx:
     uv run --project analysis python scripts/build_docx.py
@@ -51,3 +42,32 @@ clean:
     rm -rf results/demos/figures results/demos/tables
     rm -f results/demos/demo-*.ipynb
     find results/lit-search -type f ! -name MANIFEST.sha256 -delete
+
+# Set up Overleaf sync: provide the URL for the Overleaf project's git repo.
+setup-overleaf url:
+    git clone {{url}} .overleaf
+
+# Sync with Overleaf (two-way).
+overleaf-sync:
+    # Push local changes to .overleaf
+    rsync -av --delete manuscript/ .overleaf/ --exclude .git/
+
+    # Commit any local changes in .overleaf
+    if [ -n "$(git -C .overleaf status --porcelain)" ]; then \
+        git -C .overleaf add --all && git -C .overleaf commit -m "Sync manuscript changes to Overleaf"; \
+    fi
+
+    # Two-way sync with Overleaf: pull changes, rebase local, then push.
+    git -C .overleaf pull --rebase origin main
+    git -C .overleaf push origin main
+    
+    # Integrate changes from the Overleaf submodule back into the main repository.
+    # Exclude changes to generated files -- these shouldn't be edited in Overleaf.
+    rsync -av --delete .overleaf/ manuscript/ --exclude .git/ --exclude generated/
+
+    # Commit any changes now in the manuscript directory.
+    git add -- manuscript
+    if [ -n "$(git diff --cached --name-only -- manuscript)" ]; then \
+        git commit -m "Sync manuscript changes from Overleaf" -- manuscript; \
+    fi
+    git push origin main

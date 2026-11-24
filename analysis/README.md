@@ -1,7 +1,10 @@
 # analysis
 
-All the executable code, including the `manuscript_analysis` package and the two case-study
-notebooks. Run every command below from the repository root.
+All the executable code, including the `manuscript_analysis` package and the
+two case-study notebooks. Run every command below from the repository root.
+The analysis workflow, when run in full, executes the software literature
+search, computes two simulation case studies, and produces manuscript figures
+and tables which are derived from those results.
 
 ## Environment
 
@@ -97,7 +100,7 @@ read checks the file against that record. File names include the ACS vintage and
 states.
 
 To refresh a Census input on purpose, delete the file and its `.provenance.json`, put a
-Census API key in `.env`, and run the notebook  through `just notebooks` or
+Census API key in `.env`, and run the notebook through `just notebooks` or
 `just build`. Those recipes load `.env`.
 
 The one thing a build downloads is the Census TIGER geography that epymorph uses to build
@@ -124,19 +127,22 @@ by hand cannot be regenerated or checked.
 | draw a new kind of panel | in a new function in `plots.py` |
 | put a figure in the paper | in a cell in section 9 of the notebook that ends in `save(fig, name)` |
 
-In the notebook, each panel is a small
-`draw_<what>(subfig, ...)` function that selects the data and calls `plots.py`, and the
-figure is a few lines of layout. 
+In the notebook, each panel is a small `draw_<what>(subfig, ...)` function that
+selects the data and calls `plots.py`, and the figure is a few lines of layout.
 
 To add one:
 
-1. Write the cell in the notebook. Name the figure `fig<n>-<demo>-<what>` for the main text
-   or `figS-<what>` for the supplement.
-2. Run `just build`, then `just check`. The build pins
-   `PYTHONHASHSEED`, without which a PDF's bytes change from run to run.
-3. Commit the PDF, the PNG and `results/checksums.sha256` together.
-4. Run `just publish --apply`, then use `\includegraphics{figures/<name>.pdf}` in
-   Overleaf.
+1. Write the cell in the notebook. Name the figure `fig<n>-<demo>-<what>` for
+   the main text or `figS-<what>` for the supplement.
+2. Run `just build`, then `just check`. The build pins `PYTHONHASHSEED`,
+   without which a PDF's bytes change from run to run. Note that the figures
+   will be saved in the `results/` folder and also copied to
+   `manuscript/generated/` for inclusion in the manuscript.
+3. Commit the PDF, the PNG (all copies), and `results/checksums.sha256`
+   together.
+4. Run `just overleaf-sync`, then use
+   `\includegraphics{generated/demos/figures/<name>.pdf}` to insert the figure
+   in Overleaf.
 
 If a new figure replaces an old one, delete the old PDF and PNG from
 `results/demos/figures/` and from Overleaf manually.
@@ -150,6 +156,9 @@ The structured search behind Appendix S1, Table 1 and the candidate register.
 uv run --project analysis python -m manuscript_analysis.lit_search           # run the pipeline
 uv run --project analysis python -m manuscript_analysis.lit_search --check   # and verify the manuscript
 ```
+
+Note: running the lit search on its own will not copy generated outputs to
+`manuscript/generated/`.
 
 It follows the repository's layering, set out in `paths.py`:
 

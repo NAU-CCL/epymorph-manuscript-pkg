@@ -4,11 +4,54 @@ ones.
 """
 
 import hashlib
+import shutil
+from collections.abc import Callable, Iterator
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from PIL import Image
+
+# --- file utils --------------------------------------------------------------
+
+
+def multiglob(src_dir: Path, globs: list[str]) -> Iterator[Path]:
+    """Yield all file paths in `src_dir` which match any of the `globs`."""
+    seen = set[Path]()
+    for glob in globs:
+        for path in src_dir.glob(glob):
+            if path.is_file() and path not in seen:
+                seen.add(path)
+                yield path
+
+
+def copy_tree(
+    src_dir: Path,
+    dest_dir: Path,
+    include_globs: list[str],
+    *,
+    on_copy: Callable[[Path, Path], None] | None = None,
+) -> None:
+    """
+    Copy files from `src_dir` to `dest_dir` which match any of the `include_globs`,
+    first deleting the destination directory.
+
+    Preserves the directory structure relative to `src_dir`.
+
+    Optional callback `on_copy` is called with the resolved source and destination paths
+    after each file is copied.
+    """
+    # First clean up the destination directory to avoid stale files.
+    shutil.rmtree(dest_dir, ignore_errors=True)
+
+    for src in multiglob(src_dir, include_globs):
+        src = src.resolve()
+        dst = (dest_dir / src.relative_to(src_dir)).resolve()
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src, dst)
+        if on_copy:
+            on_copy(src, dst)
+
 
 # --- tables as LaTeX ----------------------------------------------------------------
 #
@@ -17,8 +60,15 @@ from PIL import Image
 # written out here rather than through `DataFrame.to_latex` and its jinja2 dependency.
 
 _ESCAPES = {
-    "\\": "\\textbackslash{}", "&": "\\&", "%": "\\%", "$": "\\$", "#": "\\#",
-    "_": "\\_", "{": "\\{", "}": "\\}", "~": "\\textasciitilde{}",
+    "\\": "\\textbackslash{}",
+    "&": "\\&",
+    "%": "\\%",
+    "$": "\\$",
+    "#": "\\#",
+    "_": "\\_",
+    "{": "\\{",
+    "}": "\\}",
+    "~": "\\textasciitilde{}",
     "^": "\\textasciicircum{}",
 }
 
@@ -114,7 +164,6 @@ def _tabular(frame: pd.DataFrame) -> str:
         "\\end{tabular}",
     ]
     return "\n".join(lines)
-
 
 
 def _longtable(frame: pd.DataFrame, caption: str, label: str, note: str | None) -> str:
@@ -233,7 +282,9 @@ def drifted(fresh_dir: Path, committed_dir: Path) -> list[str]:
             new = np.asarray(Image.open(fresh).convert("RGB"), dtype=np.int16)
             old = np.asarray(Image.open(committed).convert("RGB"), dtype=np.int16)
             if new.shape != old.shape:
-                problems.append(f"{relative}: {old.shape[:2]} committed, {new.shape[:2]} fresh")
+                problems.append(
+                    f"{relative}: {old.shape[:2]} committed, {new.shape[:2]} fresh"
+                )
             elif int(np.abs(new - old).max()) > PIXEL_TOLERANCE:
                 largest = int(np.abs(new - old).max())
                 problems.append(f"{relative}: pixels differ by up to {largest}/255")
@@ -254,7 +305,7 @@ def sha256(path: Path) -> str:
 
 def checksums(folder: Path, exclude: set[str] | None = None) -> dict[str, str]:
     """Compute SHA-256 checksums for files in `folder`.
-     
+
     Excludes files named in `exclude` and hidden files (like .DS_Store).
     """
     exclude = exclude or set()

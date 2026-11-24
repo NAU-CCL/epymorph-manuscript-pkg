@@ -1,18 +1,21 @@
-"""Build Word copies of the manuscript and supplement for collaborators to comment on.
+"""
+Build Word copies of the manuscript and supplement for collaborators to comment on.
 
     just docx
     (or: uv run --project analysis python scripts/build_docx.py)
 
-Writes `results/manuscript-docx/epymorph-ms_main_<date>.docx` and
-`..._supplement_<date>.docx`, ready to drop into a Team or OneDrive folder. Each file
-records the Overleaf commit it was built from in its document properties (File >
-Properties in Word).
+Writes two files, ready to drop into a Team or OneDrive folder:
+- `results/manuscript-docx/epymorph-ms_main_<date>.docx`, and
+- `..._supplement_<date>.docx`
 
-Needs pandoc 3.x. The source is the Overleaf clone, `../epymorph_ms_overleaf` beside this
-repository unless `OVERLEAF` says otherwise; pull it first, so the copy is current. It is
-the source because that is exactly what collaborators see in Overleaf. The conversion is pandoc's, after a few repairs pandoc cannot make on its own.
-Every repair is made to a staged copy in a temporary folder; nothing in the Overleaf clone
-or in `manuscript/` is touched.
+Each file records the Overleaf commit it was built from in its document properties
+(File > Properties in Word).
+
+Requires pandoc 3.x to be installed. Manuscript files are sourced from the `manuscript/` folder.
+If you need to sync with Overleaf first, remember to do that manually before running this script.
+
+The conversion is pandoc's, after a few repairs pandoc cannot make on its own.
+Every repair is made to a staged copy in a temporary folder; nothing in `manuscript/` is touched.
 
   - Front matter. The journal class's \\author, \\affil and \\abstract commands are rewritten
     as a plain title block, author list, affiliations and abstract.
@@ -25,11 +28,14 @@ or in `manuscript/` is touched.
   - Tables. Table 1's circles become the characters they draw, and the generated tables'
     two-line headers (a nested tabular pandoc cannot parse) become one line.
 
-A Word copy is for comments on the text, and it is one-way: changes are made in Overleaf.
+The Word copies are for enabling comments on the text only. This is a one-way operation.
+You will need to integrate edits yourself. If you are using Overleaf, you may prefer to
+make your edits there.
+
 The compiled PDF stays the authoritative version of every figure and table.
 """
-import datetime
-import os
+
+import datetime as dt
 import re
 import shutil
 import subprocess
@@ -39,7 +45,7 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-OVERLEAF = Path(os.environ.get("OVERLEAF", ROOT.parent / "epymorph_ms_overleaf"))
+MANUSCRIPT_DIR = ROOT / "manuscript"
 OUTPUT_DIR = ROOT / "results" / "manuscript-docx"
 
 # Where the PNG twin of each PDF figure lives. The build writes both formats.
@@ -48,10 +54,16 @@ PNG_SOURCES = [
     ROOT / "results" / "lit-search",
 ]
 
-# The two documents, and the prefix their figure, table and section numbers carry.
+# The two documents, and a prefix that their figure, table and section numbers carry.
 DOCUMENTS = {
-    "main": {"source": "main.tex", "prefix": ""},
-    "supplement": {"source": "supplement.tex", "prefix": "S"},
+    "main": {
+        "source": "main.tex",
+        "prefix": "",
+    },
+    "supplement": {
+        "source": "supplement.tex",
+        "prefix": "S",
+    },
 }
 
 
@@ -72,7 +84,7 @@ def braced(text: str, start: int) -> tuple[str, int]:
         elif character == "}" and text[position - 1] != "\\":
             depth -= 1
             if depth == 0:
-                return text[start + 1:position], position + 1
+                return text[start + 1 : position], position + 1
     raise ValueError(f"unbalanced braces from {start}")
 
 
@@ -92,16 +104,20 @@ def strip_comments(text: str) -> str:
 
 def expand_inputs(text: str, base: Path) -> str:
     """Replace each \\input{name} with that file's text, recursively, comments removed."""
+
     def replace(match):
         name = match.group(1)
         path = base / (name if name.endswith(".tex") else f"{name}.tex")
         return expand_inputs(strip_comments(path.read_text(encoding="utf-8")), base)
+
     return re.sub(r"\\input\{([^}]+)\}", replace, text)
 
 
 def plain(latex: str) -> str:
     """Strip the formatting commands front matter uses, keeping their text."""
-    text = re.sub(r"\\(orgdiv|orgname|orgaddress|city|state|country|fnm|sur)\{", "{", latex)
+    text = re.sub(
+        r"\\(orgdiv|orgname|orgaddress|city|state|country|fnm|sur)\{", "{", latex
+    )
     text = text.replace("{", "").replace("}", "")
     return re.sub(r"\s+", " ", text).strip()
 
@@ -150,8 +166,8 @@ def front_matter(main: str) -> str:
 
 def main_body(main: str) -> str:
     """Everything after \\maketitle, with the journal class's back-matter commands made plain."""
-    body = main[main.index("\\maketitle") + len("\\maketitle"):]
-    body = body[:body.index("\\end{document}")]
+    body = main[main.index("\\maketitle") + len("\\maketitle") :]
+    body = body[: body.index("\\end{document}")]
     body = body.replace("\\backmatter", "")
     body = re.sub(r"\\bmhead\{([^}]*)\}", r"\\section*{\1}", body)
     body = re.sub(r"\\bibliography\{[^}]*\}", "", body)
@@ -161,10 +177,12 @@ def main_body(main: str) -> str:
 def supplement_parts(supplement: str) -> tuple[str, str]:
     """The supplement's title and its body, for the same plain document shape as the paper."""
     title = command_argument(supplement, "title")
+    if title is None:
+        raise ValueError("Supplement is missing required title.")
     title = re.sub(r"\\\\(\[[^\]]*\])?", " ", title).replace("\\large", "")
     title = re.sub(r"\s+", " ", title).strip()
-    body = supplement[supplement.index("\\maketitle") + len("\\maketitle"):]
-    body = body[:body.index("\\end{document}")]
+    body = supplement[supplement.index("\\maketitle") + len("\\maketitle") :]
+    body = body[: body.index("\\end{document}")]
     body = re.sub(r"\\bibliography(style)?\{[^}]*\}", "", body)
     return title, body
 
@@ -187,23 +205,27 @@ def number_document(text: str, prefix: str) -> tuple[str, dict]:
     """
     sections = [0, 0, 0]
     counts = {"figure": 0, "table": 0, "equation": 0}
-    current = None          # the number the next \label belongs to
-    current_kind = None     # "figure", "table" or None, for the next \caption
+    current = None  # the number the next \label belongs to
+    current_kind = None  # "figure", "table" or None, for the next \caption
     numbers = {}
-    insertions = []         # (position, text) to add after each "\caption{"
+    insertions = []  # (position, text) to add after each "\caption{"
 
     for match in NUMBERED.finditer(text):
         if match.group("heading"):
             if match.group("star"):
                 continue
-            level = ["section", "subsection", "subsubsection"].index(match.group("heading"))
+            level = ["section", "subsection", "subsubsection"].index(
+                match.group("heading")
+            )
             sections[level] += 1
             for deeper in range(level + 1, 3):
                 sections[deeper] = 0
-            current = prefix + ".".join(str(n) for n in sections[:level + 1])
+            current = prefix + ".".join(str(n) for n in sections[: level + 1])
             current_kind = None
         elif match.group("float"):
-            kind = "table" if match.group("float") == "longtable" else match.group("float")
+            kind = (
+                "table" if match.group("float") == "longtable" else match.group("float")
+            )
             counts[kind] += 1
             if kind == "equation":
                 current = str(counts[kind])
@@ -230,6 +252,7 @@ def resolve_references(text: str, numbers: dict, outside: dict) -> str:
     def replace(match):
         label = match.group(1)
         return known.get(label, f"[{label}]")
+
     text = re.sub(r"\\S\\ref\{([^}]+)\}", lambda m: "Section " + replace(m), text)
     return re.sub(r"\\ref\{([^}]+)\}", replace, text)
 
@@ -250,7 +273,7 @@ def stage_figures(text: str, stage: Path) -> tuple[str, list[str]]:
 
     def replace(match):
         options, path = match.group(1) or "", match.group(2)
-        source = OVERLEAF / path
+        source = MANUSCRIPT_DIR / path
         if source.suffix == ".pdf":
             twins = [folder / f"{source.stem}.png" for folder in PNG_SOURCES]
             found = [twin for twin in twins if twin.exists()]
@@ -276,7 +299,9 @@ def stage_figures(text: str, stage: Path) -> tuple[str, list[str]]:
 def simplify_tables(text: str) -> str:
     """Repair the table constructs pandoc cannot read."""
     # Table 1 spans both columns as a table*; pandoc drops a table*'s caption.
-    text = text.replace("\\begin{table*}", "\\begin{table}").replace("\\end{table*}", "\\end{table}")
+    text = text.replace("\\begin{table*}", "\\begin{table}").replace(
+        "\\end{table*}", "\\end{table}"
+    )
     text = text.replace("\\mkfull{}", "●").replace("\\mknone{}", "○")
     text = re.sub(r"\\rotatebox\{[^}]*\}\{([^}]*)\}", r"\1", text)
     # A two-line generated header: \begin{tabular}[b]{@{}r@{}}\textbf{a} \\ \textbf{b}\end{tabular}
@@ -296,7 +321,7 @@ def simplify_tables(text: str) -> str:
         r"\\begin\{(tabular|longtable)\}.*?\\end\{\1\}",
         lambda match: re.sub(r"\n\s*\n", "\n", match.group(0)),
         text,
-        flags=re.S,
+        flags=re.DOTALL,
     )
     return text
 
@@ -304,29 +329,35 @@ def simplify_tables(text: str) -> str:
 # --- Building ---------------------------------------------------------------------------
 
 
-def overleaf_commit() -> str:
-    """The Overleaf clone's commit, and whether it has uncommitted changes."""
+def commit_info() -> str:
+    """The project's git commit hash, and whether it has uncommitted changes."""
     commit = subprocess.run(
-        ["git", "-C", str(OVERLEAF), "rev-parse", "--short", "HEAD"],
-        capture_output=True, text=True, check=True,
+        ["git", "-C", str(ROOT), "rev-parse", "HEAD"],
+        capture_output=True,
+        text=True,
+        check=True,
     ).stdout.strip()
     dirty = subprocess.run(
-        ["git", "-C", str(OVERLEAF), "status", "--porcelain"],
-        capture_output=True, text=True, check=True,
+        ["git", "-C", str(ROOT), "status", "--porcelain"],
+        capture_output=True,
+        text=True,
+        check=True,
     ).stdout.strip()
     return commit + (" plus uncommitted edits" if dirty else "")
 
 
 def assemble(name: str) -> str:
     """One document as plain LaTeX, ready for pandoc."""
-    source = strip_comments((OVERLEAF / DOCUMENTS[name]["source"]).read_text(encoding="utf-8"))
+    source = strip_comments(
+        (MANUSCRIPT_DIR / DOCUMENTS[name]["source"]).read_text(encoding="utf-8")
+    )
     if name == "main":
         head = front_matter(source)
         body = main_body(source)
     else:
         title, body = supplement_parts(source)
         head = "\n".join([f"\\title{{{title}}}", "\\date{}", "\\maketitle", ""])
-    body = expand_inputs(body, OVERLEAF)
+    body = expand_inputs(body, MANUSCRIPT_DIR)
     return (
         "\\documentclass{article}\n\\begin{document}\n"
         + head
@@ -336,11 +367,11 @@ def assemble(name: str) -> str:
 
 
 def build() -> list[Path]:
-    today = datetime.date.today().isoformat()
-    commit = overleaf_commit()
     # Which version this is, kept out of the text: it goes in the file's document
     # properties (File > Properties in Word), where it stays traceable without being read.
-    provenance = f"Built {today} from Overleaf commit {commit}"
+    today = dt.datetime.now().astimezone().date()
+    commit = commit_info()
+    provenance = f"Built {today.isoformat()} from commit {commit}"
 
     # Number both documents first, so each can resolve the other's labels.
     assembled = {name: assemble(name) for name in DOCUMENTS}
@@ -352,8 +383,12 @@ def build() -> list[Path]:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     written = []
     for name in DOCUMENTS:
-        other = {label: number for doc, found in labels.items() if doc != name
-                 for label, number in found.items()}
+        other = {
+            label: number
+            for doc, found in labels.items()
+            if doc != name
+            for label, number in found.items()
+        }
         text = resolve_references(numbered[name], labels[name], other)
         text = simplify_tables(text)
 
@@ -361,15 +396,27 @@ def build() -> list[Path]:
             stage = Path(folder)
             text, problems = stage_figures(text, stage)
             (stage / "document.tex").write_text(text, encoding="utf-8")
-            shutil.copy(OVERLEAF / "references.bib", stage / "references.bib")
+            shutil.copy(MANUSCRIPT_DIR / "references.bib", stage / "references.bib")
 
             output = OUTPUT_DIR / f"epymorph-ms_{name}_{today}.docx"
             result = subprocess.run(
-                ["pandoc", "document.tex", "--from", "latex", "--citeproc",
-                 "--bibliography", "references.bib",
-                 "--metadata", f"description={provenance}",
-                 "--output", str(output)],
-                cwd=stage, capture_output=True, text=True,
+                [
+                    "pandoc",
+                    "document.tex",
+                    "--from",
+                    "latex",
+                    "--citeproc",
+                    "--bibliography",
+                    "references.bib",
+                    "--metadata",
+                    f"description={provenance}",
+                    "--output",
+                    str(output),
+                ],
+                cwd=stage,
+                capture_output=True,
+                text=True,
+                check=False,
             )
         if result.returncode != 0:
             raise SystemExit(f"pandoc failed on the {name} document:\n{result.stderr}")
@@ -383,7 +430,9 @@ def build() -> list[Path]:
             print(f"  note: unresolved reference {label}")
         math = sum("Could not convert TeX math" in line for line in warnings)
         if math:
-            print(f"  note: {math} equation(s) kept as LaTeX source; see the PDF for these")
+            print(
+                f"  note: {math} equation(s) kept as LaTeX source; see the PDF for these"
+            )
         written.append(output)
     return written
 
@@ -391,7 +440,5 @@ def build() -> list[Path]:
 if __name__ == "__main__":
     if shutil.which("pandoc") is None:
         raise SystemExit("pandoc not found; install it first (https://pandoc.org)")
-    if not OVERLEAF.is_dir():
-        raise SystemExit(f"no Overleaf clone at {OVERLEAF} (set OVERLEAF)")
-    print(f"source: {OVERLEAF} (commit {overleaf_commit()})")
+    print(f"source: {MANUSCRIPT_DIR} (commit {commit_info()})")
     build()
