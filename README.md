@@ -24,19 +24,20 @@ data/
   lit-search/raw/                      archived PubMed and Lens.org exports
   lit-search/decisions/                hand-entered screening decisions
 analysis/                              the Python package and both case-study notebooks
-manuscript/                            LaTeX, mirrored from Overleaf
+manuscript/                            LaTeX, optionally synced with Overleaf
+  generated/                           generated figures and tables copied for the manuscript
 results/
   demos/figures/, demos/tables/        the manuscript's figures and tables
   demos/demo-*.ipynb                   the notebooks as last executed by the build
   demos/runs/                          the model runs (NOT in git; see below)
   lit-search/                          the software search's outputs, Table 1, Figure S1
   checksums.sha256                     everything the build writes, except the runs
-scripts/                               check.py, Overleaf sync and publish, Word export
-justfile                               every entry point
+scripts/                               scripts to check results and export the manuscript to Word
+justfile                               commands for working with the project
 ```
 
-Never hand-edit anything under `results/`. Every generated `.tex` carries a `% GENERATED`
-header, and `just check` fails if one is missing.
+Never hand-edit anything under `results/` or `manuscript/generated/`.
+Every generated `.tex` carries a `% GENERATED` header, and `just check` fails if one is missing.
 
 ## Quick start
 
@@ -86,27 +87,44 @@ makes git see a change. Commit them only when the analysis changes; otherwise ru
 
 ## The manuscript and Overleaf
 
-The manuscript is written in Overleaf, which syncs with a separate git repository (the
-"Overleaf clone"). The scripts find it at `../epymorph_ms_overleaf`, next to this
-repository; set `OVERLEAF=/path/to/clone` to use another location.
+For convenience and ease of collaboration, the manuscript can be edited in
+Overleaf. We provide some utilities in the project to make it easy to
+synchronize work between this project (on your development machine) and the
+Overleaf project.
 
-Two one-way mirrors move files between the two repositories. They cover **disjoint sets of
-files**, so no file is ever written on both sides:
+To set up the Overleaf integration, you will need to authenticate your git
+client to Overleaf using an API token. Manage tokens in your
+[Overleaf account settings](https://www.overleaf.com/user/settings)
+(under "Project synchronization, Git integration").
+[See the Overleaf docs for more info.](https://docs.overleaf.com/integrations-and-add-ons/git-integration-and-github-synchronization/git-integration/git-integration-authentication-tokens)
+To avoid having to enter this password repeatedly, you may wish to install
+[Git Credential Manager](https://github.com/git-ecosystem/git-credential-manager/blob/main/docs/install.md)
+(GCM) to securely cache the token.
 
-| files | written by | direction | recipe |
-|---|---|---|---|
-| `main.tex`, `supplement.tex`, `sections/`, `supplementary/`, `references.bib`, `figures/fig1-*` | a person, in Overleaf | Overleaf → `manuscript/` | `just sync-manuscript` |
-| every other figure, the tables | this repository's build | `results/` → Overleaf | `just publish` |
+After setting up authentication, find your project's git integration URL.
+Go to your Overleaf project and navigate to its Integrations tab. Click on
+**Git** (not GitHub!) and a dialog will pop up displaying a command like
+`git clone <url>`. Copy just the URL part. Then in this project run the command
+`just setup-overleaf <url>`, replacing the placeholder with the URL you copied.
 
-Both recipes only report what they would change. Add `--apply` to copy. After
-`just publish --apply`, commit and push in the Overleaf clone, then click **Pull** in
-Overleaf's GitHub panel. Edit prose in Overleaf, not in `manuscript/`: the next sync would
-overwrite it.
+That completes the setup. Now, any time you've made changes to the manuscript
+either in this project or in Overleaf, you may synchronize by running the
+command `just overleaf-sync`. This does not happen automatically: you must
+decide when you wish to sync. Only files in the `manuscript` folder are
+included in the sync, and `manuscript/generated` files only sync one-way:
+generated files are pushed to Overleaf, but never pulled from Overleaf. These
+files are supposed to be generated entirely by code and require no hand-editing!
+The sync command will create a git commit in this project if there are changes
+from Overleaf. To help ensure the sync goes smoothly, our recommendation is to
+try to perform syncs from a clean working tree (i.e., there are no uncommitted
+changes and `git status` reports "nothing to commit").
 
-`just docx` builds Word copies of the manuscript and supplement from the Overleaf clone,
-for collaborators who comment in Word. It needs [pandoc](https://pandoc.org) 3.x and
-writes them to `results/manuscript-docx/`, which is not in git. Comments made in Word are
-copied back into Overleaf by hand.
+You may also have collaborators that prefer to comment using Microsoft Word.
+`just docx` builds a copy of the manuscript to a Word document and saves it in
+`results/manuscript-docx/` (which does not get included in git commits.)
+You must have [pandoc](https://pandoc.org) 3.x installed. The Word file can be
+then shared for comment however you prefer, but naturally comments and changes
+made in Word will need to be copied back into the manuscript by hand.
 
 Notes on the LaTeX:
 

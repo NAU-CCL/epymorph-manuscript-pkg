@@ -43,12 +43,12 @@ In both cases, every competing model passes through the same data-acquisition, e
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=\textwidth]{figures/fig2-flu-demographic-structure.pdf}
+\includegraphics[width=\textwidth]{generated/demos/figures/fig2-flu-demographic-structure.png}
 \caption{\textbf{Age stratification and empirically-derived contact structure improve influenza forecast skill in the 2025--2026 season.} (a) Contact matrices of the two age-stratified models, shown for Minnesota: the empirical matrix of Mistry et al.~\citep{mistry_inferring_2021} projected onto the state's age distribution (left), and homogeneous mixing, in which contact is proportional to the size of each age class (right). Both are normalized to unit spectral radius (i.e., the dominant eigenvalue equal to one). (b) Log WIS averaged over 25 forecast origins and 51 jurisdictions, shown per forecast horizon. Lower values are better forecasts. (c) One-week-ahead forecasts of the empirical-mixing model (shaded credible intervals) against observed weekly hospital admissions (circles) in each age class, again for Minnesota as an example. (d) Log WIS of each age-stratified model relative to the model with no age structure, two points per jurisdiction, where connected points are the results of two separate seeds in forecasting. Values lower than 1 show improved forecast performance. Vertical lines give the median ratio for the two seeds separately.}
 \label{fig:flu}
 \end{figure}
 
-\input{tables/flu-skill}
+\input{generated/demos/tables/flu-skill}
 
 To demonstrate the multi-strata capabilities of \texttt{epymorph} in a real-world application, we competed three SIRH models of weekly influenza hospital admissions over the 2025--2026 season in every U.S. state, the District of Columbia, and Puerto Rico (Methods). 
 Age-stratification is commonly used in models of respiratory pathogens, because the risk of severe outcomes differ strongly with age, as do contact rates among age groups. 
@@ -79,12 +79,12 @@ One likely explanation is that empirical contact patterns, which are dominated b
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=\textwidth]{figures/fig3-covid-spatial-structure.pdf}
+\includegraphics[width=\textwidth]{generated/demos/figures/fig3-covid-spatial-structure.png}
 \caption{\textbf{Spatial structure, movement, and COVID-19 forecast skill in the 2020--2021 winter wave.} (a) Weekly commuter flows between the 32 counties of Connecticut (CT), Massachusetts (MA), and New Hampshire (NH), derived from ACS Commuting Flows. (b) Average log WIS of state-level forecasts by forecast horizon, for hospital census (left) and weekly deaths (right). (c) One-week-ahead forecasts (shaded credible intervals) of the commuting model against observed hospital census and weekly deaths (circles) in the most populous county of each state. (d) County-level log WIS of the commuting model relative to the no-movement model, one point per county, at two ensemble seeds; values below one favor the commuting model. Labels give the median ratio and the number of counties in which the commuting model forecast better, for seed 0 / seed 1.}
 \label{fig:covid}
 \end{figure}
 
-\input{tables/covid-skill}
+\input{generated/demos/tables/covid-skill}
 
 Surveillance data used for forecasting are often reported at the spatial scale of US states, but it is very likely that transmission is driven by local heterogeneities and movement of people within and among states. 
 Here we address whether modeling dynamics at the scale of counties, along with inter-county and inter-state commuting, improves forecasts of state-level COVID-19 disease outcomes. 

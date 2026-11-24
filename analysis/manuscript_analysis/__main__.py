@@ -31,6 +31,7 @@ class ProjectPaths:
     results: Path
     runs: Path
     notebooks: Path
+    manuscript: Path
 
     @staticmethod
     def from_root(root: Path, runs: Path | None = None) -> "ProjectPaths":
@@ -40,6 +41,7 @@ class ProjectPaths:
             results=root / "results",
             runs=runs if runs is not None else root / "results" / "demos" / "runs",
             notebooks=root / "analysis" / "manuscript_analysis",
+            manuscript=root / "manuscript",
         )
 
 
@@ -65,6 +67,9 @@ def main() -> None:
     # 3. Checksums: of what the build wrote, and separately of the runs.
     write_checksums(paths)
     compare_runs(paths)
+
+    # 4. Copy results to the manuscript folder.
+    copy_to_manuscript(paths)
 
 
 def run_demo(
@@ -121,6 +126,32 @@ def compare_runs(paths: ProjectPaths) -> None:
               "platform; compare results/demos/tables/ instead):", *problems, sep="\n    ")
     else:
         print(f"The runs match results/demos/runs.sha256: {len(found)} files")
+
+
+def copy_to_manuscript(paths: ProjectPaths) -> None:
+    # For the benefit of Overleaf integration, we need include paths to be relative to
+    # the manuscript files. Hence, we copy results files into `manuscript/generated`.
+    # These will eventually be synced to Overleaf.
+    #
+    # If you change the simulation code, re-run and re-sync to Overleaf.
+    # After working on the manuscript in Overleaf, sync back to this repo.
+    def on_copy(src: Path, dst: Path) -> None:
+        src_rel = src.relative_to(paths.root)
+        dst_rel = dst.relative_to(paths.root)
+        print(f"Copied '{src_rel}' to '{dst_rel}'")
+
+    util.copy_tree(
+        src_dir=paths.results,
+        dest_dir=paths.manuscript / "generated",
+        include_globs=["**/*.png", "**/*.tex"],  # only need figures and tables
+        on_copy=on_copy,
+    )
+
+    # NOTE: It is expected that the results files generated for inclusion in the
+    # manuscript will be relatively small, such that deleting and re-copying them
+    # is not a problem, nor will they run afoul of Overleaf's file size limits.
+    # It is likely that other outputs will be created by the simulation but _not_
+    # included in the manuscript, and those outputs may be larger.
 
 
 if __name__ == "__main__":
